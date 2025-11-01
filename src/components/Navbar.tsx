@@ -3,6 +3,7 @@ import Logo from './Logo'
 import { useState, useEffect } from 'react'
 import { auth } from '../lib/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
+import { signOut } from '../lib/auth'
 
 export default function Navbar(){
   const [user, setUser] = useState<any>(null)
@@ -18,6 +19,7 @@ export default function Navbar(){
           <Link href="/join" legacyBehavior><a>Join</a></Link>
           <Link href="/contact" legacyBehavior><a>Contact</a></Link>
           {user && <Link href="/admin" legacyBehavior><a className="ml-4 px-3 py-1 rounded bg-[#0033A0] text-white">Admin</a></Link>}
+          {user && <button className="ml-4 px-3 py-1 rounded bg-red-500 text-white" onClick={signOut}>Logout</button>}
         </div>
       </div>
     </nav>
