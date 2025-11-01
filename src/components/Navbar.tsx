@@ -1,0 +1,25 @@
+import Link from 'next/link'
+import Logo from './Logo'
+import { useState, useEffect } from 'react'
+import { auth } from '../lib/firebase'
+import { onAuthStateChanged } from 'firebase/auth'
+
+export default function Navbar(){
+  const [user, setUser] = useState<any>(null)
+  useEffect(()=> onAuthStateChanged(auth, u => setUser(u)), [])
+  return (
+    <nav className="fixed w-full bg-white/80 backdrop-blur z-50">
+      <div className="px-6 py-3 flex items-center justify-between">
+        <Link href="/" legacyBehavior><a><Logo size={192} /></a></Link>
+        <div className="flex gap-4 items-center">
+          <Link href="/events" legacyBehavior><a>Events</a></Link>
+          <Link href="/projects" legacyBehavior><a>Projects</a></Link>
+          <Link href="/team" legacyBehavior><a>Team</a></Link>
+          <Link href="/join" legacyBehavior><a>Join</a></Link>
+          <Link href="/contact" legacyBehavior><a>Contact</a></Link>
+          {user && <Link href="/admin" legacyBehavior><a className="ml-4 px-3 py-1 rounded bg-[#0033A0] text-white">Admin</a></Link>}
+        </div>
+      </div>
+    </nav>
+  )
+}
