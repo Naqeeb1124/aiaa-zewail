@@ -17,8 +17,8 @@ export default function Hero(){
           </p>
 
           <div className="mt-6 flex gap-3">
-            <a href="#about" className="px-4 py-2 rounded-md bg-[#0033A0] text-white font-medium">Get involved</a>
-            <a href="#events" className="px-4 py-2 rounded-md border">Upcoming events</a>
+            <a href="/join" className="px-4 py-2 rounded-md bg-[#0033A0] text-white font-medium">Get involved</a>
+            <a href="/events" className="px-4 py-2 rounded-md border">Upcoming events</a>
           </div>
         </div>
 

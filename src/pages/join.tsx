@@ -8,8 +8,11 @@ import { useRouter } from 'next/router'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
+const AUTHORIZED = ['officer1@zewail.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg']
+
 export default function Join(){
   const [user, setUser] = useState<any>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [applicationStatus, setApplicationStatus] = useState<'loading' | 'not_applied' | 'applied'>('loading')
   const [applicationType, setApplicationType] = useState<'interview' | 'no_interview' | null>(null)
   const [selectedTeams, setSelectedTeams] = useState<string[]>([])
@@ -20,6 +23,9 @@ export default function Join(){
     onAuthStateChanged(auth, async u => {
       setUser(u)
       if (u) {
+        if (AUTHORIZED.includes(u.email)) {
+          setIsAdmin(true)
+        }
         const docRef = doc(db, "applications", u.uid)
         const docSnap = await getDoc(docRef)
         if (docSnap.exists()) {
@@ -55,7 +61,7 @@ export default function Join(){
     }
     
     const zcid = formData.get('zcid') as string;
-    if (applicationType === 'no_interview' && !/^20\d{7}$/.test(zcid)) {
+    if (applicationType === 'no_interview' && zcid && !/^20\d{7}$/.test(zcid)) {
       alert('Invalid Zewail City ID format. It should be in the format 20XXXXXXX.');
       return;
     }
@@ -97,6 +103,22 @@ export default function Join(){
     }
     await setDoc(doc(db, "applications", user.uid), data)
     setApplicationStatus('applied')
+
+    const emailBody = Object.entries(data)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join('\n');
+
+    await fetch('/api/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: 's-abdelrahman.alnaqeeb@zewailcity.edu.eg',
+        subject: 'New AIAA application',
+        text: emailBody,
+      }),
+    });
   }
 
   return (
@@ -110,20 +132,23 @@ export default function Join(){
             <button className="mt-6 px-4 py-2 rounded bg-[#0033A0] text-white" onClick={signInWithGoogle}>Sign in with Google</button>
           </div>
         )}
-        {user && applicationStatus === 'loading' && <p className="mt-2">Loading application status...</p>}
-        {user && applicationStatus === 'applied' && (
+        {user && isAdmin && (
+          <p className="mt-2">You are an administrator. You do not need to apply.</p>
+        )}
+        {user && !isAdmin && applicationStatus === 'loading' && <p className="mt-2">Loading application status...</p>}
+        {user && !isAdmin && applicationStatus === 'applied' && (
           <div>
             <p className="mt-2">Thank you for applying! We have received your application and will get back to you soon.</p>
             <button className="mt-6 px-4 py-2 rounded bg-[#0033A0] text-white" onClick={() => router.push('/')}>Go to Homepage</button>
           </div>
         )}
-        {user && applicationStatus === 'not_applied' && !applicationType && (
+        {user && !isAdmin && applicationStatus === 'not_applied' && !applicationType && (
           <div className="mt-6 grid grid-cols-2 gap-4">
             <button className="px-4 py-2 rounded bg-indigo-600 text-white" onClick={() => setApplicationType('interview')}>Apply with interview</button>
             <button className="px-4 py-2 rounded bg-indigo-600 text-white" onClick={() => setApplicationType('no_interview')}>Apply without interview</button>
           </div>
         )}
-        {user && applicationStatus === 'not_applied' && applicationType && (
+        {user && !isAdmin && applicationStatus === 'not_applied' && applicationType && (
           <form className="mt-6" onSubmit={handleApplicationSubmit}>
             {/* SECTION 1 — Personal Information */}
             <h2 className="text-xl font-bold">SECTION 1 — Personal Information</h2>
