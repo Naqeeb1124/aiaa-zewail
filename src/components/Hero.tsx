@@ -6,7 +6,7 @@ export default function Hero(){
     <section className="pt-24 pb-20 bg-gradient-to-b from-white to-slate-50">
       <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
         <div>
-          <Logo size={48} />
+
 
           <h1 className="mt-6 text-4xl md:text-5xl font-extrabold leading-tight text-[#0033A0]">
             AIAA Student Branch — Zewail City of Science & Technology

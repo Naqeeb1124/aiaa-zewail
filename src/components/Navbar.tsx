@@ -9,7 +9,7 @@ export default function Navbar(){
   const [user, setUser] = useState<any>(null)
   useEffect(()=> onAuthStateChanged(auth, u => setUser(u)), [])
   return (
-    <nav className="fixed w-full bg-white/80 backdrop-blur z-50">
+    <nav className="fixed w-full bg-slate-100/30 backdrop-blur-xl z-50 border-b border-gray-200/20">
       <div className="px-6 py-3 flex items-center justify-between">
         <Link href="/" legacyBehavior><a><Logo size={192} /></a></Link>
         <div className="flex gap-4 items-center">
