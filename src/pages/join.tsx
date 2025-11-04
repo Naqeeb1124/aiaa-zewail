@@ -9,9 +9,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import ApplicationForm from '../components/ApplicationForm';
 
-import { useRouter } from 'next/router'
 
-const AUTHORIZED = ['officer1@zewail.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg']
 
 export default function Join(){
   const router = useRouter()  const [user, setUser] = useState<any>(null)
