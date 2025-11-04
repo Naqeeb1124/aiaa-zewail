@@ -26,7 +26,7 @@ export default function Navbar(){
 
   return (
     <nav className="fixed w-full bg-white/80 backdrop-blur z-50">
-      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div className="px-6 py-3 flex items-center justify-between">
         <Link href="/" legacyBehavior><a><Logo /></a></Link>
         <div className="hidden md:flex gap-4 items-center">
           <Link href="/events" legacyBehavior><a>Events</a></Link>
