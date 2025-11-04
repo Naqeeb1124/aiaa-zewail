@@ -11,8 +11,8 @@ import ApplicationForm from '../components/ApplicationForm';
 
 
 
-export default function Join(){
-  const router = useRouter()  const [user, setUser] = useState<any>(null)
+const AUTHORIZED = ['officer1@zewail.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg']
+  const router = useRouter();  const [user, setUser] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [applicationStatus, setApplicationStatus] = useState<'loading' | 'not_applied' | 'applied'>('loading')
   const [applicationType, setApplicationType] = useState<'interview' | 'no_interview' | null>(null)

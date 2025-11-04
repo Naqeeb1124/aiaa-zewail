@@ -31,7 +31,7 @@ export default function ApplicationForm({ onSubmit, applicationType }) {
               phone: userData.phone || '',
               major: userData.major || '',
               year: userData.year || '',
-              linkedin: userData.portfolioLink || '',
+              linkedin: userData.linkedin || '',
               zcid: userData.studentId || '',
             })
           }
