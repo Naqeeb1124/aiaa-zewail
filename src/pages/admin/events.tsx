@@ -6,7 +6,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { useRouter } from 'next/router'
 import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore'
 
-const AUTHORIZED = ['officer1@zewail.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg']
+const AUTHORIZED = ['mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg']
 
 export default function Events() {
   const [user, setUser] = useState<any>(null)
