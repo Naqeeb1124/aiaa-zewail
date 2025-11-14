@@ -5,7 +5,7 @@ import { auth } from '../lib/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 import { signOut } from '../lib/auth'
 
-const AUTHORIZED = ['mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg']
+const AUTHORIZED = ['s-zeina.tawab@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg']
 
 export default function Navbar(){
   const [user, setUser] = useState<any>(null)
