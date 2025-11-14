@@ -10,7 +10,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import ApplicationForm from '../components/ApplicationForm';
 
 export default function Join() {
-  const AUTHORIZED = ['mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg']
+  const AUTHORIZED = ['s-zeina.tawab@zewailcity.edu.eg', 'mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg']
   const router = useRouter();  const [user, setUser] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [applicationStatus, setApplicationStatus] = useState<'loading' | 'not_applied' | 'applied'>('loading')
