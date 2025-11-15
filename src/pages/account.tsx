@@ -43,7 +43,7 @@ export default function Account() {
             {Object.entries(application).map(([key, value]) => (
               <div key={key} className="mb-4">
                 <h3 className="text-lg font-semibold capitalize">{key.replace(/_/g, ' ')}</h3>
-                <p className="text-gray-700">{Array.isArray(value) ? value.join(', ') : value}</p>
+                <p className="text-gray-700">{Array.isArray(value) ? value.join(', ') : String(value)}</p>
               </div>
             ))}
           </div>
