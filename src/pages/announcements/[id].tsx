@@ -5,6 +5,7 @@ import { db } from '../../lib/firebase';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import Image from 'next/image';
+import imageLoader from '../../lib/imageLoader';
 
 interface Announcement {
   title: string;
@@ -59,6 +60,7 @@ export default function AnnouncementPage() {
                   alt={announcement.title}
                   layout="fill"
                   objectFit="cover"
+                  loader={imageLoader}
                 />
               </div>
             )}

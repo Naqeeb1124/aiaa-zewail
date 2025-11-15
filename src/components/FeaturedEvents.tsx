@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import Image from 'next/image';
+import imageLoader from '../lib/imageLoader';
 import Link from 'next/link';
 
 interface Event {
@@ -25,6 +26,7 @@ const EventCard = ({ event }: { event: Event }) => {
             alt={event.title}
             layout="fill"
             objectFit="cover"
+            loader={imageLoader}
           />
         </div>
       </Link>

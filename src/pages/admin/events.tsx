@@ -5,6 +5,7 @@ import { auth, db } from '../../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, addDoc, getDocs, deleteDoc, doc, orderBy, query } from 'firebase/firestore';
 import { useRouter } from 'next/router';
+import ImageUpload from '../../components/ImageUpload'; // Import the new component
 
 export default function ManageEvents() {
   const AUTHORIZED = ['s-zeina.tawab@zewailcity.edu.eg', 'mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg'];
@@ -37,6 +38,10 @@ export default function ManageEvents() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewEvent(prevState => ({ ...prevState, [name]: value }));
+  };
+
+  const handleImageUploadSuccess = (url: string) => {
+    setNewEvent(prevState => ({ ...prevState, imageUrl: url }));
   };
 
   const handleAddEvent = async () => {
@@ -99,14 +104,7 @@ export default function ManageEvents() {
                 placeholder="Event Date"
                 className="p-2 border rounded"
               />
-              <input
-                type="text"
-                name="imageUrl"
-                value={newEvent.imageUrl}
-                onChange={handleInputChange}
-                placeholder="Image URL (optional)"
-                className="p-2 border rounded"
-              />
+              <ImageUpload onUploadSuccess={handleImageUploadSuccess} initialImageUrl={newEvent.imageUrl} />
               <textarea
                 name="description"
                 value={newEvent.description}

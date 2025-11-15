@@ -5,6 +5,7 @@ import { auth, db } from '../../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, addDoc, getDocs, deleteDoc, doc, orderBy, query } from 'firebase/firestore';
 import { useRouter } from 'next/router';
+import ImageUpload from '../../components/ImageUpload'; // Import the new component
 
 export default function Announcements() {
   const AUTHORIZED = ['s-zeina.tawab@zewailcity.edu.eg', 'mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg'];
@@ -37,6 +38,10 @@ export default function Announcements() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewAnnouncement(prevState => ({ ...prevState, [name]: value }));
+  };
+
+  const handleImageUploadSuccess = (url: string) => {
+    setNewAnnouncement(prevState => ({ ...prevState, imageUrl: url }));
   };
 
   const handleAddAnnouncement = async () => {
@@ -90,14 +95,7 @@ export default function Announcements() {
                 placeholder="Announcement Title"
                 className="p-2 border rounded"
               />
-              <input
-                type="text"
-                name="imageUrl"
-                value={newAnnouncement.imageUrl}
-                onChange={handleInputChange}
-                placeholder="Image URL (optional)"
-                className="p-2 border rounded"
-              />
+              <ImageUpload onUploadSuccess={handleImageUploadSuccess} initialImageUrl={newAnnouncement.imageUrl} />
               <textarea
                 name="content"
                 value={newAnnouncement.content}
@@ -106,7 +104,7 @@ export default function Announcements() {
                 className="p-2 border rounded"
                 rows={6}
               />
-              <button onClick={handleAddAnnouncement} className="px-4 py-2 rounded bg-[#0033A0] text-white">
+              <button onClick={handleAddAnnouncement} className="px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors">
                 Add Announcement
               </button>
             </div>
