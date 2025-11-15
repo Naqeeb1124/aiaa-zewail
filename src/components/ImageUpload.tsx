@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { storage } from '../lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface ImageUploadProps {
   onUploadSuccess: (url: string) => void;
@@ -30,15 +28,27 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUploadSuccess, initialImage
     setUploading(true);
     setError(null);
 
+    const formData = new FormData();
+    formData.append('file', imageFile);
+
     try {
-      const storageRef = ref(storage, `images/${imageFile.name}`);
-      const snapshot = await uploadBytes(storageRef, imageFile);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      onUploadSuccess(downloadURL);
-      setImageUrl(downloadURL); // Update preview with actual URL
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Upload failed');
+      }
+
+      const data = await response.json();
+      onUploadSuccess(data.url);
+      setImageUrl(data.url);
     } catch (err) {
       console.error('Error uploading image:', err);
-      setError('Failed to upload image. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      setError(`Failed to upload image. ${errorMessage}`);
     } finally {
       setUploading(false);
     }
@@ -47,6 +57,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUploadSuccess, initialImage
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault(); // Prevent default paste behavior
 
+    // Handle pasting image files
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf('image') !== -1) {
@@ -55,15 +66,17 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUploadSuccess, initialImage
           setImageFile(file);
           setImageUrl(URL.createObjectURL(file));
           setError(null);
-          return;
+          return; // Exit after finding an image
         }
       }
     }
 
+    // Handle pasting image URLs
     const pastedText = e.clipboardData.getData('text');
     if (pastedText && (pastedText.startsWith('http://') || pastedText.startsWith('https://'))) {
       setImageUrl(pastedText);
-      onUploadSuccess(pastedText);
+      onUploadSuccess(pastedText); // Directly use the URL
+      setImageFile(null); // Clear any selected file
       setError(null);
     } else {
       setError('Pasted content is not a valid image or image URL.');

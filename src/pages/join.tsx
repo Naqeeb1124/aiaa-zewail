@@ -2,11 +2,10 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { signInWithGoogle } from '../lib/auth'
 import { useState, useEffect } from 'react'
-import { auth, db, storage } from '../lib/firebase'
+import { auth, db } from '../lib/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 import { useRouter } from 'next/router'
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import ApplicationForm from '../components/ApplicationForm';
 
 export default function Join() {
@@ -114,9 +113,26 @@ export default function Join() {
 
     let cvUrl = ''
     if (cvFile && cvFile.size > 0) {
-      const storageRef = ref(storage, `cvs/${user.uid}/${cvFile.name}`);
-      await uploadBytes(storageRef, cvFile)
-      cvUrl = await getDownloadURL(storageRef)
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', cvFile);
+
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadFormData,
+        });
+
+        if (!response.ok) {
+          throw new Error('CV upload failed');
+        }
+
+        const data = await response.json();
+        cvUrl = data.url;
+      } catch (error) {
+        console.error('Error uploading CV:', error);
+        alert('There was an error uploading your CV. Please try again.');
+        return; // Stop form submission if CV upload fails
+      }
     }
     
     const zcid = formData.get('zcid') as string;
