@@ -65,7 +65,7 @@ export default function ApplicationDetail() {
                   View CV
                 </a>
               ) : (
-                <p className="text-gray-700">{Array.isArray(value) ? value.join(', ') : value}</p>
+                <p className="text-gray-700">{Array.isArray(value) ? value.join(', ') : String(value)}</p>
               )}
             </div>
           ))}
