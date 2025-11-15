@@ -8,7 +8,7 @@ export default function Hero(){
         <div>
 
 
-          <h1 className="mt-6 text-4xl md:text-5xl font-extrabold leading-tight text-[#0033A0]">
+          <h1 className="mt-6 text-4xl md:text-5xl font-extrabold leading-tight text-featured-blue">
             AIAA Student Branch — Zewail City of Science & Technology
           </h1>
 
@@ -17,7 +17,7 @@ export default function Hero(){
           </p>
 
           <div className="mt-6 flex gap-3">
-            <a href="/join" className="px-4 py-2 rounded-md bg-[#0033A0] text-white font-medium">Get involved</a>
+            <a href="/join" className="px-4 py-2 rounded-md bg-featured-blue text-white font-medium hover:bg-featured-green transition-colors">Get involved</a>
             <a href="/events" className="px-4 py-2 rounded-md border">Upcoming events</a>
           </div>
         </div>

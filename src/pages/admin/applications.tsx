@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import { useEffect, useState } from 'react'
@@ -5,6 +6,7 @@ import { auth, db } from '../../lib/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 import { useRouter } from 'next/router'
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore'
+import RecruitmentManager from '../../components/RecruitmentManager'
 
 const AUTHORIZED = ['s-zeina.tawab@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg']
 
@@ -63,6 +65,7 @@ export default function Applications() {
       <Navbar />
       <main style={{ paddingTop: '240px' }} className="max-w-6xl mx-auto p-6">
         <h1 className="text-2xl font-bold">Applications</h1>
+        <RecruitmentManager />
         <div className="mt-6">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -88,8 +91,9 @@ export default function Applications() {
                   <td className="px-6 py-4 whitespace-nowrap">{app.teams.join(', ')}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{app.status || 'pending'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => handleUpdateStatus(app.id, 'accepted', app.email)} className="text-green-600 hover:text-green-900">Accept</button>
-                    <button onClick={() => handleUpdateStatus(app.id, 'rejected', app.email)} className="ml-4 text-red-600 hover:text-red-900">Reject</button>
+                    <Link href={`/admin/application/${app.id}`} legacyBehavior>
+                      <a className="text-featured-blue hover:text-blue-800">Review</a>
+                    </Link>
                   </td>
                 </tr>
               ))}

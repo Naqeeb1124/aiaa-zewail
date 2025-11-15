@@ -5,18 +5,35 @@ import { useState, useEffect } from 'react'
 import { auth, db, storage } from '../lib/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 import { useRouter } from 'next/router'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import ApplicationForm from '../components/ApplicationForm';
 
 export default function Join() {
   const AUTHORIZED = ['s-zeina.tawab@zewailcity.edu.eg', 'mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg']
-  const router = useRouter();  const [user, setUser] = useState<any>(null)
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [applicationStatus, setApplicationStatus] = useState<'loading' | 'not_applied' | 'applied'>('loading')
+  const [applicationStatus, setApplicationStatus] = useState<'loading' | 'not_applied' | 'applied' | 'rejected' | 'accepted'>('loading')
   const [applicationType, setApplicationType] = useState<'interview' | 'no_interview' | null>(null)
+  const [recruitmentOpen, setRecruitmentOpen] = useState(false)
+  const [interview, setInterview] = useState<any>(null)
+  const [selectedSlot, setSelectedSlot] = useState('')
 
   useEffect(()=> {
+    const fetchRecruitmentStatus = async () => {
+      const docRef = doc(db, 'recruitment', 'status')
+      const docSnap = await getDoc(docRef)
+      if (docSnap.exists()) {
+        const data = docSnap.data()
+        const now = new Date()
+        const startDate = new Date(data.startDate)
+        const endDate = new Date(data.endDate)
+        setRecruitmentOpen(data.isOpen && now >= startDate && now <= endDate)
+      }
+    }
+    fetchRecruitmentStatus()
+
     onAuthStateChanged(auth, async u => {
       setUser(u)
       if (u) {
@@ -24,17 +41,71 @@ export default function Join() {
           setIsAdmin(true)
         }
         const docRef = doc(db, "applications", u.uid)
-        const docSnap = await getDoc(docRef)
-        if (docSnap.exists()) {
-          setApplicationStatus('applied')
-        } else {
-          setApplicationStatus('not_applied')
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const applicationData = docSnap.data();
+            setApplicationStatus(applicationData.status || 'applied');
+          } else {
+            setApplicationStatus('not_applied');
+          }
+        });
+
+        const interviewRef = doc(db, 'interviews', u.uid)
+        const interviewSnap = await getDoc(interviewRef)
+        if (interviewSnap.exists()) {
+          setInterview(interviewSnap.data())
         }
+        
+        return () => unsubscribe();
       } else {
         setApplicationStatus('not_applied')
       }
     })
   }, [])
+
+  const handleConfirmSlot = async () => {
+    if (!selectedSlot) {
+      alert('Please select a time slot.')
+      return
+    }
+
+    const interviewRef = doc(db, 'interviews', user.uid)
+    await updateDoc(interviewRef, {
+      selectedSlot,
+      status: 'scheduled',
+    })
+
+    const subject = `Interview Scheduled for Your AIAA Zewail City Application`;
+    const text = `Dear applicant,\n\nYour interview has been scheduled for ${selectedSlot} at ${interview.location}.\n\nBest regards,\nAIAA Zewail City Team`;
+
+    await fetch('/api/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: user.email,
+        subject,
+        text,
+      }),
+    });
+
+    // Notify admin
+    await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', // Hardcoded admin email
+          subject: `Interview Scheduled with ${user.displayName}`,
+          text: `${user.displayName} has scheduled their interview for ${selectedSlot} at ${interview.location}.`,
+        }),
+      });
+
+    alert('Interview slot confirmed!')
+    setInterview({ ...interview, status: 'scheduled', selectedSlot })
+  }
 
   const handleApplicationSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -117,7 +188,7 @@ export default function Join() {
         {!user && (
           <div>
             <p className="mt-2">Sign in with your Google account to register as a member.</p>
-            <button className="mt-6 px-4 py-2 rounded bg-[#0033A0] text-white" onClick={signInWithGoogle}>Sign in with Google</button>
+            <button className="mt-6 px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors" onClick={signInWithGoogle}>Sign in with Google</button>
           </div>
         )}
         {user && isAdmin && (
@@ -130,11 +201,53 @@ export default function Join() {
             <button className="mt-6 px-4 py-2 rounded bg-[#0033A0] text-white" onClick={() => router.push('/')}>Go to Homepage</button>
           </div>
         )}
+        {user && !isAdmin && applicationStatus === 'rejected' && (
+          <div>
+            <p className="mt-2">We regret to inform you that your application has been rejected. We encourage you to apply again in the next recruitment cycle.</p>
+            <button className="mt-6 px-4 py-2 rounded bg-[#0033A0] text-white" onClick={() => router.push('/')}>Go to Homepage</button>
+          </div>
+        )}
+        {user && !isAdmin && applicationStatus === 'accepted' && (
+          <div>
+            <p className="mt-2">Congratulations! Your application has been accepted. Welcome to the team!</p>
+            <button className="mt-6 px-4 py-2 rounded bg-[#0033A0] text-white" onClick={() => router.push('/')}>Go to Homepage</button>
+          </div>
+        )}
+        {interview && interview.status === 'pending' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && (
+          <div className="mt-6 bg-white p-6 rounded-lg shadow">
+            <h2 className="text-2xl font-bold mb-4">Schedule Your Interview</h2>
+            <p className="mb-2"><strong>Location:</strong> {interview.location}</p>
+            <p className="mb-4">Please select one of the available time slots:</p>
+            <div className="flex flex-col gap-2">
+              {interview.availableSlots.map((slot: string) => (
+                <label key={slot} className="flex items-center">
+                  <input
+                    type="radio"
+                    name="interview-slot"
+                    value={slot}
+                    checked={selectedSlot === slot}
+                    onChange={(e) => setSelectedSlot(e.target.value)}
+                    className="mr-2"
+                  />
+                  {new Date(slot).toLocaleString()}
+                </label>
+              ))}
+            </div>
+            <button onClick={handleConfirmSlot} className="bg-blue-500 text-white px-4 py-2 rounded mt-4">
+              Confirm Slot
+            </button>
+          </div>
+        )}
+        {interview && interview.status === 'scheduled' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && (
+            <div className="mt-6 bg-white p-6 rounded-lg shadow">
+                <h2 className="text-2xl font-bold mb-4">Interview Scheduled</h2>
+                <p>Your interview is scheduled for <strong>{new Date(interview.selectedSlot).toLocaleString()}</strong> {interview.location.toLowerCase() === 'online' ? 'online' : `at <strong>${interview.location}</strong>`}.</p>
+            </div>
+        )}
         {user && !isAdmin && applicationStatus === 'not_applied' && !applicationType && (
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <button className="px-4 py-2 rounded bg-indigo-600 text-white" onClick={() => setApplicationType('interview')}>Apply with interview</button>
-            <button className="px-4 py-2 rounded bg-indigo-600 text-white" onClick={() => setApplicationType('no_interview')}>Apply without interview</button>
-          </div>
+            <button className="px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors" onClick={() => setApplicationType('interview')}>Apply with interview</button>
+            <button className="px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors" onClick={() => setApplicationType('no_interview')}>Apply without interview</button>          </div>
         )}
         {user && !isAdmin && applicationStatus === 'not_applied' && applicationType && (
           <ApplicationForm onSubmit={handleApplicationSubmit} applicationType={applicationType} />

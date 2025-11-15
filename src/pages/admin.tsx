@@ -24,9 +24,23 @@ export default function Admin(){
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         <p className="mt-2">Manage events, projects, and members.</p>
         <div className="mt-6">
-          <Link href="/admin/applications" legacyBehavior>
-            <a className="text-indigo-600 hover:text-indigo-900">View Applications</a>
-          </Link>
+          <ul className="list-disc list-inside">
+            <li>
+              <Link href="/admin/applications" legacyBehavior>
+                <a className="text-featured-blue hover:text-blue-800">View Applications</a>
+              </Link>
+            </li>
+            <li className="mt-2">
+              <Link href="/admin/announcements" legacyBehavior>
+                <a className="text-featured-blue hover:text-blue-800">Manage Announcements</a>
+              </Link>
+            </li>
+            <li className="mt-2">
+              <Link href="/admin/events" legacyBehavior>
+                <a className="text-featured-blue hover:text-blue-800">Manage Events</a>
+              </Link>
+            </li>
+          </ul>
         </div>
       </main>
       <Footer />

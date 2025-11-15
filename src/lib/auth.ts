@@ -8,7 +8,7 @@ export const signInWithGoogle = async () => {
     const res = await signInWithPopup(auth, provider)
     const user = res.user
     const docRef = doc(db, 'users', user.uid)
-    await setDoc(docRef, { email: user.email, name: user.displayName }, { merge: true })
+    await setDoc(docRef, { email: user.email, name: user.displayName, subscribedToAnnouncements: true }, { merge: true })
     console.log("Signed in successfully:", user);
     return res
   } catch (error) {

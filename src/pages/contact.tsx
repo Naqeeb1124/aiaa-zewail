@@ -34,7 +34,7 @@ export default function Contact() {
       <main style={{ paddingTop: '240px' }} className="max-w-3xl mx-auto p-6">
         <h1 className="text-3xl font-bold">Contact Us</h1>
         <p className="mt-2 text-slate-600">
-          Have a question or want to get in touch? Fill out the form below or email us at <a href="mailto:aiaa.zewail@gmail.com" className="text-indigo-600">aiaa.zewail@gmail.com</a>.
+          Have a question or want to get in touch? Fill out the form below or email us at <a href="mailto:aiaa.zewail@gmail.com" className="text-featured-blue">aiaa.zewail@gmail.com</a>.
         </p>
 
         {submitted ? (
@@ -45,24 +45,24 @@ export default function Contact() {
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
                 <div className="mt-1">
-                  <input type="text" name="name" id="name" required className="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" />
+                  <input type="text" name="name" id="name" required className="py-3 px-4 block w-full shadow-sm focus:ring-featured-blue focus:border-featured-blue border-gray-300 rounded-md" />
                 </div>
               </div>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
                 <div className="mt-1">
-                  <input type="email" name="email" id="email" required className="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md" />
+                  <input type="email" name="email" id="email" required className="py-3 px-4 block w-full shadow-sm focus:ring-featured-blue focus:border-featured-blue border-gray-300 rounded-md" />
                 </div>
               </div>
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700">Message</label>
                 <div className="mt-1">
-                  <textarea id="message" name="message" rows={4} required className="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md"></textarea>
+                  <textarea id="message" name="message" rows={4} required className="py-3 px-4 block w-full shadow-sm focus:ring-featured-blue focus:border-featured-blue border-gray-300 rounded-md"></textarea>
                 </div>
               </div>
             </div>
             <div className="mt-6">
-              <button type="submit" disabled={submitting} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#0033A0] hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+              <button type="submit" disabled={submitting} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-featured-blue hover:bg-featured-green transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-featured-blue disabled:opacity-50">
                 {submitting ? 'Submitting...' : 'Submit'}
               </button>
             </div>
