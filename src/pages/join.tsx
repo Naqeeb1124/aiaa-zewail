@@ -260,13 +260,19 @@ export default function Join() {
                 <p>Your interview is scheduled for <strong>{new Date(interview.selectedSlot).toLocaleString()}</strong> {interview.location.toLowerCase() === 'online' ? 'online' : `at <strong>${interview.location}</strong>`}.</p>
             </div>
         )}
-        {user && !isAdmin && applicationStatus === 'not_applied' && !applicationType && (
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            <button className="px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors" onClick={() => setApplicationType('interview')}>Apply with interview</button>
-            <button className="px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors" onClick={() => setApplicationType('no_interview')}>Apply without interview</button>          </div>
-        )}
-        {user && !isAdmin && applicationStatus === 'not_applied' && applicationType && (
-          <ApplicationForm onSubmit={handleApplicationSubmit} applicationType={applicationType} />
+        {user && !isAdmin && applicationStatus === 'not_applied' && (
+          recruitmentOpen ? (
+            !applicationType ? (
+              <div className="mt-6 grid grid-cols-2 gap-4">
+                <button className="px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors" onClick={() => setApplicationType('interview')}>Apply with interview</button>
+                <button className="px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors" onClick={() => setApplicationType('no_interview')}>Apply without interview</button>
+              </div>
+            ) : (
+              <ApplicationForm onSubmit={handleApplicationSubmit} applicationType={applicationType} />
+            )
+          ) : (
+            <p className="mt-2">Recruitment is currently closed.</p>
+          )
         )}
       </main>
       <Footer />
