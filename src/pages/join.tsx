@@ -8,31 +8,38 @@ import { useRouter } from 'next/router'
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore'
 import ApplicationForm from '../components/ApplicationForm';
 
-export default function Join() {
+import { GetServerSideProps } from 'next'
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const docRef = doc(db, 'recruitment', 'status')
+  const docSnap = await getDoc(docRef)
+  let recruitmentOpen = false
+  if (docSnap.exists()) {
+    const data = docSnap.data()
+    const now = new Date()
+    const startDate = new Date(data.startDate)
+    const endDate = new Date(data.endDate)
+    recruitmentOpen = data.isOpen && now >= startDate && now <= endDate
+  }
+  return {
+    props: {
+      initialRecruitmentOpen: recruitmentOpen,
+    },
+  }
+}
+
+export default function Join({ initialRecruitmentOpen }: { initialRecruitmentOpen: boolean }) {
   const AUTHORIZED = ['s-zeina.tawab@zewailcity.edu.eg', 'mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg']
   const router = useRouter();
   const [user, setUser] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [applicationStatus, setApplicationStatus] = useState<'loading' | 'not_applied' | 'applied' | 'rejected' | 'accepted'>('loading')
   const [applicationType, setApplicationType] = useState<'interview' | 'no_interview' | null>(null)
-  const [recruitmentOpen, setRecruitmentOpen] = useState(false)
+  const [recruitmentOpen, setRecruitmentOpen] = useState(initialRecruitmentOpen)
   const [interview, setInterview] = useState<any>(null)
   const [selectedSlot, setSelectedSlot] = useState('')
 
   useEffect(()=> {
-    const fetchRecruitmentStatus = async () => {
-      const docRef = doc(db, 'recruitment', 'status')
-      const docSnap = await getDoc(docRef)
-      if (docSnap.exists()) {
-        const data = docSnap.data()
-        const now = new Date()
-        const startDate = new Date(data.startDate)
-        const endDate = new Date(data.endDate)
-        setRecruitmentOpen(data.isOpen && now >= startDate && now <= endDate)
-      }
-    }
-    fetchRecruitmentStatus()
-
     onAuthStateChanged(auth, async u => {
       setUser(u)
       if (u) {
