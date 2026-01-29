@@ -1,107 +1,168 @@
 import Link from 'next/link'
 import Logo from './Logo'
 import { useState, useEffect } from 'react'
-import { auth } from '../lib/firebase'
-import { onAuthStateChanged } from 'firebase/auth'
+import { useRouter } from 'next/router'
+import { useAdmin } from '../hooks/useAdmin'
 import { signOut } from '../lib/auth'
 
-const AUTHORIZED = ['s-zeina.tawab@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg']
+const NAV_LINKS = [
+  { href: '/about', label: 'About' },
+  { href: '/events', label: 'Events' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/opportunities', label: 'Opportunities' },
+  { href: '/tools', label: 'Resources' },
+  { href: '/team', label: 'Team' },
+  { href: '/join', label: 'Join' },
+]
 
-export default function Navbar(){
-  const [user, setUser] = useState<any>(null)
+export default function Navbar() {
+  const { user, isAdmin } = useAdmin()
+  const router = useRouter()
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(false)
 
-  useEffect(()=> {
-    const unsubscribe = onAuthStateChanged(auth, u => {
-      setUser(u)
-      if (u) {
-        setIsAdmin(AUTHORIZED.includes(u.email))
-      } else {
-        setIsAdmin(false)
-      }
-    })
-
+  useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) { // Adjust scroll threshold as needed
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      unsubscribe();
-      window.removeEventListener('scroll', handleScroll);
-    };
+      setScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const navPadding = scrolled ? 'py-1' : 'py-4';
-  const linkTextSize = scrolled ? 'text-base' : 'text-lg';
-  const loginButtonPadding = scrolled ? 'px-3 py-1' : 'px-4 py-2';
+  const navClasses = scrolled
+    ? 'bg-featured-blue shadow-lg py-3'
+    : 'bg-featured-blue py-6'
 
   return (
-    <nav className={`fixed w-full bg-featured-blue/90 backdrop-blur z-50 transition-all duration-300 ${navPadding}`}>
+    <nav className={`fixed w-full z-50 transition-all duration-500 ${navClasses}`}>
       <div className="px-6 flex items-center justify-between">
-        <Link href="/" legacyBehavior><a><Logo scrolled={scrolled} /></a></Link>
-        <div className="hidden md:flex gap-6 items-center">
-          <Link href="/events" legacyBehavior><a className={`font-bold text-white hover:text-featured-green transition-colors duration-300 ${linkTextSize}`}>Events</a></Link>
-          <Link href="/projects" legacyBehavior><a className={`font-bold text-white hover:text-featured-green transition-colors duration-300 ${linkTextSize}`}>Projects</a></Link>
-          <Link href="/team" legacyBehavior><a className={`font-bold text-white hover:text-featured-green transition-colors duration-300 ${linkTextSize}`}>Team</a></Link>
-          <Link href="/join" legacyBehavior><a className={`font-bold text-white hover:text-featured-green transition-colors duration-300 ${linkTextSize}`}>Join</a></Link>
-          <Link href="/contact" legacyBehavior><a className={`font-bold text-white hover:text-featured-green transition-colors duration-300 ${linkTextSize}`}>Contact</a></Link>
+        <Link href="/" legacyBehavior>
+          <a className="relative z-50"><Logo scrolled={scrolled} /></a>
+        </Link>
+
+        {/* Desktop Menu */}
+        <div className="hidden md:flex gap-8 items-center">
+          {NAV_LINKS.map(link => {
+            const isActive = router.pathname === link.href;
+            return (
+              <Link key={link.href} href={link.href} legacyBehavior>
+                <a className={`relative font-bold text-sm tracking-wide transition-colors duration-300 group ${isActive ? 'text-white' : 'text-white/70 hover:text-white'}`}>
+                  {link.label}
+                  <span className={`absolute -bottom-2 left-0 w-full h-0.5 bg-featured-green transform origin-left transition-transform duration-300 ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
+                </a>
+              </Link>
+            )
+          })}
+
           {user ? (
             <div className="relative">
-              <button onClick={() => setDropdownOpen(!dropdownOpen)} className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                {user.displayName ? user.displayName[0] : 'U'}
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white font-bold border border-white/20 hover:bg-white/20 hover:border-white/40 transition-all shadow-md"
+              >
+                {user.displayName ? user.displayName[0].toUpperCase() : 'U'}
               </button>
+
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
-                  <Link href="/account" legacyBehavior><a className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Account Settings</a></Link>
-                  {isAdmin && <Link href="/admin" legacyBehavior><a className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Admin</a></Link>}
-                  <button onClick={signOut} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
+                <div className="absolute right-0 mt-4 w-60 bg-white rounded-[32px] shadow-2xl py-4 overflow-hidden animate-fade-in border border-slate-100">
+                  <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/50">
+                    <p className="text-sm text-slate-900 font-black uppercase tracking-tight truncate">{user.displayName || 'User'}</p>
+                    <p className="text-[10px] text-slate-400 font-bold truncate">{user.email}</p>
+                  </div>
+                  <div className="p-2">
+                    <Link href="/dashboard" legacyBehavior>
+                        <a className="block px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 hover:text-featured-blue transition-colors font-bold rounded-2xl">Dashboard</a>
+                    </Link>
+                    {isAdmin && (
+                        <Link href="/admin" legacyBehavior>
+                        <a className="block px-4 py-3 text-sm text-featured-blue hover:bg-slate-50 font-bold rounded-2xl">Admin Portal</a>
+                        </Link>
+                    )}
+                    <div className="border-t border-slate-50 mt-2 pt-2">
+                        <button
+                        onClick={() => signOut()}
+                        className="block w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors font-bold rounded-2xl"
+                        >
+                        Logout
+                        </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           ) : (
-            <Link href="/join" legacyBehavior><a className={`rounded-md bg-featured-green text-white font-bold hover:bg-hover-blue transition-colors duration-300 ${linkTextSize} ${loginButtonPadding}`}>Login</a></Link>
+            <Link href="/join" legacyBehavior>
+              <a className="px-6 py-2.5 rounded-full bg-white text-featured-blue font-bold text-sm hover:bg-featured-green hover:text-white transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                Join Us
+              </a>
+            </Link>
           )}
         </div>
-        <div className="md:hidden flex items-center">
+
+        {/* Mobile Menu Button */}
+        <div className="md:hidden flex items-center gap-4 relative z-50">
           {user && (
-            <div className="relative mr-4">
-              <button onClick={() => setDropdownOpen(!dropdownOpen)} className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                {user.displayName ? user.displayName[0] : 'U'}
-              </button>
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
-                  <Link href="/account" legacyBehavior><a className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Account Settings</a></Link>
-                  {isAdmin && <Link href="/admin" legacyBehavior><a className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Admin</a></Link>}
-                  <button onClick={signOut} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
-                </div>
-              )}
-            </div>
+            <Link href="/dashboard" legacyBehavior>
+              <a className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white/20">
+                {user.displayName ? user.displayName[0].toUpperCase() : 'U'}
+              </a>
+            </Link>
           )}
-          <button onClick={() => setMenuOpen(!menuOpen)}>
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
+          <button onClick={() => setMenuOpen(!menuOpen)} className="text-white p-1">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {menuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+              )}
+            </svg>
           </button>
         </div>
       </div>
-      {menuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link href="/events" legacyBehavior><a className="block px-3 py-2 rounded-md text-base font-medium text-white hover:text-featured-green hover:bg-white/10">Events</a></Link>
-            <Link href="/projects" legacyBehavior><a className="block px-3 py-2 rounded-md text-base font-medium text-white hover:text-featured-green hover:bg-white/10">Projects</a></Link>
-            <Link href="/team" legacyBehavior><a className="block px-3 py-2 rounded-md text-base font-medium text-white hover:text-featured-green hover:bg-white/10">Team</a></Link>
-            <Link href="/join" legacyBehavior><a className="block px-3 py-2 rounded-md text-base font-medium text-white hover:text-featured-green hover:bg-white/10">Join</a></Link>
-            <Link href="/contact" legacyBehavior><a className="block px-3 py-2 rounded-md text-base font-medium text-white hover:text-featured-green hover:bg-white/10">Contact</a></Link>
-          </div>
+
+      {/* Mobile Menu Overlay */}
+      <div className={`fixed inset-0 bg-featured-blue z-40 transition-transform duration-300 md:hidden flex flex-col pt-32 px-6 ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="space-y-6">
+          {NAV_LINKS.map(link => {
+            const isActive = router.pathname === link.href;
+            return (
+              <Link key={link.href} href={link.href} legacyBehavior>
+                <a 
+                  className={`block text-2xl font-bold ${isActive ? 'text-white' : 'text-white/60'} hover:text-white transition-colors`} 
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {link.label}
+                </a>
+              </Link>
+            )
+          })}
+          
+          <div className="h-px bg-white/10 my-8"></div>
+          
+          {user ? (
+            <>
+              <Link href="/dashboard" legacyBehavior>
+                <a className="block text-xl font-bold text-white mb-6">Dashboard</a>
+              </Link>
+              {isAdmin && (
+                <Link href="/admin" legacyBehavior>
+                  <a className="block text-xl font-bold text-featured-green mb-6">Admin Portal</a>
+                </Link>
+              )}
+              <button onClick={() => signOut()} className="block text-xl font-bold text-red-300">
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link href="/join" legacyBehavior>
+              <a className="block w-full text-center py-4 rounded-full bg-white text-featured-blue font-black uppercase tracking-widest text-sm shadow-lg">
+                Join Now
+              </a>
+            </Link>
+          )}
         </div>
-      )}
+      </div>
     </nav>
   )
 }

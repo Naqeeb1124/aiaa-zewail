@@ -41,10 +41,9 @@ const handleUpload = async (req: NextApiRequest, res: NextApiResponse) => {
     });
 
     const result = await cloudinary.uploader.upload(file.filepath, {
-      // Folders can be used to organize assets in Cloudinary
-      // folder: 'aiaa-uploads', 
-      // You can also specify allowed formats or other upload options here
-      // allowed_formats: ['png', 'jpg', 'pdf', 'docx'],
+      folder: 'aiaa-zewail-applications',
+      resource_type: 'auto',
+      flags: 'attachment', // Encourages browsers to download or handle as document
     });
 
     return res.status(200).json({ url: result.secure_url });

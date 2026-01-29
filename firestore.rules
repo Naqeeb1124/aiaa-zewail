@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+    }
+
+    // --- Public Content (Read Only for Everyone, Write for Admins) ---
+    match /announcements/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /events/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /projects/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+      
+      // Allow reading members subcollection
+      match /members/{memberId} {
+      	allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    // --- Join Requests ---
+    match /joinRequests/{requestId} {
+      // Users can read their own requests, Admins can read all
+      allow read: if request.auth != null && (request.auth.uid == requestId.split('_')[0] || isAdmin());
+      // Users can create requests for themselves
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Only admins can update status (users can cancel? maybe later)
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || (request.auth != null && requestId.split('_')[0] == request.auth.uid); 
+    }
+
+    // --- User Data ---
+    // Users: Read/Write own profile, Read for admins
+    match /users/{userId} {
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      // Allow user to write own, OR admin to write (for approving requests/updating profile)
+      allow write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+    }
+
+    // Applications: Read/Write own application
+    match /applications/{userId} {
+      allow read, write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+    }
+
+    // Interviews: Read/Write own interview
+    match /interviews/{userId} {
+      allow read, write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+    }
+
+    // Registrations: Read/Write own registration
+    match /registrations/{regId} {
+      allow read: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.userId);
+    }
+
+    // Members: Publicly readable, write for admins
+    match /members/{memberId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- Admin & System ---
+    // Admins: Read own admin status
+    match /admins/{email} {
+      allow read: if request.auth != null && request.auth.token.email == email;
+      allow write: if false; 
+    }
+
+    // Recruitment Status: Publicly readable
+    match /recruitment/status {
+      allow read: if true;
+      allow write: if isAdmin(); 
+    }
+
+    match /opportunities/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

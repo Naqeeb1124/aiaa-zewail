@@ -22,28 +22,29 @@ const FeatureCard = ({ announcement }: { announcement: Announcement }) => {
   const previewText = body.length > 100 ? `${body.substring(0, 100)}...` : body;
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+    <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1 group">
       <Link href={`/announcements/${announcement.id}`}>
-        <div className="relative w-full cursor-pointer" style={{ paddingTop: '56.25%' }}>
+        <div className="relative w-full cursor-pointer overflow-hidden" style={{ paddingTop: '56.25%' }}>
           <Image
             src={announcement.imageUrl || "/announcements-placeholder-image.jpeg"}
             alt={headline}
             layout="fill"
             objectFit="cover"
-            loader={imageLoader}
+            loader={announcement.imageUrl?.includes('cloudinary.com') ? undefined : imageLoader}
+            className="group-hover:scale-110 transition-transform duration-700"
           />
         </div>
       </Link>
-      <div className="p-6 flex-grow flex flex-col">
-        <h3 className="text-xl font-bold text-featured-blue">{headline}</h3>
-        <p className="text-sm text-gray-500 mt-2">
+      <div className="p-8 flex-grow flex flex-col">
+        <h3 className="text-xl font-black text-featured-blue uppercase tracking-tight mb-2 leading-tight">{headline}</h3>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
           {announcement.createdAt.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
-        <p className="text-gray-600 mt-4 flex-grow">
+        <p className="text-slate-600 text-sm leading-relaxed mb-6 flex-grow font-medium">
           {previewText}
         </p>
-        <Link href={`/announcements/${announcement.id}`} className="text-featured-green font-semibold mt-4 self-start hover:text-hover-blue transition-colors">
-          READ MORE →
+        <Link href={`/announcements/${announcement.id}`} className="text-featured-green font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:gap-3 transition-all">
+          READ MORE <span className="text-lg">→</span>
         </Link>
       </div>
     </div>
@@ -68,11 +69,18 @@ const FeaturedAnnouncements = () => {
   }, []);
 
   return (
-    <section className="py-12 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-12">
-          Featured
-        </h2>
+    <section className="py-24 bg-slate-50">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+            <div>
+                <span className="inline-block px-3 py-1 rounded-full bg-featured-blue/10 text-featured-blue border border-featured-blue/20 text-[10px] font-black mb-4 uppercase tracking-widest">
+                    The Bulletin
+                </span>
+                <h2 className="text-3xl md:text-4xl font-black text-slate-900 uppercase tracking-tighter">
+                    Latest <span className="text-featured-blue">News</span>
+                </h2>
+            </div>
+        </div>
         {announcements.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {announcements.map(ann => (
@@ -80,7 +88,9 @@ const FeaturedAnnouncements = () => {
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500">Announcements will appear here.</p>
+          <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-slate-200">
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Announcements will appear here.</p>
+          </div>
         )}
       </div>
     </section>

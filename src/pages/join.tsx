@@ -1,14 +1,14 @@
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { signInWithGoogle } from '../lib/auth'
-import { useState, useEffect } from 'react'
-import { auth, db } from '../lib/firebase'
-import { onAuthStateChanged } from 'firebase/auth'
-import { useRouter } from 'next/router'
-import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore'
+import {signInWithGoogle} from '../lib/auth'
+import {useState, useEffect} from 'react'
+import {auth, db} from '../lib/firebase'
+import {onAuthStateChanged} from 'firebase/auth'
+import {useRouter} from 'next/router'
+import {doc, getDoc, setDoc, updateDoc, onSnapshot} from 'firebase/firestore'
 import ApplicationForm from '../components/ApplicationForm';
 
-import { GetServerSideProps } from 'next'
+import {GetServerSideProps} from 'next'
 
 export const getServerSideProps: GetServerSideProps = async () => {
   const docRef = doc(db, 'recruitment', 'status')
@@ -28,7 +28,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
   }
 }
 
-export default function Join({ initialRecruitmentOpen }: { initialRecruitmentOpen: boolean }) {
+export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: boolean}) {
   const AUTHORIZED = ['s-zeina.tawab@zewailcity.edu.eg', 'mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg']
   const router = useRouter();
   const [user, setUser] = useState<any>(null)
@@ -46,6 +46,28 @@ export default function Join({ initialRecruitmentOpen }: { initialRecruitmentOpe
         if (AUTHORIZED.includes(u.email)) {
           setIsAdmin(true)
         }
+
+        // Ensure user document exists in Firestore
+        const userRef = doc(db, "users", u.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (!userSnap.exists()) {
+          // Create initial user profile
+          await setDoc(userRef, {
+            name: u.displayName || 'Anonymous User',
+            email: u.email,
+            joinedAt: new Date().toISOString(),
+            points: 0,
+            role: 'user'
+          });
+        } else {
+          // Just update name/email in case they changed
+          await setDoc(userRef, {
+            name: u.displayName || userSnap.data().name,
+            email: u.email
+          }, { merge: true });
+        }
+
         const docRef = doc(db, "applications", u.uid)
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
           if (docSnap.exists()) {
@@ -204,86 +226,166 @@ export default function Join({ initialRecruitmentOpen }: { initialRecruitmentOpe
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-slate-50">
       <Navbar />
-      <main style={{ paddingTop: '240px' }} className="max-w-3xl mx-auto p-6">
-        <h1 className="text-3xl font-bold">Join AIAA — Zewail City</h1>
-        {!user && (
-          <div>
-            <p className="mt-2">Sign in with your Google account to register as a member.</p>
-            <button className="mt-6 px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors" onClick={signInWithGoogle}>Sign in with Google</button>
-          </div>
-        )}
-        {user && isAdmin && (
-          <p className="mt-2">You are an administrator. You do not need to apply.</p>
-        )}
-        {user && !isAdmin && applicationStatus === 'loading' && <p className="mt-2">Loading application status...</p>}
-        {user && !isAdmin && applicationStatus === 'applied' && (
-          <div>
-            <p className="mt-2">Thank you for applying! We have received your application and will get back to you soon.</p>
-            <button className="mt-6 px-4 py-2 rounded bg-[#0033A0] text-white" onClick={() => router.push('/')}>Go to Homepage</button>
-          </div>
-        )}
-        {user && !isAdmin && applicationStatus === 'rejected' && (
-          <div>
-            <p className="mt-2">We regret to inform you that your application has been rejected. We encourage you to apply again in the next recruitment cycle.</p>
-            <button className="mt-6 px-4 py-2 rounded bg-[#0033A0] text-white" onClick={() => router.push('/')}>Go to Homepage</button>
-          </div>
-        )}
-        {user && !isAdmin && applicationStatus === 'accepted' && (
-          <div>
-            <p className="mt-2">Congratulations! Your application has been accepted. Welcome to the team!</p>
-            <button className="mt-6 px-4 py-2 rounded bg-[#0033A0] text-white" onClick={() => router.push('/')}>Go to Homepage</button>
-          </div>
-        )}
-        {interview && interview.status === 'pending' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && (
-          <div className="mt-6 bg-white p-6 rounded-lg shadow">
-            <h2 className="text-2xl font-bold mb-4">Schedule Your Interview</h2>
-            <p className="mb-2"><strong>Location:</strong> {interview.location}</p>
-            <p className="mb-4">Please select one of the available time slots:</p>
-            <div className="flex flex-col gap-2">
-              {interview.availableSlots.map((slot: string) => (
-                <label key={slot} className="flex items-center">
-                  <input
-                    type="radio"
-                    name="interview-slot"
-                    value={slot}
-                    checked={selectedSlot === slot}
-                    onChange={(e) => setSelectedSlot(e.target.value)}
-                    className="mr-2"
-                  />
-                  {new Date(slot).toLocaleString()}
-                </label>
-              ))}
+      
+      {/* Hero Section */}
+      <section className="pt-32 md:pt-72 pb-16 md:pb-20 bg-featured-blue text-white text-center">
+        <div className="max-w-4xl mx-auto px-6">
+          <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight uppercase tracking-tighter">
+            Join the <span className="text-white/70 italic">Mission</span>
+          </h1>
+          <p className="text-lg md:text-xl text-white/80 leading-relaxed font-medium">
+            Become a part of the world's largest aerospace professional society at Zewail City.
+          </p>
+        </div>
+      </section>
+
+      <main className="max-w-4xl mx-auto px-6 py-12 md:py-20">
+        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-slate-100">
+          {!user && (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-blue-50 text-featured-blue rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">👤</div>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Registration</h2>
+              <p className="text-slate-600 mb-8 max-w-sm mx-auto">Please sign in with your Zewail City Google account to register as a member and access the application form.</p>
+              <button 
+                className="px-8 py-4 rounded-full bg-featured-blue text-white font-bold text-lg hover:bg-featured-green transition-all shadow-lg hover:shadow-featured-blue/30 flex items-center justify-center gap-3 mx-auto transform hover:-translate-y-0.5" 
+                onClick={signInWithGoogle}
+              >
+                Sign in with Google
+              </button>
             </div>
-            <button onClick={handleConfirmSlot} className="bg-blue-500 text-white px-4 py-2 rounded mt-4">
-              Confirm Slot
-            </button>
-          </div>
-        )}
-        {interview && interview.status === 'scheduled' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && (
-            <div className="mt-6 bg-white p-6 rounded-lg shadow">
-                <h2 className="text-2xl font-bold mb-4">Interview Scheduled</h2>
-                <p>Your interview is scheduled for <strong>{new Date(interview.selectedSlot).toLocaleString()}</strong> {interview.location.toLowerCase() === 'online' ? 'online' : `at <strong>${interview.location}</strong>`}.</p>
+          )}
+
+          {user && isAdmin && (
+            <div className="text-center py-12">
+               <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">🛡️</div>
+               <h2 className="text-2xl font-bold text-slate-900 mb-2">Admin Account</h2>
+               <p className="text-slate-500">You are logged in as an administrator. You do not need to submit a membership application.</p>
+               <button onClick={() => router.push('/admin')} className="mt-8 px-8 py-3 bg-slate-900 text-white rounded-full font-bold hover:bg-featured-blue transition-all shadow-lg transform hover:-translate-y-0.5">Go to Admin Portal</button>
             </div>
-        )}
-        {user && !isAdmin && applicationStatus === 'not_applied' && (
-          recruitmentOpen ? (
-            !applicationType ? (
-              <div className="mt-6 grid grid-cols-2 gap-4">
-                <button className="px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors" onClick={() => setApplicationType('interview')}>Apply with interview</button>
-                <button className="px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors" onClick={() => setApplicationType('no_interview')}>Apply without interview</button>
+          )}
+
+          {user && !isAdmin && applicationStatus === 'loading' && (
+            <div className="text-center py-12 animate-pulse">
+              <p className="text-slate-400 font-bold uppercase tracking-widest">Checking status...</p>
+            </div>
+          )}
+
+          {user && !isAdmin && applicationStatus === 'applied' && (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-blue-50 text-featured-blue rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">✉️</div>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Application Received!</h2>
+              <p className="text-slate-600 mb-8 max-w-sm mx-auto font-medium">Thank you for applying. We have received your application and our team is currently reviewing it. We will contact you via email soon.</p>
+              <button className="px-10 py-3 rounded-full bg-featured-blue text-white font-bold hover:bg-featured-green transition-all shadow-lg transform hover:-translate-y-0.5" onClick={() => router.push('/')}>Return Home</button>
+            </div>
+          )}
+
+          {user && !isAdmin && applicationStatus === 'rejected' && (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">✖</div>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Application Status</h2>
+              <p className="text-slate-600 mb-8 max-w-sm mx-auto font-medium">We regret to inform you that your application has been rejected for this cycle. We encourage you to try again next semester!</p>
+              <button className="px-10 py-3 rounded-full bg-slate-900 text-white font-bold hover:bg-featured-blue transition-all shadow-lg transform hover:-translate-y-0.5" onClick={() => router.push('/')}>Return Home</button>
+            </div>
+          )}
+
+          {user && !isAdmin && applicationStatus === 'accepted' && (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">★</div>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Welcome to AIAA!</h2>
+              <p className="text-slate-600 mb-8 max-w-sm mx-auto font-medium">Congratulations! Your application has been accepted. You are now an official member of the AIAA Zewail City Student Branch.</p>
+              <button className="px-10 py-3 rounded-full bg-featured-green text-white font-bold hover:bg-featured-blue transition-all shadow-lg transform hover:-translate-y-0.5" onClick={() => router.push('/dashboard')}>Go to Dashboard</button>
+            </div>
+          )}
+
+          {/* Interview Scheduling */}
+          {interview && interview.status === 'pending' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && (
+            <div className="mt-6 bg-slate-50 p-8 rounded-3xl border border-slate-100">
+              <h2 className="text-2xl font-bold mb-6 text-slate-800">Schedule Your Interview</h2>
+              <div className="flex items-center gap-4 mb-8 p-4 bg-white rounded-xl border border-slate-100">
+                <div className="w-12 h-12 bg-blue-100 text-featured-blue rounded-full flex items-center justify-center text-xl">📍</div>
+                <div>
+                   <p className="text-xs font-bold text-slate-400 uppercase">Location</p>
+                   <p className="font-bold text-slate-700">{interview.location}</p>
+                </div>
               </div>
+
+              <p className="font-bold text-slate-700 mb-4">Select a time slot:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+                {interview.availableSlots.map((slot: string) => (
+                  <label key={slot} className={`flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedSlot === slot ? 'border-featured-blue bg-blue-50 text-featured-blue' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                    <input
+                      type="radio"
+                      name="interview-slot"
+                      value={slot}
+                      checked={selectedSlot === slot}
+                      onChange={(e) => setSelectedSlot(e.target.value)}
+                      className="hidden"
+                    />
+                    <span className="font-bold text-sm uppercase tracking-tighter">{new Date(slot).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                  </label>
+                ))}
+              </div>
+              <button onClick={handleConfirmSlot} className="w-full py-4 bg-featured-blue text-white rounded-full font-black uppercase tracking-widest text-sm shadow-lg hover:bg-featured-green transition-all transform hover:-translate-y-0.5">
+                Confirm Interview Slot
+              </button>
+            </div>
+          )}
+
+          {interview && interview.status === 'scheduled' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && (
+              <div className="mt-6 bg-green-50 p-10 rounded-[32px] border border-green-100 text-center">
+                  <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">📅</div>
+                  <h2 className="text-2xl font-black text-green-800 mb-2">Interview Scheduled</h2>
+                  <p className="text-green-700 font-medium">Your interview is confirmed for <strong>{new Date(interview.selectedSlot).toLocaleString()}</strong>.</p>
+                  <p className="text-sm text-green-600 mt-4 font-bold uppercase tracking-wider">{interview.location.toLowerCase() === 'online' ? 'Meeting link will be sent via email' : `Location: ${interview.location}`}</p>
+              </div>
+          )}
+
+          {user && !isAdmin && applicationStatus === 'not_applied' && (
+            recruitmentOpen ? (
+              !applicationType ? (
+                <div className="py-8">
+                  <h2 className="text-3xl font-black text-slate-900 mb-2 text-center tracking-tight">Application Type</h2>
+                  <p className="text-slate-500 text-center mb-12 font-medium">Choose how you would like to apply. Technical roles usually require an interview.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <button 
+                      className="p-10 rounded-[32px] bg-slate-50 border-2 border-slate-100 hover:border-featured-blue hover:bg-white transition-all text-left group hover:shadow-2xl hover:shadow-featured-blue/5 transform hover:-translate-y-1" 
+                      onClick={() => setApplicationType('interview')}
+                    >
+                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-sm group-hover:bg-featured-blue group-hover:text-white transition-all duration-500">🎤</div>
+                      <h3 className="text-xl font-black text-slate-800 mb-2 uppercase tracking-tight">Apply with Interview</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed font-medium">Recommended for Technical, HR, and Leadership positions.</p>
+                    </button>
+                    <button 
+                      className="p-10 rounded-[32px] bg-slate-50 border-2 border-slate-100 hover:border-featured-blue hover:bg-white transition-all text-left group hover:shadow-2xl hover:shadow-featured-blue/5 transform hover:-translate-y-1" 
+                      onClick={() => setApplicationType('no_interview')}
+                    >
+                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-sm group-hover:bg-featured-blue group-hover:text-white transition-all duration-500">📝</div>
+                      <h3 className="text-xl font-black text-slate-800 mb-2 uppercase tracking-tight">Apply without Interview</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed font-medium">Fast-track for general membership and supportive roles.</p>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                   <button onClick={() => setApplicationType(null)} className="mb-8 text-xs font-black text-featured-blue flex items-center gap-2 hover:gap-3 transition-all uppercase tracking-widest">
+                      ← Back to Selection
+                   </button>
+                   <ApplicationForm onSubmit={handleApplicationSubmit} applicationType={applicationType} />
+                </div>
+              )
             ) : (
-              <ApplicationForm onSubmit={handleApplicationSubmit} applicationType={applicationType} />
+              <div className="text-center py-16">
+                <div className="w-20 h-20 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">🔒</div>
+                <h2 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">Recruitment Closed</h2>
+                <p className="text-slate-500 font-medium max-w-xs mx-auto">Applications are currently closed. Please follow our social media for announcements about the next cycle.</p>
+              </div>
             )
-          ) : (
-            <p className="mt-2">Recruitment is currently closed.</p>
-          )
-        )}
+          )}
+        </div>
       </main>
       <Footer />
     </div>
   )
 }
-
