@@ -6,6 +6,7 @@ import { collection, getDocs, query, orderBy, doc, getDoc, onSnapshot } from 'fi
 import { createJoinRequest } from '../lib/projects'
 import { Project } from '../types/project'
 import { UserProfile } from '../types/user'
+import Link from 'next/link'
 
 
 export default function Projects() {

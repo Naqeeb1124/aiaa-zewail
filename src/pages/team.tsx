@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { db } from '../lib/firebase'
 import { doc, getDoc } from 'firebase/firestore'
 import { GetServerSideProps } from 'next'
+import Link from 'next/link'
 
 // --- Team Member Data ---
 // To add a new member, simply add an object to this list!

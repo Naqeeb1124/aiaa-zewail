@@ -4,6 +4,7 @@ import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firesto
 import AdminGuard from '../../components/AdminGuard';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import Link from 'next/link';
 
 interface InterviewItem {
     id: string;
