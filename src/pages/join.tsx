@@ -1,7 +1,7 @@
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import {signInWithGoogle} from '../lib/auth'
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useMemo} from 'react'
 import {auth, db} from '../lib/firebase'
 import {onAuthStateChanged} from 'firebase/auth'
 import {useRouter} from 'next/router'
@@ -29,7 +29,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
 }
 
 export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: boolean}) {
-  const AUTHORIZED = ['s-zeina.tawab@zewailcity.edu.eg', 'mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg']
+  const AUTHORIZED = useMemo(() => ['s-zeina.tawab@zewailcity.edu.eg', 'mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg'], [])
   const router = useRouter();
   const [user, setUser] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -89,7 +89,7 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
         setApplicationStatus('not_applied')
       }
     })
-  }, [])
+  }, [AUTHORIZED])
 
   const handleConfirmSlot = async () => {
     if (!selectedSlot) {
@@ -236,7 +236,7 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
             Join the <span className="text-white/70 italic">Mission</span>
           </h1>
           <p className="text-lg md:text-xl text-white/80 leading-relaxed font-medium">
-            Become a part of the world's largest aerospace professional society at Zewail City.
+            Become a part of the world&apos;s largest aerospace professional society at Zewail City.
           </p>
         </div>
       </section>

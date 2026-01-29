@@ -39,7 +39,7 @@ export default function Contact() {
             Get in <span className="text-white/70 italic">Touch</span>
           </h1>
           <p className="text-lg md:text-xl text-white/80 leading-relaxed font-medium">
-            Have questions about membership, projects, or partnerships? We'd love to hear from you.
+            Have questions about membership, projects, or partnerships? We&apos;d love to hear from you.
           </p>
         </div>
       </section>

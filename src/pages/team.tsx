@@ -152,9 +152,11 @@ export default function Team({ recruitmentOpen }: { recruitmentOpen: boolean }) 
               <p className="text-slate-600 mb-10 max-w-xl mx-auto text-lg leading-relaxed">
                 We are always looking for passionate individuals to lead our initiatives. Join us and start your journey today.
               </p>
-              <a href="/join" className="inline-block px-10 py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-sm hover:bg-featured-green transition-all shadow-xl transform hover:-translate-y-0.5">
-                Apply Now
-              </a>
+              <Link href="/join" legacyBehavior>
+                <a className="inline-block px-10 py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-sm hover:bg-featured-green transition-all shadow-xl transform hover:-translate-y-0.5">
+                  Apply Now
+                </a>
+              </Link>
             </div>
           ) : (
             <div className="mt-24 text-center bg-slate-100 p-12 md:p-20 rounded-[40px] border border-slate-200 relative overflow-hidden">

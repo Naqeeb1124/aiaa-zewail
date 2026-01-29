@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
@@ -34,7 +34,7 @@ export default function Dashboard() {
         }
     }, [router.query.tab]);
 
-    const fetchUserData = async () => {
+    const fetchUserData = useCallback(async () => {
         if (user?.uid) {
             try {
                 // Fetch profile
@@ -85,11 +85,11 @@ export default function Dashboard() {
                 console.error("Error fetching user data:", error);
             }
         }
-    };
+    }, [user]);
 
     useEffect(() => {
         fetchUserData();
-    }, [user]);
+    }, [fetchUserData]);
 
     const handleDeleteRegistration = async (regId: string) => {
         if (!confirm('Are you sure you want to cancel this event registration?')) return;

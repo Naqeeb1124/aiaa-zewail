@@ -221,9 +221,11 @@ export default function Projects() {
             <p className="text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed text-lg font-medium">
               We provide the resources, mentorship, and community to turn your aerospace concepts into reality. Our project proposals are always open for members.
             </p>
-            <a href="/contact" className="inline-block px-10 py-4 rounded-full bg-featured-green text-white font-bold text-lg hover:bg-white hover:text-featured-blue transition-all shadow-xl transform hover:-translate-y-0.5">
-              Pitch Your Idea
-            </a>
+            <Link href="/contact" legacyBehavior>
+              <a className="inline-block px-10 py-4 rounded-full bg-featured-green text-white font-bold text-lg hover:bg-white hover:text-featured-blue transition-all shadow-xl transform hover:-translate-y-0.5">
+                Pitch Your Idea
+              </a>
+            </Link>
           </div>
         </div>
       </main>

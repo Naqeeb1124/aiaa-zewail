@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function HeroEgypt() {
   return (
@@ -11,7 +12,7 @@ export default function HeroEgypt() {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-featured-blue/10 text-featured-blue border border-featured-blue/20 text-xs font-bold mb-6 uppercase tracking-wider">
             <span className="w-2 h-2 rounded-full bg-featured-green animate-pulse"></span>
-            Egypt's Only Active AIAA Student Branch
+            Egypt&apos;s Only Active AIAA Student Branch
           </div>
 
           <h1 className="text-4xl md:text-6xl font-extrabold leading-tight text-featured-blue mb-6">
@@ -20,7 +21,7 @@ export default function HeroEgypt() {
           </h1>
 
           <p className="text-lg md:text-xl text-slate-600 mb-8 leading-relaxed">
-            Connecting aerospace-minded students at Zewail City with projects, events, and the global industry. We are the national gateway to the world's largest aerospace society.
+            Connecting aerospace-minded students at Zewail City with projects, events, and the global industry. We are the national gateway to the world&apos;s largest aerospace society.
           </p>
 
           <div className="flex flex-wrap gap-4">
@@ -40,10 +41,12 @@ export default function HeroEgypt() {
         <div className="relative hidden md:flex items-center justify-center">
           <div className="w-full max-w-md relative aspect-square">
             {/* The SVG Map from file */}
-            <img 
+            <Image 
               src="/egypt.svg" 
               alt="Map of Egypt" 
-              className="w-full h-full object-contain relative z-10" 
+              layout="fill"
+              objectFit="contain"
+              className="relative z-10" 
             />
             
             {/* Zewail City Marker */}

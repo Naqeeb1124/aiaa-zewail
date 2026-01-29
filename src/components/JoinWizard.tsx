@@ -133,7 +133,7 @@ export default function JoinWizard({ onSubmit, applicationType }: { onSubmit: (d
     const renderStep2 = () => (
         <div className="space-y-6 animate-fadeIn">
             <h2 className="text-2xl font-bold text-white">Team Preference</h2>
-            <p className="text-slate-400">Select up to 2 teams you're interested in.</p>
+            <p className="text-slate-400">Select up to 2 teams you&apos;re interested in.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {['Technical', 'Marketing & Media', 'PR & Events', 'HR', 'Finance'].map(team => (
                     <label key={team} className={`flex items-center p-4 rounded-lg border cursor-pointer transition-all ${formData.team.includes(team) ? 'bg-blue-600/20 border-blue-500' : 'bg-slate-800 border-slate-700 hover:border-slate-600'}`}>

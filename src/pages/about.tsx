@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Link from 'next/link';
+import Image from 'next/image';
 import { db } from '../lib/firebase';
 import { collection, getCountFromServer } from 'firebase/firestore';
 
@@ -34,10 +35,10 @@ export default function About() {
                             Who We Are
                         </span>
                         <h1 className="text-4xl md:text-7xl font-black mb-8 leading-tight uppercase tracking-tighter">
-                            Egypt's Aerospace <span className="text-white/70 italic">Powerhouse</span>
+                            Egypt&apos;s Aerospace <span className="text-white/70 italic">Powerhouse</span>
                         </h1>
                         <p className="text-lg md:text-2xl text-white/80 leading-relaxed font-medium">
-                            We are the only active AIAA student branch in Egypt, stationed at the country's premier hub for scientific research—Zewail City of Science and Technology.
+                            We are the only active AIAA student branch in Egypt, stationed at the country&apos;s premier hub for scientific research—Zewail City of Science and Technology.
                         </p>
                     </div>
                 </div>
@@ -48,11 +49,12 @@ export default function About() {
                 {/* Zewail City & Aerospace Section */}
                 <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-center mb-24 md:mb-40">
                     <div className="order-2 md:order-1">
-                        <div className="relative rounded-[40px] overflow-hidden shadow-2xl border border-slate-100 group">
-                             <img 
+                        <div className="relative rounded-[40px] overflow-hidden shadow-2xl border border-slate-100 group h-[300px] md:h-[600px]">
+                             <Image 
                                 src="/hero-mock.jpg" 
                                 alt="Zewail City Campus" 
-                                className="w-full h-[300px] md:h-[600px] object-cover transition-transform duration-700 group-hover:scale-105"
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent flex items-end p-8 md:p-12">
                                 <div>
@@ -71,7 +73,7 @@ export default function About() {
                                 Zewail City of Science and Technology stands as a beacon of scientific renaissance in Egypt. Within this ecosystem, the <strong className="text-slate-900">Aerospace Engineering Department</strong> offers a world-class curriculum designed to equip students with the theoretical depth and practical skills required for the modern aerospace sector.
                             </p>
                             <p>
-                                Our members tackle rigorous coursework ranging from <span className="italic font-bold text-featured-blue">Aerospace Structures</span> to advanced orbital mechanics. As a student branch, we complement this academic rigor by providing the "hands-on" dimension—transforming textbook equations into flying rockets, autonomous drones, and research papers.
+                                Our members tackle rigorous coursework ranging from <span className="italic font-bold text-featured-blue">Aerospace Structures</span> to advanced orbital mechanics. As a student branch, we complement this academic rigor by providing the &quot;hands-on&quot; dimension—transforming textbook equations into flying rockets, autonomous drones, and research papers.
                             </p>
                         </div>
                     </div>
@@ -83,7 +85,7 @@ export default function About() {
                         <div className="w-14 md:w-16 h-14 md:h-16 bg-slate-50 text-featured-blue rounded-[20px] flex items-center justify-center text-2xl md:text-3xl mb-8 md:mb-10 group-hover:bg-featured-blue group-hover:text-white transition-colors duration-500 shadow-inner">🚀</div>
                         <h3 className="text-xl font-black text-slate-900 mb-4 uppercase tracking-tight">Technical Mastery</h3>
                         <p className="text-slate-500 leading-relaxed font-medium text-sm md:text-base">
-                            We don't just study aerospace; we practice it. Our project teams work on sounding rockets, UAVs, and cubesats, applying engineering principles to real-world challenges.
+                            We don&apos;t just study aerospace; we practice it. Our project teams work on sounding rockets, UAVs, and cubesats, applying engineering principles to real-world challenges.
                         </p>
                     </div>
                     <div className="bg-white p-8 md:p-12 rounded-[40px] shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-2 group">
@@ -115,7 +117,7 @@ export default function About() {
                             </span>
                             <h3 className="text-3xl md:text-5xl font-black mb-6 md:mb-8 uppercase tracking-tighter leading-tight">Part of <br/> Something <span className="text-white/70 italic">Bigger</span></h3>
                             <p className="text-base md:text-lg text-white/80 leading-relaxed mb-8 md:mb-10 font-medium">
-                                Being part of AIAA Zewail City means joining a global family of over 30,000 members across 91 countries. The American Institute of Aeronautics and Astronautics (AIAA) is the world's largest technical society dedicated to the global aerospace profession.
+                                Being part of AIAA Zewail City means joining a global family of over 30,000 members across 91 countries. The American Institute of Aeronautics and Astronautics (AIAA) is the world&apos;s largest technical society dedicated to the global aerospace profession.
                             </p>
                             <a 
                                 href="https://www.aiaa.org/about-aiaa" 

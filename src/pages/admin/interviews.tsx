@@ -121,7 +121,7 @@ export default function AdminInterviews() {
 
                      <div className="mt-12 p-8 bg-blue-50 rounded-3xl border border-blue-100">
                         <h3 className="text-xl font-bold text-blue-900 mb-2">Invite Applicants</h3>
-                        <p className="text-blue-700 mb-6">To invite an applicant to interview, go to the <a href="/admin/applications" className="underline font-bold">Applications</a> page, review their application, and click "Invite to Interview".</p>
+                        <p className="text-blue-700 mb-6">To invite an applicant to interview, go to the <Link href="/admin/applications" legacyBehavior><a className="underline font-bold">Applications</a></Link> page, review their application, and click &quot;Invite to Interview&quot;.</p>
                      </div>
                 </main>
                 <Footer />
