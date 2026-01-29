@@ -5,39 +5,31 @@ import AdminGuard from '../../components/AdminGuard';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 
+interface InterviewItem {
+    id: string;
+    status: 'pending' | 'scheduled';
+    selectedSlot?: string;
+    location?: string;
+    [key: string]: any;
+}
+
 export default function AdminInterviews() {
-    const [interviews, setInterviews] = useState<any[]>([]);
+    const [interviews, setInterviews] = useState<InterviewItem[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchInterviews = async () => {
         try {
             const querySnapshot = await getDocs(collection(db, 'interviews'));
-            // Join with user data if possible, but for now just use what's in the interview doc or ID
-            // The interview doc might need to store the applicant name to be useful, 
-            // otherwise we have to fetch the user profile for each interview.
-            
-            // Let's assume we need to fetch user names.
-            const items = await Promise.all(querySnapshot.docs.map(async (d) => {
+            const items: InterviewItem[] = querySnapshot.docs.map((d) => {
                 const data = d.data();
-                let name = "Unknown Applicant";
-                let email = "";
-                
-                // Try to fetch user profile linked to this interview ID (which is uid)
-                try {
-                   const userSnap = await getDocs(collection(db, 'users')); 
-                   // This is inefficient (fetching all users), better to fetch specific doc:
-                   // const userDoc = await getDoc(doc(db, 'users', d.id));
-                   // But let's stick to the list logic.
-                } catch(e) {}
-
-                // Actually, let's just use the ID for now and maybe the application data if we had it.
-                // Optimally, when creating the interview invite, we should save the name.
-                
                 return {
                     id: d.id, // User UID
+                    status: data.status,
+                    selectedSlot: data.selectedSlot,
+                    location: data.location,
                     ...data
-                };
-            }));
+                } as InterviewItem;
+            });
 
             // Filter for only scheduled or pending
             setInterviews(items.filter(i => i.status === 'scheduled' || i.status === 'pending'));

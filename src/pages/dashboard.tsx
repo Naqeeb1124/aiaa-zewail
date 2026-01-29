@@ -8,12 +8,22 @@ import { doc, getDoc, query, collection, where, getDocs, deleteDoc } from 'fireb
 import { db } from '../lib/firebase';
 import { cancelJoinRequest } from '../lib/projects';
 
+interface RegistrationItem {
+    id: string;
+    eventId: string;
+    userId: string;
+    type: string;
+    eventTitle?: string;
+    eventDate?: any;
+    [key: string]: any;
+}
+
 export default function Dashboard() {
     const { user, loading, isAdmin } = useAdmin();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('profile');
     const [userProfile, setUserProfile] = useState<any>(null);
-    const [registrations, setRegistrations] = useState<any[]>([]);
+    const [registrations, setRegistrations] = useState<RegistrationItem[]>([]);
     const [projectRequests, setProjectRequests] = useState<any[]>([]);
     const [downloading, setDownloading] = useState(false);
 
@@ -40,7 +50,16 @@ export default function Dashboard() {
                     where('userId', '==', user.uid)
                 );
                 const regSnap = await getDocs(q);
-                const regs = regSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), type: 'event' }));
+                const regs: RegistrationItem[] = regSnap.docs.map(doc => {
+                    const data = doc.data();
+                    return { 
+                        id: doc.id, 
+                        eventId: data.eventId,
+                        userId: data.userId,
+                        type: 'event',
+                        ...data 
+                    } as RegistrationItem;
+                });
                 
                 // Fetch event titles for registrations
                 const regsWithEvents = await Promise.all(regs.map(async (reg) => {
