@@ -7,6 +7,7 @@ import { useAdmin } from '../hooks/useAdmin';
 import { doc, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { cancelJoinRequest } from '../lib/projects';
+import { parseZewailName } from '../lib/auth';
 
 interface RegistrationItem {
     id: string;
@@ -132,8 +133,9 @@ export default function Dashboard() {
     };
 
     // Mock member data with real joined date
+    const rawName = userProfile?.name || user?.displayName || 'Student Member';
     const member = {
-        name: userProfile?.name || user?.displayName || 'Student Member',
+        name: parseZewailName(rawName).fullName || rawName,
         studentId: userProfile?.studentId || '202xxxxx',
         role: isAdmin ? 'Administrator' : 'Active Member',
         joined: user?.metadata?.creationTime 

@@ -21,8 +21,6 @@ const RESOURCES = [
         icon: "📝",
         items: [
             { name: "AIAA Technical Paper Template", link: "https://www.overleaf.com/latex/templates/preparation-of-papers-for-aiaa-technical-journals/mqqbqqvyhtwm", type: "LaTeX/Word" },
-            { name: "Project Proposal Template", link: "#", type: "AIAA ZC Only" },
-            { name: "Technical Report Guide", link: "https://owl.purdue.edu/owl/subject_specific_writing/professional_technical_writing/technical_reports.html", type: "Guide" }
         ]
     },
     {
@@ -40,9 +38,7 @@ const RESOURCES = [
         description: "Resources to help you launch your aerospace career.",
         icon: "🚀",
         items: [
-            { name: "AIAA Global Career Center", link: "https://careercenter.aiaa.org/", type: "Jobs" },
-            { name: "Aerospace Resume Guide", link: "#", type: "PDF" },
-            { name: "Networking Tips for Engineers", link: "#", type: "Guide" }
+            { name: "AIAA Global Career Center", link: "https://careercenter.aiaa.org/", type: "Jobs" }
         ]
     }
 ];

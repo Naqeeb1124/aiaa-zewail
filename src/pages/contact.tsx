@@ -1,10 +1,21 @@
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useAdmin } from '../hooks/useAdmin'
+import { parseZewailName } from '../lib/auth'
 
 export default function Contact() {
+  const { user } = useAdmin()
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+
+  const parsedUserInfo = useMemo(() => {
+    if (!user) return null;
+    return {
+      fullName: parseZewailName(user.displayName).fullName,
+      email: user.email
+    }
+  }, [user])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -67,8 +78,10 @@ export default function Contact() {
                   name="name" 
                   id="name" 
                   required 
+                  defaultValue={parsedUserInfo?.fullName || ''}
+                  readOnly={!!parsedUserInfo?.fullName}
                   placeholder="Tahir Elmudathir"
-                  className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue transition-all outline-none font-medium" 
+                  className={`w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue transition-all outline-none font-medium ${parsedUserInfo?.fullName ? 'opacity-75 cursor-not-allowed' : ''}`}
                 />
               </div>
               <div>
@@ -78,8 +91,10 @@ export default function Contact() {
                   name="email" 
                   id="email" 
                   required 
+                  defaultValue={parsedUserInfo?.email || ''}
+                  readOnly={!!parsedUserInfo?.email}
                   placeholder="s-name@zewailcity.edu.eg"
-                  className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue transition-all outline-none font-medium" 
+                  className={`w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue transition-all outline-none font-medium ${parsedUserInfo?.email ? 'opacity-75 cursor-not-allowed' : ''}`}
                 />
               </div>
               <div>

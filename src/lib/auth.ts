@@ -6,7 +6,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
  * Extracts Name and Student ID from Zewail City Google Display Name
  * Format: "First Last ID" -> e.g., "Abdelrahman Mohamed 202200281"
  */
-const parseZewailName = (displayName: string | null) => {
+export const parseZewailName = (displayName: string | null) => {
   if (!displayName) return { firstName: '', lastName: '', studentId: '' };
 
   const parts = displayName.trim().split(/\s+/);
@@ -40,11 +40,11 @@ export const signInWithGoogle = async () => {
     user = res.user
 
     // Strict Check: Only s- prefixed Zewail City emails allowed
-    // if (!user.email?.endsWith('@zewailcity.edu.eg') || !user.email?.startsWith('s-')) {
-    //   await fbSignOut(auth); 
-    //   alert('Access Denied: Please use your Zewail City student email (starting with s-).');
-    //   throw new Error('Only Zewail City students are allowed to join.');
-    // }
+    if (!user.email?.endsWith('@zewailcity.edu.eg') || !user.email?.startsWith('s-')) {
+      await fbSignOut(auth); 
+      alert('Access Denied: Please use your Zewail City student email (starting with s-).');
+      throw new Error('Only Zewail City students are allowed to join.');
+    }
 
     console.log("Authentication successful:", user.uid);
   } catch (authError) {
