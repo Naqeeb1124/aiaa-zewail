@@ -33,14 +33,14 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4 uppercase tracking-tight">2. Use License</h2>
             <p className="text-slate-600 leading-relaxed mb-4">
-              Permission is granted to temporarily download one copy of the materials (information or software) on AIAA Zewail City's website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
+              Permission is granted to temporarily download one copy of the materials (information or software) on AIAA Zewail City&apos;s website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-slate-600">
               <li>Modify or copy the materials;</li>
               <li>Use the materials for any commercial purpose, or for any public display (commercial or non-commercial);</li>
               <li>Attempt to decompile or reverse engineer any software contained on the website;</li>
               <li>Remove any copyright or other proprietary notations from the materials; or</li>
-              <li>Transfer the materials to another person or "mirror" the materials on any other server.</li>
+              <li>Transfer the materials to another person or &quot;mirror&quot; the materials on any other server.</li>
             </ul>
           </section>
 
@@ -61,7 +61,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4 uppercase tracking-tight">5. Disclaimer</h2>
             <p className="text-slate-600 leading-relaxed">
-              The materials on AIAA Zewail City's website are provided on an 'as is' basis. We make no warranties, expressed or implied, and hereby disclaim and negate all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+              The materials on AIAA Zewail City&apos;s website are provided on an &apos;as is&apos; basis. We make no warranties, expressed or implied, and hereby disclaim and negate all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
             </p>
           </section>
 

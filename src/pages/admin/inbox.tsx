@@ -166,7 +166,7 @@ Thank you for reaching out to us.
                         <div className="text-center py-12 text-slate-500">Loading messages...</div>
                     ) : messages.length === 0 ? (
                         <div className="text-center py-20 bg-white rounded-3xl border border-slate-200">
-                            <p className="text-slate-400 font-bold">No messages found in 'contact_requests' collection.</p>
+                            <p className="text-slate-400 font-bold">No messages found in &apos;contact_requests&apos; collection.</p>
                         </div>
                     ) : (
                         <div className="grid gap-4">

@@ -18,7 +18,7 @@ export default function Custom404() {
             Page Not <span className="text-featured-blue">Found</span>
           </h1>
           <p className="text-lg text-slate-500 mb-10 font-medium">
-            This page is not part of our flight plan! It might have been moved, renamed, or perhaps it never existed. Let's get you back on course.
+            This page is not part of our flight plan! It might have been moved, renamed, or perhaps it never existed. Let&apos;s get you back on course.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
