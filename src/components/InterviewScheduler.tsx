@@ -2,11 +2,16 @@ import { useState } from 'react'
 import { db } from '../lib/firebase'
 import { doc, setDoc } from 'firebase/firestore'
 
-export default function InterviewScheduler({ applicationId, applicantEmail }) {
+interface InterviewSchedulerProps {
+  applicationId: string;
+  applicantEmail: string;
+}
+
+export default function InterviewScheduler({ applicationId, applicantEmail }: InterviewSchedulerProps) {
   const [slots, setSlots] = useState([''])
   const [location, setLocation] = useState('')
 
-  const handleSlotChange = (index, value) => {
+  const handleSlotChange = (index: number, value: string) => {
     const newSlots = [...slots]
     newSlots[index] = value
     setSlots(newSlots)
@@ -16,7 +21,7 @@ export default function InterviewScheduler({ applicationId, applicantEmail }) {
     setSlots([...slots, ''])
   }
 
-  const removeSlot = (index) => {
+  const removeSlot = (index: number) => {
     const newSlots = slots.filter((_, i) => i !== index)
     setSlots(newSlots)
   }

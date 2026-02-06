@@ -14,7 +14,8 @@ const teamMembers = [
     role: 'Chairperson',
     major: 'Aerospace Engineering',
     image: '/board-images/omar-metwally.png',
-    link: 'https://sites.google.com/view/omar-elmetwalli/home?authuser=0',
+    link: 'https://omar-elmetwalli.github.io/github-portfolio/',
+  
     linkedin: 'https://www.linkedin.com/in/omar-elmetwally-ba272521b/'
   },
   {
@@ -55,6 +56,14 @@ const teamMembers = [
     image: '/announcements-placeholder-image.jpeg',
     link: '#',
     linkedin: '#'
+  },
+  {
+    name:'Maryam Raslan',
+    role: 'Marketing & Media Head',
+    major: 'Business',
+    image: '/board-images/MARYAM.jpg',
+    link: '#',
+    linkedin: 'https://www.linkedin.com/in/maryam-raslan-75329222a'
   },
 ]
 

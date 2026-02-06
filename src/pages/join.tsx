@@ -1,5 +1,6 @@
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import Link from 'next/link'
 import {signInWithGoogle} from '../lib/auth'
 import {useState, useEffect, useMemo} from 'react'
 import {auth, db} from '../lib/firebase'
@@ -7,92 +8,82 @@ import {onAuthStateChanged} from 'firebase/auth'
 import {useRouter} from 'next/router'
 import {doc, getDoc, setDoc, updateDoc, onSnapshot} from 'firebase/firestore'
 import ApplicationForm from '../components/ApplicationForm';
+import { useAdmin } from '../hooks/useAdmin'
+import { getAdminEmails } from '../lib/admin'
 
 import {GetServerSideProps} from 'next'
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const docRef = doc(db, 'recruitment', 'status')
-  const docSnap = await getDoc(docRef)
-  let recruitmentOpen = false
-  if (docSnap.exists()) {
-    const data = docSnap.data()
-    const now = new Date()
-    const startDate = new Date(data.startDate)
-    const endDate = new Date(data.endDate)
-    recruitmentOpen = data.isOpen && now >= startDate && now <= endDate
-  }
-  return {
-    props: {
-      initialRecruitmentOpen: recruitmentOpen,
-    },
+  try {
+    const statusRef = doc(db, "recruitment", "status");
+    const statusDoc = await getDoc(statusRef);
+    const open = statusDoc.exists() ? statusDoc.data().open : false;
+
+    return {
+      props: {
+        initialRecruitmentOpen: !!open
+      }
+    }
+  } catch (error) {
+    console.error("Error in getServerSideProps for /join:", error);
+    return {
+      props: {
+        initialRecruitmentOpen: false
+      }
+    }
   }
 }
 
 export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: boolean}) {
-  const AUTHORIZED = useMemo(() => ['s-zeina.tawab@zewailcity.edu.eg', 'mdraz@zewailcity.edu.eg', 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', 's-omar.elmetwalli@zewailcity.edu.eg', 's-asmaa.shahine@zewailcity.edu.eg', 'aeltaweel@zewailcity.edu.eg', 'mabdelshafy@zewailcity.edu.eg'], [])
-  const router = useRouter();
-  const [user, setUser] = useState<any>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [applicationStatus, setApplicationStatus] = useState<'loading' | 'not_applied' | 'applied' | 'rejected' | 'accepted'>('loading')
+  const { user, isAdmin, loading } = useAdmin()
+  const router = useRouter()
+  const [applicationStatus, setApplicationStatus] = useState<'loading' | 'not_applied' | 'applied' | 'accepted' | 'rejected'>('loading')
   const [applicationType, setApplicationType] = useState<'interview' | 'no_interview' | null>(null)
   const [recruitmentOpen, setRecruitmentOpen] = useState(initialRecruitmentOpen)
   const [interview, setInterview] = useState<any>(null)
-  const [selectedSlot, setSelectedSlot] = useState('')
+  const [selectedSlot, setSelectedSlot] = useState<string>('')
 
-  useEffect(()=> {
-    onAuthStateChanged(auth, async u => {
-      setUser(u)
-      if (u) {
-        if (AUTHORIZED.includes(u.email)) {
-          setIsAdmin(true)
-        }
-
-        // Ensure user document exists in Firestore
-        const userRef = doc(db, "users", u.uid);
-        const userSnap = await getDoc(userRef);
-        
-        if (!userSnap.exists()) {
-          // Create initial user profile
-          await setDoc(userRef, {
-            name: u.displayName || 'Anonymous User',
-            email: u.email,
-            joinedAt: new Date().toISOString(),
-            points: 0,
-            role: 'user'
-          });
-        } else {
-          // Just update name/email in case they changed
-          await setDoc(userRef, {
-            name: u.displayName || userSnap.data().name,
-            email: u.email
-          }, { merge: true });
-        }
-
-        const docRef = doc(db, "applications", u.uid)
-        const unsubscribe = onSnapshot(docRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const applicationData = docSnap.data();
-            setApplicationStatus(applicationData.status || 'applied');
-          } else {
-            setApplicationStatus('not_applied');
-          }
-        });
-
-        const interviewRef = doc(db, 'interviews', u.uid)
-        const interviewSnap = await getDoc(interviewRef)
-        if (interviewSnap.exists()) {
-          setInterview(interviewSnap.data())
-        }
-        
-        return () => unsubscribe();
-      } else {
-        setApplicationStatus('not_applied')
+  useEffect(() => {
+    // Listen for recruitment status
+    const unsubStatus = onSnapshot(doc(db, "recruitment", "status"), (doc) => {
+      if (doc.exists()) {
+        setRecruitmentOpen(doc.data().open)
       }
     })
-  }, [AUTHORIZED])
+
+    if (user && !isAdmin) {
+      // Listen for application status
+      const unsubApp = onSnapshot(doc(db, "applications", user.uid), (doc) => {
+        if (doc.exists()) {
+          const status = doc.data().status || 'applied'
+          setApplicationStatus(status)
+        } else {
+          setApplicationStatus('not_applied')
+        }
+      })
+
+      // Listen for interview data
+      const unsubInterview = onSnapshot(doc(db, "interviews", user.uid), (doc) => {
+        if (doc.exists()) {
+          setInterview({ id: doc.id, ...doc.data() })
+        } else {
+          setInterview(null)
+        }
+      })
+
+      return () => {
+        unsubStatus()
+        unsubApp()
+        unsubInterview()
+      }
+    } else {
+      if (!loading && !user) setApplicationStatus('not_applied')
+      return () => unsubStatus()
+    }
+  }, [user, isAdmin, loading])
 
   const handleConfirmSlot = async () => {
-    if (!selectedSlot) {
+    if (!selectedSlot || !user) {
       alert('Please select a time slot.')
       return
     }
@@ -106,30 +97,37 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
     const subject = `Interview Scheduled for Your AIAA Zewail City Application`;
     const text = `Dear applicant,\n\nYour interview has been scheduled for ${selectedSlot} at ${interview.location}.\n\nBest regards,\nAIAA Zewail City Team`;
 
+    const token = await user.getIdToken()
+
     await fetch('/api/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        to: user.email,
+        to: user.email || '',
         subject,
         text,
       }),
     });
 
-    // Notify admin
-    await fetch('/api/send-email', {
+    // Notify all admins
+    const adminEmails = await getAdminEmails();
+    await Promise.all(adminEmails.map(email => 
+      fetch('/api/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          to: 's-abdelrahman.alnaqeeb@zewailcity.edu.eg', // Hardcoded admin email
+          to: email,
           subject: `Interview Scheduled with ${user.displayName}`,
           text: `${user.displayName} has scheduled their interview for ${selectedSlot} at ${interview.location}.`,
         }),
-      });
+      })
+    ));
 
     alert('Interview slot confirmed!')
     setInterview({ ...interview, status: 'scheduled', selectedSlot })
@@ -137,8 +135,13 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
 
   const handleApplicationSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!user) return;
+
     const formData = new FormData(e.currentTarget)
     const cvFile = formData.get('cv') as File
+
+    const token = await user.getIdToken()
+// ... later in the component ...
 
     let cvUrl = ''
     if (cvFile && cvFile.size > 0) {
@@ -148,6 +151,9 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
       try {
         const response = await fetch('/api/upload', {
           method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
           body: uploadFormData,
         });
 
@@ -205,24 +211,30 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
       cv: cvUrl,
       applicationType,
     }
-    await setDoc(doc(db, "applications", user.uid), data)
-    setApplicationStatus('applied')
+    if (user) {
+      await setDoc(doc(db, "applications", user.uid), data)
+      setApplicationStatus('applied')
+    }
 
     const emailBody = Object.entries(data)
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n');
 
-    await fetch('/api/send-email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: 's-abdelrahman.alnaqeeb@zewailcity.edu.eg',
-        subject: 'New AIAA application',
-        text: emailBody,
-      }),
-    });
+    const adminEmails = await getAdminEmails();
+    await Promise.all(adminEmails.map(email => 
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          to: email,
+          subject: 'New AIAA application',
+          text: emailBody,
+        }),
+      })
+    ));
   }
 
   return (
@@ -262,7 +274,9 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
                <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">🛡️</div>
                <h2 className="text-2xl font-bold text-slate-900 mb-2">Admin Account</h2>
                <p className="text-slate-500">You are logged in as an administrator. You do not need to submit a membership application.</p>
-               <button onClick={() => router.push('/admin')} className="mt-8 px-8 py-3 bg-slate-900 text-white rounded-full font-bold hover:bg-featured-blue transition-all shadow-lg transform hover:-translate-y-0.5">Go to Admin Portal</button>
+               <Link href="/admin" className="inline-block mt-8 px-8 py-3 bg-slate-900 text-white rounded-full font-bold hover:bg-featured-blue transition-all shadow-lg transform hover:-translate-y-0.5">
+                  Go to Admin Portal
+               </Link>
             </div>
           )}
 

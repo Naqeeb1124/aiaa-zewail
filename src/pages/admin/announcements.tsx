@@ -1,7 +1,7 @@
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { useState, useEffect } from 'react';
-import { db } from '../../lib/firebase';
+import { db, auth } from '../../lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, orderBy, query } from 'firebase/firestore';
 import AdminGuard from '../../components/AdminGuard';
 import ImageUpload from '../../components/ImageUpload';
@@ -39,41 +39,93 @@ export default function Announcements() {
 
   const handleAddAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newAnnouncement.title || !newAnnouncement.content) return;
+    const title = newAnnouncement.title;
+    const content = newAnnouncement.content;
+    const imageUrl = newAnnouncement.imageUrl;
+
+    if (!title || !content) return;
 
     setIsSubmitting(true);
     try {
+        // 1. Post to Firestore
         const docRef = await addDoc(collection(db, 'announcements'), {
-          ...newAnnouncement,
+          title,
+          content,
+          imageUrl,
           createdAt: new Date(),
         });
         
         // Optimistic update
-        const newItem = { id: docRef.id, ...newAnnouncement, createdAt: { toDate: () => new Date() } };
+        const newItem = { id: docRef.id, title, content, imageUrl, createdAt: { toDate: () => new Date() } };
         setAnnouncements([newItem, ...announcements]);
         setNewAnnouncement({ title: '', content: '', imageUrl: '' });
         
-        alert('Announcement published successfully!');
+        // 2. Email notification logic - wrapped in its own try-catch
+        try {
+            const user = auth.currentUser;
+            if (!user) throw new Error("No authenticated user found for sending notifications.");
+            
+            const token = await user.getIdToken();
+            const usersSnapshot = await getDocs(collection(db, 'users'));
+            const recipients = usersSnapshot.docs
+                .map(d => ({ 
+                    id: d.id, 
+                    name: d.data().name,
+                    email: d.data().email,
+                    subscribedToAnnouncements: d.data().subscribedToAnnouncements,
+                    firstName: d.data().name?.split(' ')[0] || ''
+                }))
+                .filter((u: any) => u.subscribedToAnnouncements !== false && u.email)
+                .map((u: any) => ({
+                    id: u.id,
+                    name: u.name,
+                    email: u.email,
+                    firstName: u.firstName
+                }));
 
-        // Email notification logic (kept from original)
-        // Note: In production, this should be a Cloud Function, not client-side loop
-        const usersSnapshot = await getDocs(collection(db, 'users'));
-        usersSnapshot.forEach(async (userDoc) => {
-            const user = userDoc.data();
-            if (user.subscribedToAnnouncements !== false && user.email) {
-                const unsubscribeUrl = `${window.location.origin}/api/unsubscribe?userId=${userDoc.id}`;
-                const emailBody = `A new announcement has been posted: ${newAnnouncement.title}\n\n${newAnnouncement.content.substring(0, 150)}...\n\nRead more on our website.\n\nTo unsubscribe from future announcements, click here: ${unsubscribeUrl}`;
-                await fetch('/api/send-email', {
+            if (recipients.length > 0) {
+                const SITE_URL = window.location.origin;
+                const contentHtml = `
+                    <p style="font-size: 16px; color: #334155;">Hi {{name}},</p>
+                    <h1 style="color: #2b4b77; font-size: 24px; margin-bottom: 20px;">New Announcement</h1>
+                    <p style="font-size: 18px; font-weight: bold; color: #334155; margin-bottom: 15px;">${title}</p>
+                    <div style="color: #475569; line-height: 1.6;">
+                        ${content.replace(/\n/g, '<br/>')}
+                    </div>
+                    <div style="margin-top: 30px;">
+                        <a href="${SITE_URL}/announcements/${docRef.id}" style="display: inline-block; padding: 12px 24px; background-color: #78af03; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold;">Read Full Update</a>
+                    </div>
+                `;
+
+                const res = await fetch('/api/admin/bulk-email', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({
-                        to: user.email,
-                        subject: `New Announcement: ${newAnnouncement.title}`,
-                        text: emailBody,
+                        recipients,
+                        subject: `AIAA Announcement: ${title}`,
+                        htmlTemplate: contentHtml,
+                        useBranding: true,
+                        siteUrl: SITE_URL
                     }),
                 });
+                
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.message || "Failed to send emails via API.");
+                }
+                
+                const resultData = await res.json();
+                alert(`Announcement published! Notification sent to ${resultData.success} members.`);
+            } else {
+                alert('Announcement published! (No subscribers to notify)');
             }
-        });
+        } catch (emailError: any) {
+            console.error("Error during email notification phase:", emailError);
+            alert('Announcement published successfully, but email notifications failed: ' + emailError.message);
+        }
 
     } catch (error) {
         console.error("Error adding announcement:", error);

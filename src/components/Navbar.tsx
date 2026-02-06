@@ -35,10 +35,10 @@ export default function Navbar() {
     : 'bg-featured-blue py-6'
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-500 ${navClasses}`}>
+    <nav className={`fixed w-full z-50 transition-[padding,background-color,box-shadow] duration-300 ${navClasses}`}>
       <div className="px-6 flex items-center justify-between">
-        <Link href="/" legacyBehavior>
-          <a className="relative z-50"><Logo scrolled={scrolled} /></a>
+        <Link href="/" className="relative z-50">
+          <Logo scrolled={scrolled} />
         </Link>
 
         {/* Desktop Menu */}
@@ -46,11 +46,13 @@ export default function Navbar() {
           {NAV_LINKS.map(link => {
             const isActive = router.pathname === link.href;
             return (
-              <Link key={link.href} href={link.href} legacyBehavior>
-                <a className={`relative font-bold text-sm tracking-wide transition-colors duration-300 group ${isActive ? 'text-white' : 'text-white/70 hover:text-white'}`}>
-                  {link.label}
-                  <span className={`absolute -bottom-2 left-0 w-full h-0.5 bg-featured-green transform origin-left transition-transform duration-300 ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
-                </a>
+              <Link 
+                key={link.href} 
+                href={link.href}
+                className={`relative font-bold text-sm tracking-wide transition-colors duration-300 group ${isActive ? 'text-white' : 'text-white/70 hover:text-white'}`}
+              >
+                {link.label}
+                <span className={`absolute -bottom-2 left-0 w-full h-0.5 bg-featured-green transform origin-left transition-transform duration-300 ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
               </Link>
             )
           })}
@@ -71,12 +73,12 @@ export default function Navbar() {
                     <p className="text-[10px] text-slate-400 font-bold truncate">{user.email}</p>
                   </div>
                   <div className="p-2">
-                    <Link href="/dashboard" legacyBehavior>
-                        <a className="block px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 hover:text-featured-blue transition-colors font-bold rounded-2xl">Dashboard</a>
+                    <Link href="/dashboard" className="block px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 hover:text-featured-blue transition-colors font-bold rounded-2xl">
+                      Dashboard
                     </Link>
                     {isAdmin && (
-                        <Link href="/admin" legacyBehavior>
-                        <a className="block px-4 py-3 text-sm text-featured-blue hover:bg-slate-50 font-bold rounded-2xl">Admin Portal</a>
+                        <Link href="/admin" className="block px-4 py-3 text-sm text-featured-blue hover:bg-slate-50 font-bold rounded-2xl">
+                          Admin Portal
                         </Link>
                     )}
                     <div className="border-t border-slate-50 mt-2 pt-2">
@@ -92,10 +94,11 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <Link href="/join" legacyBehavior>
-              <a className="px-6 py-2.5 rounded-full bg-white text-featured-blue font-bold text-sm hover:bg-featured-green hover:text-white transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                Join Us
-              </a>
+            <Link 
+              href="/join" 
+              className="px-6 py-2.5 rounded-full bg-white text-featured-blue font-bold text-sm hover:bg-featured-green hover:text-white transition-[transform,background-color,color] duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:scale-95"
+            >
+              Join Us
             </Link>
           )}
         </div>
@@ -103,10 +106,11 @@ export default function Navbar() {
         {/* Mobile Menu Button */}
         <div className="md:hidden flex items-center gap-4 relative z-50">
           {user && (
-            <Link href="/dashboard" legacyBehavior>
-              <a className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white/20">
-                {user.displayName ? user.displayName[0].toUpperCase() : 'U'}
-              </a>
+            <Link 
+              href="/dashboard" 
+              className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white/20"
+            >
+              {user.displayName ? user.displayName[0].toUpperCase() : 'U'}
             </Link>
           )}
           <button onClick={() => setMenuOpen(!menuOpen)} className="text-white p-1">
@@ -127,13 +131,13 @@ export default function Navbar() {
           {NAV_LINKS.map(link => {
             const isActive = router.pathname === link.href;
             return (
-              <Link key={link.href} href={link.href} legacyBehavior>
-                <a 
-                  className={`block text-2xl font-bold ${isActive ? 'text-white' : 'text-white/60'} hover:text-white transition-colors`} 
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {link.label}
-                </a>
+              <Link 
+                key={link.href} 
+                href={link.href}
+                className={`block text-2xl font-bold ${isActive ? 'text-white' : 'text-white/60'} hover:text-white transition-colors`} 
+                onClick={() => setMenuOpen(false)}
+              >
+                {link.label}
               </Link>
             )
           })}
@@ -142,12 +146,12 @@ export default function Navbar() {
           
           {user ? (
             <>
-              <Link href="/dashboard" legacyBehavior>
-                <a className="block text-xl font-bold text-white mb-6">Dashboard</a>
+              <Link href="/dashboard" className="block text-xl font-bold text-white mb-6">
+                Dashboard
               </Link>
               {isAdmin && (
-                <Link href="/admin" legacyBehavior>
-                  <a className="block text-xl font-bold text-featured-green mb-6">Admin Portal</a>
+                <Link href="/admin" className="block text-xl font-bold text-featured-green mb-6">
+                  Admin Portal
                 </Link>
               )}
               <button onClick={() => signOut()} className="block text-xl font-bold text-red-300">
@@ -155,10 +159,11 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <Link href="/join" legacyBehavior>
-              <a className="block w-full text-center py-4 rounded-full bg-white text-featured-blue font-black uppercase tracking-widest text-sm shadow-lg">
-                Join Now
-              </a>
+            <Link 
+              href="/join" 
+              className="block w-full text-center py-4 rounded-full bg-white text-featured-blue font-black uppercase tracking-widest text-sm shadow-lg active:scale-95 transition-transform"
+            >
+              Join Now
             </Link>
           )}
         </div>

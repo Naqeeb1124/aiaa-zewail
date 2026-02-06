@@ -2,10 +2,25 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import PDFDocument from 'pdfkit';
 import path from 'path';
 import fs from 'fs';
+import { verifyIdToken } from '../../../lib/firebase-admin';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Method not allowed' });
+    }
+
+    // Authentication check
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Unauthorized: Missing or invalid token' });
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    try {
+        await verifyIdToken(idToken);
+    } catch (error) {
+        console.error('Token verification failed:', error);
+        return res.status(401).json({ message: 'Unauthorized: Token verification failed' });
     }
 
     const { name, email, studentId, joined, points, badges, projects } = req.body;

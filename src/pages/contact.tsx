@@ -3,6 +3,8 @@ import Footer from '../components/Footer'
 import { useState, useMemo } from 'react'
 import { useAdmin } from '../hooks/useAdmin'
 import { parseZewailName } from '../lib/auth'
+import { db } from '../lib/firebase'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
 export default function Contact() {
   const { user } = useAdmin()
@@ -22,21 +24,37 @@ export default function Contact() {
     setSubmitting(true)
     const formData = new FormData(e.currentTarget)
     const data = {
-      name: formData.get('name'),
-      email: formData.get('email'),
-      message: formData.get('message'),
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+      message: formData.get('message') as string,
     }
 
-    await fetch('/api/contact', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
+    try {
+      // 1. Save to Firestore directly from client
+      const docRef = await addDoc(collection(db, 'contact_requests'), {
+        ...data,
+        status: 'unread',
+        createdAt: serverTimestamp(),
+      });
+      console.log("Document written with ID: ", docRef.id);
+      // alert(`Debug: Message saved with ID: ${docRef.id}`); // Uncomment for debugging if needed
 
-    setSubmitting(false)
-    setSubmitted(true)
+      // 2. Trigger email notification via API (optional, will fail silently if API has issues but DB write is already done)
+      fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      }).catch(err => console.error("Email notification failed:", err));
+
+      setSubmitted(true)
+    } catch (error: any) {
+      console.error("Error sending message:", error)
+      alert(`Failed to send message: ${error.message || 'Unknown error'}`)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -80,12 +98,12 @@ export default function Contact() {
                   required 
                   defaultValue={parsedUserInfo?.fullName || ''}
                   readOnly={!!parsedUserInfo?.fullName}
-                  placeholder="Tahir Elmudathir"
+                  placeholder="Your Name"
                   className={`w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue transition-all outline-none font-medium ${parsedUserInfo?.fullName ? 'opacity-75 cursor-not-allowed' : ''}`}
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3 ml-1">University Email</label>
+                <label htmlFor="email" className="block text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-3 ml-1">Email Address</label>
                 <input 
                   type="email" 
                   name="email" 
@@ -93,7 +111,7 @@ export default function Contact() {
                   required 
                   defaultValue={parsedUserInfo?.email || ''}
                   readOnly={!!parsedUserInfo?.email}
-                  placeholder="s-name@zewailcity.edu.eg"
+                  placeholder="your@email.com"
                   className={`w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue transition-all outline-none font-medium ${parsedUserInfo?.email ? 'opacity-75 cursor-not-allowed' : ''}`}
                 />
               </div>
@@ -112,7 +130,7 @@ export default function Contact() {
               <button 
                 type="submit" 
                 disabled={submitting} 
-                className="w-full py-5 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-sm hover:bg-featured-green transition-all shadow-xl hover:shadow-featured-green/20 disabled:opacity-50 flex items-center justify-center gap-3 transform hover:-translate-y-0.5"
+                className="w-full py-5 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-sm hover:bg-featured-green transition-[transform,background-color,box-shadow] duration-200 shadow-xl hover:shadow-featured-green/20 disabled:opacity-50 flex items-center justify-center gap-3 transform hover:-translate-y-0.5 active:scale-95"
               >
                 {submitting ? (
                   <>

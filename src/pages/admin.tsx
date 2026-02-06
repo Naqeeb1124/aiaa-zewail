@@ -17,6 +17,7 @@ export default function AdminDashboard() {
   }, [user, isAdmin, loading, router])
 
   if (loading || !user || !isAdmin) return (
+// ... rest of the component ...
     <div className="min-h-screen flex items-center justify-center bg-slate-50 text-featured-blue font-bold text-xl">
         <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-featured-blue border-t-transparent rounded-full animate-spin"></div>
@@ -46,6 +47,20 @@ export default function AdminDashboard() {
         icon: "📅",
         link: "/admin/interviews",
         color: "bg-amber-50 text-amber-600 border-amber-100"
+    },
+    { 
+        title: "Communications", 
+        desc: "Send personalized bulk emails to members and event attendees.",
+        icon: "📧",
+        link: "/admin/communications",
+        color: "bg-indigo-50 text-indigo-600 border-indigo-100"
+    },
+    { 
+        title: "Contact Inbox", 
+        desc: "View and reply to contact requests from the website.",
+        icon: "📨",
+        link: "/admin/inbox",
+        color: "bg-teal-50 text-teal-600 border-teal-100"
     },
     { 
         title: "Member Database", 
@@ -131,20 +146,22 @@ export default function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {ADMIN_MODULES.map((mod, idx) => (
-                <Link key={idx} href={mod.link} legacyBehavior>
-                    <a className="group bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-slate-300 transition-all duration-300 flex flex-col">
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 ${mod.color}`}>
-                            {mod.icon === 'users' ? (
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                            ) : mod.icon}
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-featured-blue transition-colors">{mod.title}</h3>
-                        <p className="text-slate-500 text-sm leading-relaxed">{mod.desc}</p>
-                        
-                        <div className="mt-auto pt-6 flex items-center text-sm font-bold text-slate-400 group-hover:text-featured-blue transition-colors">
-                            Access Module <span className="ml-2">→</span>
-                        </div>
-                    </a>
+                <Link 
+                  key={idx} 
+                  href={mod.link}
+                  className="group bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl hover:border-slate-300 transition-all duration-300 flex flex-col active:scale-[0.98]"
+                >
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 ${mod.color}`}>
+                        {mod.icon === 'users' ? (
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                        ) : mod.icon}
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-featured-blue transition-colors">{mod.title}</h3>
+                    <p className="text-slate-500 text-sm leading-relaxed">{mod.desc}</p>
+                    
+                    <div className="mt-auto pt-6 flex items-center text-sm font-bold text-slate-400 group-hover:text-featured-blue transition-colors">
+                        Access Module <span className="ml-2">→</span>
+                    </div>
                 </Link>
             ))}
         </div>

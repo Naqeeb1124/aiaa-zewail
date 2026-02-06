@@ -25,15 +25,17 @@ export default function HeroEgypt() {
           </p>
 
           <div className="flex flex-wrap gap-4">
-            <Link href="/join" legacyBehavior>
-              <a className="px-8 py-3 rounded-full bg-featured-blue text-white font-bold hover:bg-featured-green transition-all transform hover:-translate-y-0.5">
-                Join the Mission
-              </a>
+            <Link 
+              href="/join" 
+              className="px-8 py-3 rounded-full bg-featured-blue text-white font-bold hover:bg-featured-green transition-[transform,background-color] duration-200 transform hover:-translate-y-0.5 active:scale-95"
+            >
+              Join the Mission
             </Link>
-            <Link href="/about" legacyBehavior>
-              <a className="px-8 py-3 rounded-full border-2 border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all">
-                Our Story
-              </a>
+            <Link 
+              href="/about" 
+              className="px-8 py-3 rounded-full border-2 border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-[transform,background-color] duration-200 transform hover:-translate-y-0.5 active:scale-95"
+            >
+              Our Story
             </Link>
           </div>
         </div>

@@ -89,5 +89,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    match /contact_requests/{docId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
   }
 }

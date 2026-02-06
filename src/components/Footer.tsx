@@ -28,6 +28,8 @@ export default function Footer() {
               <li><Link href="/projects" legacyBehavior><a className="hover:text-featured-green transition-colors">Projects</a></Link></li>
               <li><Link href="/opportunities" legacyBehavior><a className="hover:text-featured-green transition-colors">Opportunities</a></Link></li>
               <li><Link href="/tools" legacyBehavior><a className="hover:text-featured-green transition-colors">Resources</a></Link></li>
+              <li><Link href="/privacy" legacyBehavior><a className="hover:text-featured-green transition-colors">Privacy Policy</a></Link></li>
+              <li><Link href="/terms" legacyBehavior><a className="hover:text-featured-green transition-colors">Terms of Service</a></Link></li>
             </ul>
           </div>
 

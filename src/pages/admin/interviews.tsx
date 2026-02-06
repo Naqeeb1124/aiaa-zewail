@@ -93,10 +93,10 @@ export default function AdminInterviews() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {interviews.filter(i => i.status === 'scheduled').sort((a,b) => new Date(a.selectedSlot).getTime() - new Date(b.selectedSlot).getTime()).map(interview => (
+                                        {interviews.filter(i => i.status === 'scheduled').sort((a,b) => new Date(a.selectedSlot!).getTime() - new Date(b.selectedSlot!).getTime()).map(interview => (
                                             <tr key={interview.id} className="hover:bg-blue-50/50 transition-colors">
                                                 <td className="p-6 font-bold text-slate-800">
-                                                    {new Date(interview.selectedSlot).toLocaleString()}
+                                                    {new Date(interview.selectedSlot!).toLocaleString()}
                                                 </td>
                                                 <td className="p-6 font-mono text-sm text-slate-600">
                                                     {interview.id}

@@ -13,7 +13,7 @@ interface RegistrationItem {
     id: string;
     eventId: string;
     userId: string;
-    type: string;
+    type: 'event';
     eventTitle?: string;
     eventDate?: any;
     [key: string]: any;
@@ -21,6 +21,8 @@ interface RegistrationItem {
 
 export default function Dashboard() {
     const { user, loading, isAdmin } = useAdmin();
+// ... rest of the component ...
+
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('profile');
     const [userProfile, setUserProfile] = useState<any>(null);
@@ -155,9 +157,18 @@ export default function Dashboard() {
     const handleDownloadPortfolio = async () => {
         setDownloading(true);
         try {
+            if (!user) {
+                alert('You must be logged in to download your portfolio.');
+                return;
+            }
+            const token = await user.getIdToken();
+
             const response = await fetch('/api/portfolio/generate', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     name: member.name,
                     email: user?.email,

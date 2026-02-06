@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { v2 as cloudinary } from 'cloudinary';
 import formidable from 'formidable';
+import { verifyIdToken } from '../../lib/firebase-admin';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -23,6 +24,20 @@ const handleUpload = async (req: NextApiRequest, res: NextApiResponse) => {
     return res.status(405).json({
       error: `Method ${req.method} Not Allowed`,
     });
+  }
+
+  // Authentication check
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
+  }
+
+  const idToken = authHeader.split('Bearer ')[1];
+  try {
+    await verifyIdToken(idToken);
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return res.status(401).json({ error: 'Unauthorized: Token verification failed' });
   }
 
   try {

@@ -3,7 +3,12 @@ import { auth, db } from '../lib/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 
-export default function ApplicationForm({ onSubmit, applicationType }) {
+interface ApplicationFormProps {
+  onSubmit: (e: any) => void;
+  applicationType: string;
+}
+
+export default function ApplicationForm({ onSubmit, applicationType }: ApplicationFormProps) {
   const [user, setUser] = useState<any>(null)
   const [formData, setFormData] = useState({
     name: '',

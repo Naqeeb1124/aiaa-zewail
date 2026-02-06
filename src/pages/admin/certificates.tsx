@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminGuard from '../../components/AdminGuard';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import { auth } from '../../lib/firebase';
 
 const CATEGORIES: Record<string, { label: string, roles: string[] }> = {
     event: {
@@ -49,9 +50,19 @@ export default function AdminCertificates() {
         e.preventDefault();
         setLoading(true);
         try {
+            const user = auth.currentUser;
+            if (!user) {
+                alert('You must be logged in to generate certificates.');
+                return;
+            }
+            const token = await user.getIdToken();
+
             const response = await fetch('/api/certificates/generate', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(formData),
             });
             if (response.ok) {
