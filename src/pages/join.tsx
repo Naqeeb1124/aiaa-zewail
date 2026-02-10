@@ -86,7 +86,7 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
       if (!loading && !user) setApplicationStatus('not_applied')
       return () => unsubStatus()
     }
-  }, [user, isAdmin, loading])
+  }, [user, isAdmin, loading, router])
 
   const handleConfirmSlot = async () => {
     if (!selectedSlot || !user) {

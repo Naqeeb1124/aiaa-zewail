@@ -105,7 +105,7 @@ export default function EventCheckIn() {
                                 !
                             </div>
                             <h2 className="text-2xl font-black text-slate-900 mb-4 uppercase tracking-tighter">No Registration Found</h2>
-                            <p className="text-slate-500 font-medium mb-8">It seems you haven't registered for this event yet. Please register first to check in.</p>
+                            <p className="text-slate-500 font-medium mb-8">It seems you haven&apos;t registered for this event yet. Please register first to check in.</p>
                             <Link href={`/events/${id}`} legacyBehavior>
                                 <a className="inline-block w-full py-4 bg-featured-blue text-white rounded-full font-black uppercase tracking-widest text-xs hover:bg-featured-green transition-all shadow-lg">
                                     Register Now
@@ -135,7 +135,7 @@ export default function EventCheckIn() {
                                 ✕
                             </div>
                             <h2 className="text-2xl font-black text-slate-900 mb-4 uppercase tracking-tighter">System Error</h2>
-                            <p className="text-slate-500 font-medium mb-8">We couldn't process your check-in. The event ID might be invalid or the system is down.</p>
+                            <p className="text-slate-500 font-medium mb-8">We couldn&apos;t process your check-in. The event ID might be invalid or the system is down.</p>
                             <Link href="/" legacyBehavior>
                                 <a className="inline-block w-full py-4 bg-slate-900 text-white rounded-full font-black uppercase tracking-widest text-xs hover:bg-featured-blue transition-all shadow-lg">
                                     Return Home

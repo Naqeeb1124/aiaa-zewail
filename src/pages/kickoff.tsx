@@ -136,7 +136,7 @@ export default function KickoffPage() {
             </h1>
             
             <p className="text-lg md:text-2xl text-slate-600 max-w-3xl mx-auto mb-12 leading-relaxed font-medium">
-              Egypt's only AIAA Student Branch is officially landing. Join us for our kickoff event and start your journey in the aerospace industry.
+              Egypt&apos;s only AIAA Student Branch is officially landing. Join us for our kickoff event and start your journey in the aerospace industry.
             </p>
 
             {/* Countdown */}

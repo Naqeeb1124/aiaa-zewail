@@ -1,6 +1,6 @@
 import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { db } from '../../../../lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -23,13 +23,7 @@ export default function EditEvent() {
     imageUrl: ''
   });
 
-  useEffect(() => {
-    if (id) {
-      fetchEvent();
-    }
-  }, [id]);
-
-  const fetchEvent = async () => {
+  const fetchEvent = useCallback(async () => {
     try {
       const docRef = doc(db, 'events', id as string);
       const docSnap = await getDoc(docRef);
@@ -59,7 +53,13 @@ export default function EditEvent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, router]);
+
+  useEffect(() => {
+    if (id) {
+      fetchEvent();
+    }
+  }, [id, fetchEvent]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -103,7 +103,7 @@ export default function EditEvent() {
         <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
           <div className="max-w-7xl mx-auto px-6">
             <h1 className="text-4xl font-extrabold mb-2 uppercase tracking-tighter">Edit Event</h1>
-            <p className="text-slate-400 font-medium">Update the details for "{event.title}"</p>
+            <p className="text-slate-400 font-medium">Update the details for &quot;{event.title}&quot;</p>
           </div>
         </section>
 
