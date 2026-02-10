@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAdmin } from '../hooks/useAdmin'
 import { signOut } from '../lib/auth'
+import { KICKOFF_MODE } from '../lib/config'
 
 const NAV_LINKS = [
   { href: '/about', label: 'About' },
@@ -21,6 +22,13 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+
+  const visibleLinks = KICKOFF_MODE 
+    ? [
+        { href: '/#board', label: 'Team' },
+        { href: '/join', label: 'Register' }
+      ]
+    : NAV_LINKS;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,7 +51,7 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex gap-8 items-center">
-          {NAV_LINKS.map(link => {
+          {visibleLinks.map(link => {
             const isActive = router.pathname === link.href;
             return (
               <Link 
@@ -98,7 +106,7 @@ export default function Navbar() {
               href="/join" 
               className="px-6 py-2.5 rounded-full bg-white text-featured-blue font-bold text-sm hover:bg-featured-green hover:text-white transition-[transform,background-color,color] duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:scale-95"
             >
-              Join Us
+              {KICKOFF_MODE ? 'Register' : 'Join Us'}
             </Link>
           )}
         </div>
@@ -128,7 +136,7 @@ export default function Navbar() {
       {/* Mobile Menu Overlay */}
       <div className={`fixed inset-0 bg-featured-blue z-40 transition-transform duration-300 md:hidden flex flex-col pt-32 px-6 ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="space-y-6">
-          {NAV_LINKS.map(link => {
+          {visibleLinks.map(link => {
             const isActive = router.pathname === link.href;
             return (
               <Link 
@@ -163,7 +171,7 @@ export default function Navbar() {
               href="/join" 
               className="block w-full text-center py-4 rounded-full bg-white text-featured-blue font-black uppercase tracking-widest text-sm shadow-lg active:scale-95 transition-transform"
             >
-              Join Now
+              {KICKOFF_MODE ? 'Register Now' : 'Join Now'}
             </Link>
           )}
         </div>

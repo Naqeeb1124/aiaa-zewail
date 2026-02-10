@@ -44,6 +44,12 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
   const [selectedSlot, setSelectedSlot] = useState<string>('')
 
   useEffect(() => {
+    // Handle redirect if user is logged in
+    if (user && router.query.redirect) {
+      router.push(router.query.redirect as string);
+      return;
+    }
+
     // Listen for recruitment status
     const unsubStatus = onSnapshot(doc(db, "recruitment", "status"), (doc) => {
       if (doc.exists()) {

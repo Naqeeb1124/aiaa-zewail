@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Logo from './Logo'
+import { KICKOFF_MODE } from '../lib/config'
 
 export default function Footer() {
   return (
@@ -22,25 +23,40 @@ export default function Footer() {
             </div>
           </div>
 
-          <div>
-            <h4 className="text-white font-bold mb-6">Quick Links</h4>
-            <ul className="space-y-4">
-              <li><Link href="/projects" legacyBehavior><a className="hover:text-featured-green transition-colors">Projects</a></Link></li>
-              <li><Link href="/opportunities" legacyBehavior><a className="hover:text-featured-green transition-colors">Opportunities</a></Link></li>
-              <li><Link href="/tools" legacyBehavior><a className="hover:text-featured-green transition-colors">Resources</a></Link></li>
-              <li><Link href="/privacy" legacyBehavior><a className="hover:text-featured-green transition-colors">Privacy Policy</a></Link></li>
-              <li><Link href="/terms" legacyBehavior><a className="hover:text-featured-green transition-colors">Terms of Service</a></Link></li>
-            </ul>
-          </div>
+          {!KICKOFF_MODE && (
+            <>
+              <div>
+                <h4 className="text-white font-bold mb-6">Quick Links</h4>
+                <ul className="space-y-4">
+                  <li><Link href="/projects" legacyBehavior><a className="hover:text-featured-green transition-colors">Projects</a></Link></li>
+                  <li><Link href="/opportunities" legacyBehavior><a className="hover:text-featured-green transition-colors">Opportunities</a></Link></li>
+                  <li><Link href="/tools" legacyBehavior><a className="hover:text-featured-green transition-colors">Resources</a></Link></li>
+                  <li><Link href="/privacy" legacyBehavior><a className="hover:text-featured-green transition-colors">Privacy Policy</a></Link></li>
+                  <li><Link href="/terms" legacyBehavior><a className="hover:text-featured-green transition-colors">Terms of Service</a></Link></li>
+                </ul>
+              </div>
 
-          <div>
-            <h4 className="text-white font-bold mb-6">Join Us</h4>
-            <ul className="space-y-4">
-              <li><Link href="/join" legacyBehavior><a className="hover:text-featured-green transition-colors">Membership</a></Link></li>
-              <li><Link href="/contact" legacyBehavior><a className="hover:text-featured-green transition-colors">Contact</a></Link></li>
-              <li><Link href="/admin" legacyBehavior><a className="hover:text-featured-green transition-colors">Admin Portal</a></Link></li>
-            </ul>
-          </div>
+              <div>
+                <h4 className="text-white font-bold mb-6">Join Us</h4>
+                <ul className="space-y-4">
+                  <li><Link href="/join" legacyBehavior><a className="hover:text-featured-green transition-colors">Membership</a></Link></li>
+                  <li><Link href="/contact" legacyBehavior><a className="hover:text-featured-green transition-colors">Contact</a></Link></li>
+                  <li><Link href="/admin" legacyBehavior><a className="hover:text-featured-green transition-colors">Admin Portal</a></Link></li>
+                </ul>
+              </div>
+            </>
+          )}
+
+          {KICKOFF_MODE && (
+            <div>
+              <h4 className="text-white font-bold mb-6">Explore</h4>
+              <ul className="space-y-4">
+                <li><Link href="/#board" legacyBehavior><a className="hover:text-featured-green transition-colors">The Board</a></Link></li>
+                <li><Link href="/join" legacyBehavior><a className="hover:text-featured-green transition-colors">Register</a></Link></li>
+                <li><Link href="/admin" legacyBehavior><a className="hover:text-featured-green transition-colors">Admin Portal</a></Link></li>
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
