@@ -4,72 +4,9 @@ import Seo from '../components/Seo'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-
-const teamMembers = [
-  {
-    name: 'Omar Elmetwally',
-    role: 'Chairperson',
-    major: 'Aerospace Engineering',
-    image: '/board-images/omar-metwally.png',
-    linkedin: 'https://www.linkedin.com/in/omar-elmetwally-ba272521b/'
-  },
-  {
-    name: 'Abdelrahman Alnaqeeb',
-    role: 'Vice Chairperson',
-    major: 'Aerospace Engineering',
-    image: '/board-images/naqeeb.jpeg',
-    linkedin: '#'
-  },
-  {
-    name: 'Asmaa Sapry',
-    role: 'Vice Chairperson',
-    major: 'Aerospace Engineering',
-    image: '/board-images/Asmaa.jpg',
-    linkedin: '#'
-  },
-  {
-    name: 'Walid Sherif ',
-    role: 'Technical Operations Officer',
-    major: 'Renewable Energy Engineering',
-    image: '/board-images/walid.jpeg',
-    linkedin: 'https://www.linkedin.com/in/walid-sherif-saeed'
-  },
-  {
-    name: 'Zeina Amr',
-    role: 'Secretary',
-    major: 'Renewable Energy Engineering',
-    image: '/board-images/Zeina amr picture.jpg',
-    linkedin: 'https://www.linkedin.com/in/zeina-amr-608a92252'
-  },
-  {
-    name: 'Omar Ghoneim',
-    role: 'Treasurer',
-    major: 'Business',
-    image: '/board-images/Omar Ghoneim.jpg',
-    linkedin: '#'
-  },
-  {
-    name:'Maryam Raslan',
-    role: 'Marketing & publicity Officer',
-    major: 'Business',
-    image: '/board-images/MARYAM.jpg',
-    linkedin: 'https://www.linkedin.com/in/maryam-raslan-75329222a'
-  },
-  {
-    name: 'Mohamed Ayman',
-    role: 'Public Relations Officer',
-    major: 'Computer Science',
-    image: '/board-images/Mohamed Ayman.jpeg',
-    linkedin: 'https://www.linkedin.com/in/mohammed-ayman-8a1772228'
-  },
-  {
-    name: 'Adham Ahmed',
-    role: 'General administrative Officer',
-    major: 'Aerospace Engineering',
-    image: '/board-images/Adham.jpg',
-    linkedin: 'https://www.linkedin.com/in/adham-ahmed-800b3b36b'
-  }
-]
+import { db } from '../lib/firebase'
+import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore'
+import { teamMembers } from '../lib/teamData'
 
 const TeamMemberCard = ({ member }: { member: any }) => (
   <div className="group relative bg-white rounded-[40px] overflow-hidden shadow-sm border border-slate-100 hover:shadow-xl hover:border-featured-green/50 transition-all duration-500 hover:-translate-y-2">
@@ -83,6 +20,21 @@ const TeamMemberCard = ({ member }: { member: any }) => (
         className="object-cover group-hover:scale-110 transition-transform duration-700"
       />
 
+      {/* Social Links (appear on hover) */}
+      <div className="absolute top-6 right-6 z-20 translate-y-[-20px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 flex flex-col gap-3">
+        {member.linkedin && member.linkedin !== '#' && (
+          <a href={member.linkedin} target="_blank" rel="noreferrer" className="p-3.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-[#0077b5] transition-all hover:scale-110" title="LinkedIn">
+            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
+          </a>
+        )}
+
+        {member.link && member.link !== '#' && (
+          <a href={member.link} target="_blank" rel="noreferrer" className="p-3.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-featured-green transition-all hover:scale-110" title="Portfolio / Website">
+            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" /></svg>
+          </a>
+        )}
+      </div>
+
       <div className="absolute bottom-0 left-0 w-full p-10 z-20 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
         <p className="text-zewail-cyan font-black text-[10px] tracking-[0.2em] uppercase mb-2">{member.role}</p>
         <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight leading-tight">{member.name}</h3>
@@ -94,13 +46,68 @@ const TeamMemberCard = ({ member }: { member: any }) => (
 
 export default function KickoffPage() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  const [event, setEvent] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const target = new Date('2026-02-17T12:00:00')
+    const fetchLatestEvent = async () => {
+      try {
+        const eventsRef = collection(db, 'events')
+        
+        // 1. Try to find an event explicitly flagged as Kickoff
+        const qKickoff = query(
+          eventsRef, 
+          where('isKickoff', '==', true),
+          limit(1)
+        )
+        const kickoffSnapshot = await getDocs(qKickoff)
+        
+        if (!kickoffSnapshot.empty) {
+          setEvent({ id: kickoffSnapshot.docs[0].id, ...kickoffSnapshot.docs[0].data() })
+        } else {
+          // 2. Fallback: Get the next upcoming event
+          const qUpcoming = query(
+            eventsRef, 
+            where('date', '>=', new Date().toISOString()),
+            orderBy('date', 'asc'),
+            limit(1)
+          )
+          const upcomingSnapshot = await getDocs(qUpcoming)
+          
+          if (!upcomingSnapshot.empty) {
+            setEvent({ id: upcomingSnapshot.docs[0].id, ...upcomingSnapshot.docs[0].data() })
+          } else {
+            // 3. Last fallback: Get most recent past event
+            const qRecent = query(
+              eventsRef,
+              orderBy('date', 'desc'),
+              limit(1)
+            )
+            const recentSnapshot = await getDocs(qRecent)
+            if (!recentSnapshot.empty) {
+              setEvent({ id: recentSnapshot.docs[0].id, ...recentSnapshot.docs[0].data() })
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching kickoff event:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchLatestEvent()
+  }, [])
+
+  useEffect(() => {
+    if (!event?.date) return
+
+    const target = new Date(event.date)
     const interval = setInterval(() => {
       const now = new Date()
       const diff = target.getTime() - now.getTime()
       if (diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
         clearInterval(interval)
         return
       }
@@ -112,7 +119,11 @@ export default function KickoffPage() {
       })
     }, 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [event])
+
+  const eventDate = event ? new Date(event.date) : null
+  const formattedDate = eventDate ? eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBA'
+  const formattedTime = eventDate ? eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans">
@@ -140,26 +151,28 @@ export default function KickoffPage() {
             </p>
 
             {/* Countdown */}
-            <div className="flex justify-center gap-4 md:gap-8 mb-16">
-              {[
-                { label: 'Days', value: timeLeft.days },
-                { label: 'Hours', value: timeLeft.hours },
-                { label: 'Mins', value: timeLeft.minutes },
-                { label: 'Secs', value: timeLeft.seconds }
-              ].map((unit) => (
-                <div key={unit.label} className="flex flex-col items-center">
-                  <div className="text-4xl md:text-6xl font-black text-featured-blue">{unit.value.toString().padStart(2, '0')}</div>
-                  <div className="text-[10px] md:text-xs uppercase font-bold tracking-[0.2em] text-slate-400">{unit.label}</div>
-                </div>
-              ))}
-            </div>
+            {!loading && event && (
+              <div className="flex justify-center gap-4 md:gap-8 mb-16">
+                {[
+                  { label: 'Days', value: timeLeft.days },
+                  { label: 'Hours', value: timeLeft.hours },
+                  { label: 'Mins', value: timeLeft.minutes },
+                  { label: 'Secs', value: timeLeft.seconds }
+                ].map((unit) => (
+                  <div key={unit.label} className="flex flex-col items-center">
+                    <div className="text-4xl md:text-6xl font-black text-featured-blue">{unit.value.toString().padStart(2, '0')}</div>
+                    <div className="text-[10px] md:text-xs uppercase font-bold tracking-[0.2em] text-slate-400">{unit.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link 
-                href="/join?redirect=/events/RodbpynKzPyWs4OtSv38" 
+                href={event ? `/join?redirect=/events/${event.id}` : "/join"} 
                 className="px-10 py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-sm hover:bg-featured-green transition-all shadow-xl transform hover:-translate-y-0.5"
               >
-                Register for the Event
+                {event ? 'Register for the Event' : 'Join the Mission'}
               </Link>
             </div>
           </div>
@@ -174,8 +187,12 @@ export default function KickoffPage() {
                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
                 <h3 className="text-featured-blue font-black uppercase tracking-widest text-xs mb-4">When & Where</h3>
-                <p className="text-2xl font-black mb-2 text-slate-900 uppercase">Feb 17 or 18</p>
-                <p className="text-slate-500 font-medium leading-relaxed">Week 2, University Lecture Hall. 75 minutes of high-impact career mapping.</p>
+                <p className="text-2xl font-black mb-2 text-slate-900 uppercase">
+                  {formattedDate} {formattedTime && `@ ${formattedTime}`}
+                </p>
+                <p className="text-slate-500 font-medium leading-relaxed">
+                  {event?.location || 'Location to be announced.'} 75 minutes of high-impact career mapping.
+                </p>
               </div>
 
               <div className="bg-slate-50 p-12 rounded-[40px] border border-slate-100 transition-all hover:shadow-lg">
@@ -233,7 +250,7 @@ export default function KickoffPage() {
               Ready to <span className="text-zewail-cyan italic">Ignite</span> Your Career?
             </h2>
             <Link 
-              href="/join?redirect=/events/RodbpynKzPyWs4OtSv38" 
+              href={event ? `/join?redirect=/events/${event.id}` : "/join"} 
               className="inline-block px-12 py-5 bg-white text-featured-blue font-black uppercase tracking-widest text-lg rounded-full hover:bg-featured-green hover:text-white transition-all shadow-2xl transform hover:-translate-y-1"
             >
               Register Now

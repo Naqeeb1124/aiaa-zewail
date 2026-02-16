@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { db, auth } from '../../../lib/firebase';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
@@ -12,7 +12,7 @@ export default function EventCheckIn() {
     const router = useRouter();
     const { id } = router.query;
     const [user, setUser] = useState<any>(null);
-    const [status, setStatus] = useState<'loading' | 'success' | 'not_registered' | 'error' | 'unauthenticated'>('loading');
+    const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'unauthenticated'>('loading');
     const [eventName, setEventName] = useState('');
 
     useEffect(() => {
@@ -49,11 +49,23 @@ export default function EventCheckIn() {
                 const snap = await getDocs(q);
                 
                 if (snap.empty) {
-                    setStatus('not_registered');
+                    // Auto-register and check-in
+                    const regData = {
+                        eventId: id,
+                        userId: user.uid,
+                        userEmail: user.email,
+                        userName: user.displayName || 'Anonymous',
+                        status: 'attended',
+                        registeredAt: new Date().toISOString(),
+                        attendedAt: new Date().toISOString(),
+                        autoRegistered: true
+                    };
+                    await addDoc(collection(db, 'registrations'), regData);
+                    setStatus('success');
                     return;
                 }
 
-                // 3. Update status to attended
+                // 3. Update existing status to attended
                 const registrationId = snap.docs[0].id;
                 await updateDoc(doc(db, 'registrations', registrationId), {
                     status: 'attended',
@@ -99,21 +111,6 @@ export default function EventCheckIn() {
                         </div>
                     )}
 
-                    {status === 'not_registered' && (
-                        <div>
-                            <div className="w-24 h-24 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-8 text-4xl">
-                                !
-                            </div>
-                            <h2 className="text-2xl font-black text-slate-900 mb-4 uppercase tracking-tighter">No Registration Found</h2>
-                            <p className="text-slate-500 font-medium mb-8">It seems you haven&apos;t registered for this event yet. Please register first to check in.</p>
-                            <Link href={`/events/${id}`} legacyBehavior>
-                                <a className="inline-block w-full py-4 bg-featured-blue text-white rounded-full font-black uppercase tracking-widest text-xs hover:bg-featured-green transition-all shadow-lg">
-                                    Register Now
-                                </a>
-                            </Link>
-                        </div>
-                    )}
-
                     {status === 'unauthenticated' && (
                         <div>
                             <div className="w-24 h-24 bg-blue-50 text-featured-blue rounded-full flex items-center justify-center mx-auto mb-8 text-4xl">
@@ -121,7 +118,7 @@ export default function EventCheckIn() {
                             </div>
                             <h2 className="text-2xl font-black text-slate-900 mb-4 uppercase tracking-tighter">Identity Required</h2>
                             <p className="text-slate-500 font-medium mb-8">Please sign in with your Zewail City account to complete your check-in.</p>
-                            <Link href="/join" legacyBehavior>
+                            <Link href={`/join?redirect=${encodeURIComponent(router.asPath)}`} legacyBehavior>
                                 <a className="inline-block w-full py-4 bg-featured-blue text-white rounded-full font-black uppercase tracking-widest text-xs hover:bg-featured-green transition-all shadow-lg">
                                     Sign In
                                 </a>

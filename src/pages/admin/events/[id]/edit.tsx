@@ -20,7 +20,8 @@ export default function EditEvent() {
     location: '',
     category: 'Workshop',
     description: '',
-    imageUrl: ''
+    imageUrl: '',
+    isKickoff: false
   });
 
   const fetchEvent = useCallback(async () => {
@@ -30,7 +31,6 @@ export default function EditEvent() {
 
       if (docSnap.exists()) {
         const data = docSnap.data();
-        // Extract date and time from the ISO string
         const eventDate = new Date(data.date);
         const dateStr = eventDate.toISOString().split('T')[0];
         const timeStr = eventDate.toTimeString().split(' ')[0].substring(0, 5);
@@ -42,7 +42,8 @@ export default function EditEvent() {
           location: data.location || '',
           category: data.category || 'Workshop',
           description: data.description || '',
-          imageUrl: data.imageUrl || ''
+          imageUrl: data.imageUrl || '',
+          isKickoff: data.isKickoff || false
         });
       } else {
         alert('Event not found');
@@ -62,8 +63,9 @@ export default function EditEvent() {
   }, [id, fetchEvent]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setEvent(prevState => ({ ...prevState, [name]: value }));
+    const { name, value, type } = e.target as HTMLInputElement;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    setEvent(prevState => ({ ...prevState, [name]: val }));
   };
 
   const handleImageUploadSuccess = (url: string) => {
@@ -179,6 +181,18 @@ export default function EditEvent() {
               <div>
                 <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Cover Image</label>
                 <ImageUpload onUploadSuccess={handleImageUploadSuccess} initialImageUrl={event.imageUrl} />
+              </div>
+
+              <div className="flex items-center gap-2 py-2">
+                <input 
+                    type="checkbox" 
+                    name="isKickoff" 
+                    id="isKickoff"
+                    checked={event.isKickoff} 
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-featured-blue rounded border-slate-300 focus:ring-featured-blue"
+                />
+                <label htmlFor="isKickoff" className="text-xs font-bold text-slate-600 uppercase tracking-wide cursor-pointer">Set as Home Page Countdown</label>
               </div>
 
               <div>

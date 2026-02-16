@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { auth } from '../lib/firebase';
 
 interface ImageUploadProps {
   onUploadSuccess: (url: string) => void;
@@ -28,12 +29,22 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUploadSuccess, initialImage
     setUploading(true);
     setError(null);
 
+    const idToken = await auth.currentUser?.getIdToken();
+    if (!idToken) {
+      setError('You must be logged in to upload images.');
+      setUploading(false);
+      return;
+    }
+
     const formData = new FormData();
     formData.append('file', imageFile);
 
     try {
       const response = await fetch('/api/upload', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+        },
         body: formData,
       });
 
