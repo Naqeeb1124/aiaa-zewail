@@ -219,6 +219,15 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
     }
     if (user) {
       await setDoc(doc(db, "applications", user.uid), data)
+      
+      // Update User Profile with latest info from form
+      await updateDoc(doc(db, "users", user.uid), {
+        phone: data.phone,
+        major: data.major,
+        year: data.year,
+        lastUpdated: new Date().toISOString()
+      })
+
       setApplicationStatus('applied')
     }
 

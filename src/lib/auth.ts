@@ -4,27 +4,34 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 
 /**
  * Extracts Name and Student ID from Zewail City Google Display Name
- * Format: "First Last ID" -> e.g., "Abdelrahman Mohamed 202200281"
+ * Handles formats: 
+ * 1. "First Last 202200281" (Space separated)
+ * 2. "First Last-202200281" (Hyphen separated)
  */
 export const parseZewailName = (displayName: string | null) => {
   if (!displayName) return { firstName: '', lastName: '', studentId: '' };
 
-  const parts = displayName.trim().split(/\s+/);
+  let namePart = displayName.trim();
+  let studentId = '';
+
+  // Match ID at the end (either space or hyphen before 9 digits starting with 20)
+  const idMatch = namePart.match(/[\s-](20\d{7})$/);
   
-  // Assuming the last part is always the ID
-  const studentId = parts.length > 1 ? parts[parts.length - 1] : '';
-  
-  // If we have an ID, remove it from the name parts
-  const nameParts = /^\d+$/.test(studentId) ? parts.slice(0, -1) : parts;
-  
-  const firstName = nameParts[0] || '';
-  const lastName = nameParts.slice(1).join(' ') || '';
+  if (idMatch) {
+    studentId = idMatch[1];
+    // Remove the ID and the separator (space or hyphen) from the name
+    namePart = namePart.substring(0, idMatch.index).trim();
+  }
+
+  const parts = namePart.split(/\s+/);
+  const firstName = parts[0] || '';
+  const lastName = parts.slice(1).join(' ') || '';
 
   return {
     firstName,
     lastName,
-    fullName: nameParts.join(' '),
-    studentId: /^\d+$/.test(studentId) ? studentId : ''
+    fullName: namePart,
+    studentId: studentId
   };
 }
 
@@ -56,17 +63,23 @@ export const signInWithGoogle = async () => {
   try {
     const { firstName, lastName, fullName, studentId } = parseZewailName(user.displayName);
     const docRef = doc(db, 'users', user.uid);
-    
-    await setDoc(docRef, { 
+    const docSnap = await getDoc(docRef);
+
+    const userData: any = { 
       email: user.email, 
-      name: fullName || user.displayName, // Fallback to display name if parse fails
+      name: fullName || user.displayName, 
       firstName,
       lastName,
       studentId,
       subscribedToAnnouncements: true,
       lastLogin: serverTimestamp(),
-      joinedAt: serverTimestamp() // Set on first login
-    }, { merge: true });
+    };
+
+    if (!docSnap.exists()) {
+      userData.joinedAt = serverTimestamp();
+    }
+    
+    await setDoc(docRef, userData, { merge: true });
 
     console.log("Database record updated for:", fullName);
     return res;

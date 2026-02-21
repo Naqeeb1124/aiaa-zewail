@@ -34,7 +34,10 @@ export default function ApplicationForm({ onSubmit, applicationType }: Applicati
               ...prev,
               name: userData.name || user.displayName || '',
               email: userData.email || user.email || '',
-              studentId: userData.studentId || '',
+              zcid: userData.studentId || '',
+              phone: userData.phone || '',
+              major: userData.major || '',
+              year: userData.year || '1',
             }))
           }
         }
@@ -56,7 +59,7 @@ export default function ApplicationForm({ onSubmit, applicationType }: Applicati
     }
   }
 
-  const inputClasses = "w-full px-6 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue transition-all outline-none bg-slate-50 focus:bg-white font-medium text-slate-700";
+  const inputClasses = "w-full px-6 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue transition-all outline-none bg-slate-50 focus:bg-white font-medium text-slate-700 disabled:opacity-60 disabled:cursor-not-allowed";
   const labelClasses = "block text-[10px] font-black text-slate-400 mb-3 uppercase tracking-[0.2em] ml-1";
   const sectionTitle = "text-2xl font-black text-slate-900 mb-10 pb-3 border-b-4 border-featured-green inline-block uppercase tracking-tight";
 
@@ -68,12 +71,17 @@ export default function ApplicationForm({ onSubmit, applicationType }: Applicati
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="md:col-span-2">
                 <label className={labelClasses}>Full Name</label>
-                <input type="text" name="name" required value={formData.name} onChange={handleChange} className={inputClasses} placeholder="Enter your full name" />
+                <input type="text" name="name" required value={formData.name} readOnly className={inputClasses} />
+                <p className="text-[10px] font-bold text-slate-400 mt-2 ml-1 italic">* Fetched from account - cannot be changed</p>
+            </div>
+            <div>
+                <label className={labelClasses}>Zewail City ID</label>
+                <input type="text" name="zcid" required value={formData.zcid} readOnly className={inputClasses} />
+                <p className="text-[10px] font-bold text-slate-400 mt-2 ml-1 italic">* Fetched from account - cannot be changed</p>
             </div>
             <div>
                 <label className={labelClasses}>University Email</label>
-                <input type="email" name="email" required value={formData.email} onChange={handleChange} className={inputClasses} readOnly />
-                <p className="text-[10px] font-bold text-slate-400 mt-2 ml-1 italic">* Automatically filled</p>
+                <input type="email" name="email" required value={formData.email} readOnly className={inputClasses} />
             </div>
             <div>
                 <label className={labelClasses}>Phone (WhatsApp)</label>
@@ -112,6 +120,12 @@ export default function ApplicationForm({ onSubmit, applicationType }: Applicati
                     <option>5</option>
                 </select>
             </div>
+            {applicationType === 'no_interview' && (
+              <div className="md:col-span-2">
+                <label className={labelClasses}>LinkedIn / Portfolio Link</label>
+                <input type="url" name="linkedin" value={formData.linkedin} onChange={handleChange} className={inputClasses} placeholder="https://linkedin.com/in/..." />
+              </div>
+            )}
         </div>
       </div>
 
@@ -129,54 +143,103 @@ export default function ApplicationForm({ onSubmit, applicationType }: Applicati
             >
               <div className="font-black uppercase tracking-tight">{team}</div>
               <div className="text-[10px] opacity-60 uppercase mt-2 font-black tracking-widest">{selectedTeams.includes(team) ? 'Selected' : 'Select Team'}</div>
+              <input type="hidden" name="team" value={team} disabled={!selectedTeams.includes(team)} />
             </button>
           ))}
         </div>
       </div>
 
       {/* SECTION 3 — Conditional Questions */}
-      {selectedTeams.length > 0 && (
-        <div className="mb-16">
-          <h2 className={sectionTitle}>Specific Questions</h2>
-          <div className="space-y-10">
-            {selectedTeams.includes('Technical') && (
-                <div className="p-8 bg-slate-50 rounded-[32px] border border-slate-100">
-                    <h3 className="text-lg font-black text-featured-blue mb-6 flex items-center gap-3 uppercase tracking-tight">
-                        <span className="w-10 h-10 bg-featured-blue text-white rounded-xl flex items-center justify-center text-sm shadow-lg">🛠</span> 
-                        Technical Team
-                    </h3>
-                    <div className="space-y-6">
-                        <div>
-                            <label className={labelClasses}>Primary Interest Area</label>
-                            <select name="technical_interest" className={inputClasses}>
-                                <option>Aerodynamics</option>
-                                <option>Propulsion</option>
-                                <option>CAD & Design</option>
-                                <option>Controls & Avionics</option>
-                                <option>Space Systems</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className={labelClasses}>Relevant Software/Skills</label>
-                            <textarea name="technical_software" rows={2} className={inputClasses} placeholder="SolidWorks, MATLAB, Python, etc."></textarea>
-                        </div>
-                    </div>
-                </div>
-            )}
-            
-            <div className="space-y-8">
-                <div>
-                    <label className={labelClasses}>Why do you want to join AIAA Zewail?</label>
-                    <textarea name="motivation_join" rows={4} required className={inputClasses} placeholder="Tell us about your interest in aerospace..."></textarea>
-                </div>
-                <div>
-                    <label className={labelClasses}>What do you hope to achieve?</label>
-                    <textarea name="motivation_achieve" rows={4} required className={inputClasses} placeholder="What skills do you want to learn?"></textarea>
-                </div>
-            </div>
+      <div className="mb-16">
+        <h2 className={sectionTitle}>Specific Questions</h2>
+        <div className="space-y-10">
+          {selectedTeams.includes('Technical') && (
+              <div className="p-8 bg-slate-50 rounded-[32px] border border-slate-100">
+                  <h3 className="text-lg font-black text-featured-blue mb-6 flex items-center gap-3 uppercase tracking-tight">
+                      <span className="w-10 h-10 bg-featured-blue text-white rounded-xl flex items-center justify-center text-sm shadow-lg">🛠</span> 
+                      Technical Team
+                  </h3>
+                  <div className="space-y-6">
+                      <div>
+                          <label className={labelClasses}>Primary Interest Area</label>
+                          <select name="technical_interest" className={inputClasses}>
+                              <option>Aerodynamics</option>
+                              <option>Propulsion</option>
+                              <option>CAD & Design</option>
+                              <option>Controls & Avionics</option>
+                              <option>Space Systems</option>
+                          </select>
+                      </div>
+                      <div>
+                          <label className={labelClasses}>Relevant Software/Skills</label>
+                          <textarea name="technical_software" rows={2} className={inputClasses} placeholder="SolidWorks, MATLAB, Python, etc."></textarea>
+                      </div>
+                      {applicationType === 'no_interview' && (
+                        <>
+                          <div>
+                              <label className={labelClasses}>Describe a technical project you worked on.</label>
+                              <textarea name="technical_projects" rows={3} required className={inputClasses}></textarea>
+                          </div>
+                          <div>
+                              <label className={labelClasses}>Describe a technical challenge you enjoyed solving.</label>
+                              <textarea name="technical_challenge" rows={3} required className={inputClasses}></textarea>
+                          </div>
+                        </>
+                      )}
+                  </div>
+              </div>
+          )}
+
+          {selectedTeams.includes('Marketing & Media') && applicationType === 'no_interview' && (
+              <div className="p-8 bg-slate-50 rounded-[32px] border border-slate-100">
+                  <h3 className="text-lg font-black text-pink-600 mb-6 flex items-center gap-3 uppercase tracking-tight">
+                      <span className="w-10 h-10 bg-pink-600 text-white rounded-xl flex items-center justify-center text-sm shadow-lg">🎨</span> 
+                      Marketing & Media
+                  </h3>
+                  <div className="space-y-6">
+                      <div>
+                          <label className={labelClasses}>Tools you are proficient in (Photoshop, Premiere, etc.)</label>
+                          <textarea name="marketing_tools" rows={2} required className={inputClasses}></textarea>
+                      </div>
+                      <div>
+                          <label className={labelClasses}>Briefly describe your creative process.</label>
+                          <textarea name="marketing_experience" rows={3} required className={inputClasses}></textarea>
+                      </div>
+                  </div>
+              </div>
+          )}
+          
+          <div className="space-y-8">
+              <div>
+                  <label className={labelClasses}>Why do you want to join AIAA Zewail?</label>
+                  <textarea name="motivation_join" rows={4} required className={inputClasses} placeholder="Tell us about your interest in aerospace..."></textarea>
+              </div>
+              <div>
+                  <label className={labelClasses}>What do you hope to achieve?</label>
+                  <textarea name="motivation_achieve" rows={4} required className={inputClasses} placeholder="What skills do you want to learn?"></textarea>
+              </div>
+              {applicationType === 'no_interview' && (
+                <>
+                  <div>
+                      <label className={labelClasses}>How many hours can you commit per week?</label>
+                      <select name="availability" required className={inputClasses}>
+                          <option>2–4 hours</option>
+                          <option>5–8 hours</option>
+                          <option>9+ hours</option>
+                      </select>
+                  </div>
+                  <div>
+                      <label className={labelClasses}>Are you comfortable with attending bi-weekly meetings?</label>
+                      <select name="meetings" required className={inputClasses}>
+                          <option>Yes</option>
+                          <option>No</option>
+                      </select>
+                  </div>
+                </>
+              )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* SECTION 6 — Final */}
       <div className="mb-16">

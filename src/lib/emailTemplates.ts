@@ -15,10 +15,10 @@ export const getBrandedTemplate = (contentHtml: string, siteUrl: string, unsubsc
                     <a href="https://www.instagram.com/aiaazc/" target="_blank" style="text-decoration: none; margin: 0 10px; display: inline-block;">
                         <img src="https://img.icons8.com/ios-filled/50/2b4b77/instagram.png" alt="Instagram" width="24" height="24" style="border: 0; display: inline-block;">
                     </a>
-                    <a href="https://www.linkedin.com/company/aiaazc/" target="_blank" style="text-decoration: none; margin: 0 10px; display: inline-block;">
+                    <a href="https://www.linkedin.com/company/aiaa-student-branch-zewail-city/" target="_blank" style="text-decoration: none; margin: 0 10px; display: inline-block;">
                         <img src="https://img.icons8.com/ios-filled/50/2b4b77/linkedin.png" alt="LinkedIn" width="24" height="24" style="border: 0; display: inline-block;">
                     </a>
-                    <a href="https://discord.gg/9KhjKKCu" target="_blank" style="text-decoration: none; margin: 0 10px; display: inline-block;">
+                    <a href="https://discord.gg/2xMQrCHdPd" target="_blank" style="text-decoration: none; margin: 0 10px; display: inline-block;">
                         <img src="https://img.icons8.com/ios-filled/50/2b4b77/discord-logo.png" alt="Discord" width="24" height="24" style="border: 0; display: inline-block;">
                     </a>
                 </div>

@@ -216,7 +216,20 @@ export default function EventRegistrations() {
                             <p className="text-slate-500 text-sm mb-8">Scan to automatically record attendance for <br/><strong>{event?.title}</strong></p>
                             
                             <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-inner flex justify-center mb-8">
-                                <QRCodeSVG value={checkInUrl} size={200} />
+                                <QRCodeSVG 
+                                    value={checkInUrl} 
+                                    size={200}
+                                    fgColor="#2b4b77"
+                                    level="H"
+                                    imageSettings={{
+                                        src: "/aiaa-logo-solo.jpeg",
+                                        x: undefined,
+                                        y: undefined,
+                                        height: 40,
+                                        width: 40,
+                                        excavate: true,
+                                    }}
+                                />
                             </div>
 
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 py-2 rounded-lg">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db, auth } from '../../lib/firebase';
-import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, addDoc } from 'firebase/firestore';
 import AdminGuard from '../../components/AdminGuard';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
@@ -20,6 +20,8 @@ export default function CommunicationsHub() {
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
     const [useBranding, setUseBranding] = useState(true);
+    const [isScheduled, setIsScheduled] = useState(false);
+    const [scheduledTime, setScheduledTime] = useState('');
     const [sending, setSending] = useState(false);
     const [progress, setProgress] = useState({ current: 0, total: 0 });
     const [result, setResult] = useState<any>(null);
@@ -114,6 +116,8 @@ export default function CommunicationsHub() {
 
     const handleSend = async () => {
         if (!subject || !message) return alert('Please fill in subject and message.');
+        if (isScheduled && !scheduledTime) return alert('Please select a time for the scheduled email.');
+
         setSending(true);
         setResult(null);
         
@@ -125,12 +129,30 @@ export default function CommunicationsHub() {
                 return;
             }
             
-            setProgress({ current: 0, total: recipients.length });
             const user = auth.currentUser;
             const token = await user?.getIdToken();
-
             let contentHtml = message.replace(/\n/g, '<br/>');
+
+            if (isScheduled) {
+                // Save to scheduled_emails collection
+                await addDoc(collection(db, 'scheduled_emails'), {
+                    recipients,
+                    subject,
+                    htmlTemplate: contentHtml,
+                    useBranding,
+                    siteUrl: SITE_URL,
+                    scheduledAt: new Date(scheduledTime).toISOString(),
+                    status: 'pending',
+                    createdAt: new Date().toISOString(),
+                    createdBy: user?.email
+                });
+                alert('Email successfully scheduled!');
+                setSending(false);
+                return;
+            }
             
+            setProgress({ current: 0, total: recipients.length });
+
             const res = await fetch('/api/admin/bulk-email', {
                 method: 'POST',
                 headers: {
@@ -150,7 +172,7 @@ export default function CommunicationsHub() {
             setResult(data);
         } catch (error) {
             console.error(error);
-            alert('Failed to send.');
+            alert('Failed to process.');
         } finally {
             setSending(false);
         }
@@ -248,6 +270,37 @@ export default function CommunicationsHub() {
                                     <button type="button" onClick={() => insertTag('{{email}}')} className="p-3 bg-slate-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 border border-slate-100 hover:border-featured-blue hover:text-featured-blue transition-all">{"{{email}}"}</button>
                                 </div>
                             </div>
+
+                            <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
+                                <h2 className="font-black text-slate-800 mb-6 uppercase tracking-tight text-xs flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                                    3. Timing
+                                </h2>
+                                <div className="space-y-4">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setIsScheduled(!isScheduled)}
+                                        className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${isScheduled ? 'border-amber-500 bg-amber-50/50 text-amber-700' : 'border-slate-50 text-slate-400'}`}
+                                    >
+                                        <span className="text-[10px] font-black uppercase tracking-widest">{isScheduled ? 'Scheduled Delivery' : 'Send Immediately'}</span>
+                                        <div className={`w-8 h-4 rounded-full relative transition-all ${isScheduled ? 'bg-amber-500' : 'bg-slate-200'}`}>
+                                            <div className={`absolute top-1 w-2 h-2 bg-white rounded-full transition-all ${isScheduled ? 'right-1' : 'left-1'}`} />
+                                        </div>
+                                    </button>
+
+                                    {isScheduled && (
+                                        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <label className="block text-[9px] font-black text-slate-400 mb-2 uppercase tracking-widest ml-1">Dispatch Time</label>
+                                            <input 
+                                                type="datetime-local" 
+                                                value={scheduledTime}
+                                                onChange={(e) => setScheduledTime(e.target.value)}
+                                                className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="lg:col-span-2 space-y-6">
@@ -311,9 +364,9 @@ export default function CommunicationsHub() {
                                         <button 
                                             type="button"
                                             onClick={handleSend}
-                                            className="w-full py-6 rounded-full bg-featured-blue text-white font-black uppercase tracking-[0.3em] text-sm hover:bg-featured-green transition-all shadow-2xl hover:shadow-featured-green/30 transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-4"
+                                            className={`w-full py-6 rounded-full text-white font-black uppercase tracking-[0.3em] text-sm transition-all shadow-2xl transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-4 ${isScheduled ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30' : 'bg-featured-blue hover:bg-featured-green shadow-featured-green/30'}`}
                                         >
-                                            🚀 SEND DISPATCH
+                                            {isScheduled ? '🚀 SCHEDULE DISPATCH' : '🚀 SEND DISPATCH'}
                                         </button>
                                     )}
 

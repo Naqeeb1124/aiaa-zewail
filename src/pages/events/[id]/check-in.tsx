@@ -87,7 +87,7 @@ export default function EventCheckIn() {
             <Seo title="Event Check-in - AIAA Zewail City" />
             <Navbar />
             
-            <main className="flex-grow flex items-center justify-center px-6 py-20">
+            <main className="flex-grow flex items-start justify-center px-6 pt-72 pb-20">
                 <div className="max-w-md w-full bg-white rounded-[40px] shadow-xl border border-slate-100 p-10 text-center">
                     {status === 'loading' && (
                         <div className="space-y-6">
