@@ -1,6 +1,6 @@
 import { auth, provider, db } from './firebase'
 import { signInWithPopup, signOut as fbSignOut } from 'firebase/auth'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore'
 
 /**
  * Extracts Name and Student ID from Zewail City Google Display Name
