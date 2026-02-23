@@ -27,8 +27,8 @@ export default function ReviewRequests() {
                 const userSnap = await getDoc(doc(db, 'users', data.userId));
                 const userData = userSnap.data() as UserProfile;
                 return {
-                    id: d.id,
                     ...data,
+                    id: d.id,
                     isMember: userData?.role === 'member' || userData?.role === 'admin'
                 };
             }))

@@ -263,6 +263,7 @@ export default function Projects() {
                 <div className="bg-white w-full max-w-3xl max-h-[85vh] rounded-[40px] overflow-hidden shadow-2xl flex flex-col animate-scale-up" onClick={e => e.stopPropagation()}>
                     <div className="relative h-48 md:h-64 flex-shrink-0">
                         {selectedProject.coverImage ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
                             <img src={selectedProject.coverImage} alt={selectedProject.title} className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full bg-slate-100 flex items-center justify-center text-7xl">{selectedProject.icon}</div>
