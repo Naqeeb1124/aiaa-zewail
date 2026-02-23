@@ -1,13 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import nodemailer from 'nodemailer'
 import { getBrandedTemplate } from '../../lib/emailTemplates';
-import { getAdminDb } from '../../lib/firebase-admin';
-import * as admin from 'firebase-admin';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse){
   if(req.method !== 'POST') return res.status(405).end()
   const { name, email, message } = req.body
   const SITE_URL = 'https://aiaa-zewail.vercel.app';
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -38,7 +40,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await transporter.sendMail(mailOptions);
     res.status(200).json({ ok: true })
   } catch (error: any) {
-    console.error(error);
-    res.status(500).json({ message: 'Error sending email' })
+    console.error('Nodemailer error:', error);
+    res.status(500).json({ 
+      message: 'Error sending email',
+      error: error.message || 'Unknown error'
+    })
   }
 }

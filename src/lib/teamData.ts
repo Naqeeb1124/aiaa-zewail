@@ -35,7 +35,7 @@ export const teamMembers = [
     name: 'Zeina Amr',
     role: 'Secretary',
     major: 'Renewable Energy Engineering',
-    image: '/board-images/Zeina amr picture.jpg',
+    image: '/board-images/Zeina%20amr%20picture.jpg',
     link: '#',
     linkedin: 'https://www.linkedin.com/in/zeina-amr-608a92252?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app'
   },
@@ -59,7 +59,7 @@ export const teamMembers = [
     name: 'Mohamed Ayman',
     role: 'Public Relations Officer',
     major: 'Computer Science',
-    image: '/board-images/Mohamed Ayman.jpeg',
+    image: '/board-images/Mohamed%20Ayman.jpeg',
     link: '#',
     linkedin: 'https://www.linkedin.com/in/mohammed-ayman-8a1772228?utm_source=share_via&utm_content=profile&utm_medium=member_android'
   },

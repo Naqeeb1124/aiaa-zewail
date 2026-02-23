@@ -73,9 +73,9 @@ service cloud.firestore {
     }
 
     // --- Admin & System ---
-    // Admins: Read own admin status
+    // Admins: Read own admin status, or let auth users list them for notification purposes
     match /admins/{email} {
-      allow read: if request.auth != null && request.auth.token.email == email;
+      allow read: if request.auth != null;
       allow write: if false; 
     }
 

@@ -11,6 +11,7 @@ interface Event {
   description: string;
   date: string;
   imageUrl?: string;
+  isArchived?: boolean;
 }
 
 const EventCard = ({ event }: { event: Event }) => {
@@ -27,8 +28,9 @@ const EventCard = ({ event }: { event: Event }) => {
           <Image
             src={event.imageUrl || "/announcements-placeholder-image.jpeg"}
             alt={event.title}
-            layout="fill"
-            objectFit="cover"
+            fill
+            sizes="(max-w-768px) 100vw, (max-w-1200px) 50vw, 33vw"
+            style={{ objectFit: 'cover' }}
             loader={imageLoader}
             className="group-hover:scale-110 transition-transform duration-700"
           />
@@ -55,12 +57,17 @@ const FeaturedEvents = () => {
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const q = query(collection(db, 'events'), orderBy('date', 'desc'), limit(3));
+      // Fetch more than 3 so we can filter archived ones and still potentially have 3
+      const q = query(collection(db, 'events'), orderBy('date', 'desc'), limit(10));
       const querySnapshot = await getDocs(q);
-      const fetchedEvents = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Event));
+      const fetchedEvents = querySnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Event))
+        .filter(event => !event.isArchived)
+        .slice(0, 3);
+      
       setEvents(fetchedEvents);
     };
 

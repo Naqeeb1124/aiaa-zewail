@@ -73,12 +73,16 @@ const FeaturedProjects = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'), limit(3));
+        const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'), limit(10));
         const querySnapshot = await getDocs(q);
-        const fetchedProjects = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Project));
+        const fetchedProjects = querySnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          } as Project))
+          .filter(project => !project.isArchived)
+          .slice(0, 3);
+        
         setProjects(fetchedProjects);
       } catch (error) {
         console.error("Error fetching featured projects:", error);

@@ -38,10 +38,10 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
   const { user, isAdmin, loading } = useAdmin()
   const router = useRouter()
   const [applicationStatus, setApplicationStatus] = useState<'loading' | 'not_applied' | 'applied' | 'accepted' | 'rejected'>('loading')
-  const [applicationType, setApplicationType] = useState<'interview' | 'no_interview' | null>(null)
   const [recruitmentOpen, setRecruitmentOpen] = useState(initialRecruitmentOpen)
   const [interview, setInterview] = useState<any>(null)
-  const [selectedSlot, setSelectedSlot] = useState<string>('')
+  const [selectedSlot, setSelectedSlot] = useState<any>(null)
+  const [testMode, setTestMode] = useState(false)
 
   useEffect(() => {
     // Handle redirect if user is logged in
@@ -94,49 +94,55 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
       return
     }
 
-    const interviewRef = doc(db, 'interviews', user.uid)
-    await updateDoc(interviewRef, {
-      selectedSlot,
-      status: 'scheduled',
-    })
+    try {
+        const interviewRef = doc(db, 'interviews', user.uid)
+        await updateDoc(interviewRef, {
+          selectedSlot: selectedSlot.time,
+          location: selectedSlot.location,
+          status: 'scheduled',
+        })
 
-    const subject = `Interview Scheduled for Your AIAA Zewail City Application`;
-    const text = `Dear applicant,\n\nYour interview has been scheduled for ${selectedSlot} at ${interview.location}.\n\nBest regards,\nAIAA Zewail City Team`;
+        const subject = `Interview Scheduled for Your AIAA Zewail City Application`;
+        const text = `Dear applicant,\n\nYour interview has been scheduled for ${new Date(selectedSlot.time).toLocaleString()} at ${selectedSlot.location}.\n\nBest regards,\nAIAA Zewail City Team`;
 
-    const token = await user.getIdToken()
+        const token = await user.getIdToken()
 
-    await fetch('/api/send-email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        to: user.email || '',
-        subject,
-        text,
-      }),
-    });
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            to: user.email || '',
+            subject,
+            text,
+          }),
+        });
 
-    // Notify all admins
-    const adminEmails = await getAdminEmails();
-    await Promise.all(adminEmails.map(email => 
-      fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          to: email,
-          subject: `Interview Scheduled with ${user.displayName}`,
-          text: `${user.displayName} has scheduled their interview for ${selectedSlot} at ${interview.location}.`,
-        }),
-      })
-    ));
+        // Notify all admins
+        const adminEmails = await getAdminEmails();
+        await Promise.all(adminEmails.map(email => 
+          fetch('/api/send-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              to: email,
+              subject: `Interview Scheduled with ${user.displayName}`,
+              text: `${user.displayName} has scheduled their interview for ${new Date(selectedSlot.time).toLocaleString()} at ${selectedSlot.location}.`,
+            }),
+          })
+        ));
 
-    alert('Interview slot confirmed!')
-    setInterview({ ...interview, status: 'scheduled', selectedSlot })
+        alert('Interview slot confirmed!')
+        setInterview({ ...interview, status: 'scheduled', selectedSlot: selectedSlot.time, location: selectedSlot.location })
+    } catch (error) {
+        console.error("Error confirming slot:", error)
+        alert("Failed to confirm slot.")
+    }
   }
 
   const handleApplicationSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -144,112 +150,80 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
     if (!user) return;
 
     const formData = new FormData(e.currentTarget)
-    const cvFile = formData.get('cv') as File
+    
+    try {
+        const token = await user.getIdToken()
 
-    const token = await user.getIdToken()
-// ... later in the component ...
+        // NEW REVAMPED DATA STRUCTURE
+        const data = {
+          // Section 1: Basic Info
+          name: formData.get('name'),
+          email: formData.get('email'),
+          phone: formData.get('phone'),
+          major: formData.get('major'),
+          year: formData.get('year'),
+          previous_clubs: formData.get('previous_clubs'),
 
-    let cvUrl = ''
-    if (cvFile && cvFile.size > 0) {
-      const uploadFormData = new FormData();
-      uploadFormData.append('file', cvFile);
+          // Section 2: Commitment Filter
+          hours_per_week: formData.get('hours_per_week'),
+          weekly_meetings: formData.get('weekly_meetings'),
+          semester_commitment: formData.get('semester_commitment'),
+          other_clubs: formData.get('other_clubs'),
 
-      try {
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: uploadFormData,
-        });
+          // Section 3: Skills & Interests
+          interests: Array.from(formData.getAll('interests')),
+          tools: formData.get('tools'),
 
-        if (!response.ok) {
-          throw new Error('CV upload failed');
+          // Section 4: One Smart Question
+          impact_vision: formData.get('impact_vision'),
+
+          // Metadata
+          applicationType: 'interview', 
+          status: 'pending',
+          createdAt: new Date().toISOString()
         }
 
-        const data = await response.json();
-        cvUrl = data.url;
-      } catch (error) {
-        console.error('Error uploading CV:', error);
-        alert('There was an error uploading your CV. Please try again.');
-        return; // Stop form submission if CV upload fails
-      }
-    }
-    
-    const zcid = formData.get('zcid') as string;
-    if (applicationType === 'no_interview' && zcid && !/^20\d{7}$/.test(zcid)) {
-      alert('Invalid Zewail City ID format. It should be in the format 20XXXXXXX.');
-      return;
-    }
+        // 1. Save Application
+        await setDoc(doc(db, "applications", user.uid), data)
+        
+        // 2. Update User Profile (using setDoc with merge to avoid non-existent doc errors)
+        await setDoc(doc(db, "users", user.uid), {
+            phone: data.phone,
+            major: data.major,
+            year: data.year,
+            lastUpdated: new Date().toISOString()
+        }, { merge: true })
 
-    const data = {
-      name: formData.get('name'),
-      email: formData.get('email'),
-      phone: formData.get('phone'),
-      major: formData.get('major'),
-      year: formData.get('year'),
-      linkedin: formData.get('linkedin'),
-      teams: Array.from(formData.getAll('team')),
-      technical_interest: formData.get('technical_interest'),
-      technical_software: formData.get('technical_software'),
-      technical_projects: formData.get('technical_projects'),
-      technical_challenge: formData.get('technical_challenge'),
-      technical_gain: formData.get('technical_gain'),
-      marketing_skills: formData.get('marketing_skills'),
-      marketing_tools: formData.get('marketing_tools'),
-      marketing_experience: formData.get('marketing_experience'),
-      marketing_idea: formData.get('marketing_idea'),
-      marketing_focus: formData.get('marketing_focus'),
-      pr_experience: formData.get('pr_experience'),
-      pr_approach: formData.get('pr_approach'),
-      pr_ideas: formData.get('pr_ideas'),
-      hr_interest: formData.get('hr_interest'),
-      hr_teamwork: formData.get('hr_teamwork'),
-      hr_motivation: formData.get('hr_motivation'),
-      finance_experience: formData.get('finance_experience'),
-      finance_sponsorship: formData.get('finance_sponsorship'),
-      finance_fundraising: formData.get('finance_fundraising'),
-      availability: formData.get('availability'),
-      meetings: formData.get('meetings'),
-      commitments: formData.get('commitments'),
-      motivation_join: formData.get('motivation_join'),
-      motivation_achieve: formData.get('motivation_achieve'),
-      cv: cvUrl,
-      applicationType,
+        // 3. Update Status for UI
+        setApplicationStatus('applied')
+        if (testMode) {
+            alert("Test Submission Successful! Data has been recorded.");
+        }
+
+        // 4. Send Emails
+        const emailBody = Object.entries(data)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join('\n');
+
+        const adminEmails = await getAdminEmails();
+        await Promise.all(adminEmails.map(email => 
+          fetch('/api/send-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              to: email,
+              subject: testMode ? '[TEST] New Revamped Application' : 'New AIAA Application',
+              text: emailBody,
+            }),
+          })
+        ));
+    } catch (error: any) {
+        console.error("Submission error:", error)
+        alert(`Failed to submit: ${error.message}`)
     }
-    if (user) {
-      await setDoc(doc(db, "applications", user.uid), data)
-      
-      // Update User Profile with latest info from form
-      await updateDoc(doc(db, "users", user.uid), {
-        phone: data.phone,
-        major: data.major,
-        year: data.year,
-        lastUpdated: new Date().toISOString()
-      })
-
-      setApplicationStatus('applied')
-    }
-
-    const emailBody = Object.entries(data)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join('\n');
-
-    const adminEmails = await getAdminEmails();
-    await Promise.all(adminEmails.map(email => 
-      fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          to: email,
-          subject: 'New AIAA application',
-          text: emailBody,
-        }),
-      })
-    ));
   }
 
   return (
@@ -257,8 +231,9 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
       <Navbar />
       
       {/* Hero Section */}
-      <section className="pt-32 md:pt-72 pb-16 md:pb-20 bg-featured-blue text-white text-center">
-        <div className="max-w-4xl mx-auto px-6">
+      <section className="pt-32 md:pt-72 pb-16 md:pb-20 bg-featured-blue text-white text-center relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/10 to-transparent pointer-events-none"></div>
+        <div className="max-w-4xl mx-auto px-6 relative z-10">
           <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight uppercase tracking-tighter">
             Join the <span className="text-white/70 italic">Mission</span>
           </h1>
@@ -269,14 +244,14 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
       </section>
 
       <main className="max-w-4xl mx-auto px-6 py-12 md:py-20">
-        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-slate-100">
+        <div className="bg-white rounded-[40px] shadow-xl p-8 md:p-16 border border-slate-100">
           {!user && (
             <div className="text-center py-12">
-              <div className="w-20 h-20 bg-blue-50 text-featured-blue rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">👤</div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Registration</h2>
-              <p className="text-slate-600 mb-8 max-w-sm mx-auto">Please sign in with your Zewail City Google account to register as a member and access the application form.</p>
+              <div className="w-20 h-20 bg-blue-50 text-featured-blue rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm border border-blue-100">👤</div>
+              <h2 className="text-3xl font-black text-slate-900 mb-4 uppercase tracking-tight">Registration</h2>
+              <p className="text-slate-600 mb-8 max-w-sm mx-auto font-medium">Please sign in with your Zewail City Google account to register as a member and access the application form.</p>
               <button 
-                className="px-8 py-4 rounded-full bg-featured-blue text-white font-bold text-lg hover:bg-featured-green transition-all shadow-lg hover:shadow-featured-blue/30 flex items-center justify-center gap-3 mx-auto transform hover:-translate-y-0.5" 
+                className="px-10 py-4 rounded-full bg-featured-blue text-white font-black text-lg hover:bg-featured-green transition-all shadow-xl hover:shadow-featured-blue/30 flex items-center justify-center gap-3 mx-auto transform hover:-translate-y-0.5 uppercase tracking-widest" 
                 onClick={signInWithGoogle}
               >
                 Sign in with Google
@@ -284,131 +259,139 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
             </div>
           )}
 
-          {user && isAdmin && (
+          {user && isAdmin && applicationStatus !== 'applied' && (
             <div className="text-center py-12">
-               <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">🛡️</div>
-               <h2 className="text-2xl font-bold text-slate-900 mb-2">Admin Account</h2>
-               <p className="text-slate-500">You are logged in as an administrator. You do not need to submit a membership application.</p>
-               <Link href="/admin" className="inline-block mt-8 px-8 py-3 bg-slate-900 text-white rounded-full font-bold hover:bg-featured-blue transition-all shadow-lg transform hover:-translate-y-0.5">
-                  Go to Admin Portal
-               </Link>
+               <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm border border-amber-100">🛡️</div>
+               <h2 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">Admin Account</h2>
+               <p className="text-slate-500 font-medium">You are logged in as an administrator. You do not need to submit a membership application.</p>
+               
+               {!testMode ? (
+                 <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+                    <Link href="/admin" legacyBehavior>
+                        <a className="px-10 py-4 bg-slate-900 text-white rounded-full font-black uppercase tracking-widest text-sm hover:bg-featured-blue transition-all shadow-xl transform hover:-translate-y-0.5">
+                            Go to Admin Portal
+                        </a>
+                    </Link>
+                    <button 
+                        onClick={() => setTestMode(true)}
+                        className="px-10 py-4 bg-white border-2 border-slate-200 text-slate-600 rounded-full font-black uppercase tracking-widest text-sm hover:border-amber-500 hover:text-amber-600 transition-all transform hover:-translate-y-0.5"
+                    >
+                        Run System Test
+                    </button>
+                 </div>
+               ) : (
+                 <div className="mt-12 text-left animate-fade-in">
+                    <div className="mb-10 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center justify-between">
+                        <p className="text-amber-800 text-xs font-bold uppercase tracking-tight">System Test Mode Active — Submissions will be recorded under your admin UID</p>
+                        <button onClick={() => setTestMode(false)} className="text-amber-900 font-black text-xs uppercase hover:underline">Exit Test</button>
+                    </div>
+                    <ApplicationForm onSubmit={handleApplicationSubmit} />
+                 </div>
+               )}
+            </div>
+          )}
+
+          {user && applicationStatus === 'applied' && (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-blue-50 text-featured-blue rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm border border-blue-100">✉️</div>
+              <h2 className="text-3xl font-black text-slate-900 mb-4 uppercase tracking-tight">Application Transmitted</h2>
+              <p className="text-slate-600 mb-8 max-w-sm mx-auto font-medium leading-relaxed">Thank you for applying. We have received your application and our team is currently reviewing your profile. You will be contacted via email regarding your interview schedule.</p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button className="px-10 py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-sm hover:bg-featured-green transition-all shadow-xl transform hover:-translate-y-0.5" onClick={() => router.push('/')}>Return Home</button>
+                {isAdmin && (
+                    <button className="px-10 py-4 rounded-full bg-white border-2 border-slate-200 text-slate-600 font-black uppercase tracking-widest text-sm hover:border-featured-blue transition-all transform hover:-translate-y-0.5" onClick={() => { setApplicationStatus('not_applied'); setTestMode(false); }}>Reset Test State</button>
+                )}
+              </div>
             </div>
           )}
 
           {user && !isAdmin && applicationStatus === 'loading' && (
             <div className="text-center py-12 animate-pulse">
-              <p className="text-slate-400 font-bold uppercase tracking-widest">Checking status...</p>
-            </div>
-          )}
-
-          {user && !isAdmin && applicationStatus === 'applied' && (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-blue-50 text-featured-blue rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">✉️</div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Application Received!</h2>
-              <p className="text-slate-600 mb-8 max-w-sm mx-auto font-medium">Thank you for applying. We have received your application and our team is currently reviewing it. We will contact you via email soon.</p>
-              <button className="px-10 py-3 rounded-full bg-featured-blue text-white font-bold hover:bg-featured-green transition-all shadow-lg transform hover:-translate-y-0.5" onClick={() => router.push('/')}>Return Home</button>
+              <p className="text-slate-400 font-black uppercase tracking-widest">Accessing Secure Records...</p>
             </div>
           )}
 
           {user && !isAdmin && applicationStatus === 'rejected' && (
             <div className="text-center py-12">
-              <div className="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">✖</div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Application Status</h2>
-              <p className="text-slate-600 mb-8 max-w-sm mx-auto font-medium">We regret to inform you that your application has been rejected for this cycle. We encourage you to try again next semester!</p>
-              <button className="px-10 py-3 rounded-full bg-slate-900 text-white font-bold hover:bg-featured-blue transition-all shadow-lg transform hover:-translate-y-0.5" onClick={() => router.push('/')}>Return Home</button>
+              <div className="w-20 h-20 bg-red-50 text-red-600 rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm border border-red-100">✖</div>
+              <h2 className="text-3xl font-black text-slate-900 mb-4 uppercase tracking-tight">Mission Status</h2>
+              <p className="text-slate-600 mb-8 max-w-sm mx-auto font-medium">We regret to inform you that your application has not been selected for this recruitment cycle. We encourage you to continue your aerospace journey and try again next season!</p>
+              <button className="px-10 py-4 rounded-full bg-slate-900 text-white font-black uppercase tracking-widest text-sm hover:bg-featured-blue transition-all shadow-xl transform hover:-translate-y-0.5" onClick={() => router.push('/')}>Return Home</button>
             </div>
           )}
 
           {user && !isAdmin && applicationStatus === 'accepted' && (
             <div className="text-center py-12">
-              <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">★</div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Welcome to AIAA!</h2>
+              <div className="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm border border-green-100 animate-bounce">★</div>
+              <h2 className="text-3xl font-black text-slate-900 mb-4 uppercase tracking-tight">Welcome Aboard</h2>
               <p className="text-slate-600 mb-8 max-w-sm mx-auto font-medium">Congratulations! Your application has been accepted. You are now an official member of the AIAA Zewail City Student Branch.</p>
-              <button className="px-10 py-3 rounded-full bg-featured-green text-white font-bold hover:bg-featured-blue transition-all shadow-lg transform hover:-translate-y-0.5" onClick={() => router.push('/dashboard')}>Go to Dashboard</button>
+              <button className="px-10 py-4 rounded-full bg-featured-green text-white font-black uppercase tracking-widest text-sm hover:bg-featured-blue transition-all shadow-xl transform hover:-translate-y-0.5" onClick={() => router.push('/dashboard')}>Go to Member Portal</button>
             </div>
           )}
 
           {/* Interview Scheduling */}
-          {interview && interview.status === 'pending' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && (
-            <div className="mt-6 bg-slate-50 p-8 rounded-3xl border border-slate-100">
-              <h2 className="text-2xl font-bold mb-6 text-slate-800">Schedule Your Interview</h2>
-              <div className="flex items-center gap-4 mb-8 p-4 bg-white rounded-xl border border-slate-100">
-                <div className="w-12 h-12 bg-blue-100 text-featured-blue rounded-full flex items-center justify-center text-xl">📍</div>
-                <div>
-                   <p className="text-xs font-bold text-slate-400 uppercase">Location</p>
-                   <p className="font-bold text-slate-700">{interview.location}</p>
-                </div>
-              </div>
+          {interview && interview.status === 'pending' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && !isAdmin && (
+            <div className="mt-6 bg-slate-50 p-8 md:p-12 rounded-[32px] border border-slate-100 shadow-inner">
+              <h2 className="text-2xl font-black mb-6 text-slate-800 uppercase tracking-tight">Mission Interview</h2>
+              <p className="text-slate-500 mb-8 font-medium">Please select a time and location that fits your schedule.</p>
 
-              <p className="font-bold text-slate-700 mb-4">Select a time slot:</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-                {interview.availableSlots.map((slot: string) => (
-                  <label key={slot} className={`flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedSlot === slot ? 'border-featured-blue bg-blue-50 text-featured-blue' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+              <p className="font-black text-slate-400 text-[10px] uppercase tracking-widest mb-4 ml-1">Select Engagement Window:</p>
+              <div className="grid grid-cols-1 gap-3 mb-8">
+                {interview.slots?.map((slot: any, idx: number) => (
+                  <label key={idx} className={`flex items-center justify-between p-6 rounded-2xl border-2 cursor-pointer transition-all ${selectedSlot === slot ? 'border-featured-blue bg-blue-50 text-featured-blue shadow-md' : 'border-slate-100 bg-white hover:border-slate-200 shadow-sm'}`}>
                     <input
                       type="radio"
                       name="interview-slot"
-                      value={slot}
+                      value={idx}
                       checked={selectedSlot === slot}
-                      onChange={(e) => setSelectedSlot(e.target.value)}
+                      onChange={() => setSelectedSlot(slot)}
                       className="hidden"
                     />
-                    <span className="font-bold text-sm uppercase tracking-tighter">{new Date(slot).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                    <div>
+                        <span className="font-black text-sm uppercase tracking-tighter block">{new Date(slot.time).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">Location: {slot.location}</span>
+                    </div>
+                    {selectedSlot === slot && <div className="w-6 h-6 bg-featured-blue text-white rounded-full flex items-center justify-center text-xs">✓</div>}
                   </label>
                 ))}
               </div>
-              <button onClick={handleConfirmSlot} className="w-full py-4 bg-featured-blue text-white rounded-full font-black uppercase tracking-widest text-sm shadow-lg hover:bg-featured-green transition-all transform hover:-translate-y-0.5">
-                Confirm Interview Slot
+              <button onClick={handleConfirmSlot} className="w-full py-5 bg-featured-blue text-white rounded-full font-black uppercase tracking-widest text-sm shadow-xl hover:bg-featured-green transition-all transform hover:-translate-y-0.5">
+                Confirm Engagement Schedule
               </button>
             </div>
           )}
 
-          {interview && interview.status === 'scheduled' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && (
-              <div className="mt-6 bg-green-50 p-10 rounded-[32px] border border-green-100 text-center">
-                  <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">📅</div>
-                  <h2 className="text-2xl font-black text-green-800 mb-2">Interview Scheduled</h2>
-                  <p className="text-green-700 font-medium">Your interview is confirmed for <strong>{new Date(interview.selectedSlot).toLocaleString()}</strong>.</p>
-                  <p className="text-sm text-green-600 mt-4 font-bold uppercase tracking-wider">{interview.location.toLowerCase() === 'online' ? 'Meeting link will be sent via email' : `Location: ${interview.location}`}</p>
+          {interview && interview.status === 'scheduled' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && !isAdmin && (
+              <div className="mt-6 bg-green-50 p-10 rounded-[40px] border border-green-100 text-center shadow-inner">
+                  <div className="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl shadow-sm">📅</div>
+                  <h2 className="text-2xl font-black text-green-800 mb-2 uppercase tracking-tight">Interview Locked</h2>
+                  <p className="text-green-700 font-medium">Your mission briefing is scheduled for <strong>{new Date(interview.selectedSlot).toLocaleString()}</strong>.</p>
+                  <div className="mt-6 pt-6 border-t border-green-100">
+                    <p className="text-[10px] text-green-600 font-black uppercase tracking-[0.2em]">Location: {interview.location}</p>
+                    {interview.location.toLowerCase().includes('online') && (
+                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-2 italic">Secure link will be sent via Email</p>
+                    )}
+                  </div>
               </div>
           )}
 
           {user && !isAdmin && applicationStatus === 'not_applied' && (
             recruitmentOpen ? (
-              !applicationType ? (
-                <div className="py-8">
-                  <h2 className="text-3xl font-black text-slate-900 mb-2 text-center tracking-tight">Application Type</h2>
-                  <p className="text-slate-500 text-center mb-12 font-medium">Choose how you would like to apply. Technical roles usually require an interview.</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <button 
-                      className="p-10 rounded-[32px] bg-slate-50 border-2 border-slate-100 hover:border-featured-blue hover:bg-white transition-all text-left group hover:shadow-2xl hover:shadow-featured-blue/5 transform hover:-translate-y-1" 
-                      onClick={() => setApplicationType('interview')}
-                    >
-                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-sm group-hover:bg-featured-blue group-hover:text-white transition-all duration-500">🎤</div>
-                      <h3 className="text-xl font-black text-slate-800 mb-2 uppercase tracking-tight">Apply with Interview</h3>
-                      <p className="text-sm text-slate-500 leading-relaxed font-medium">Recommended for Technical, HR, and Leadership positions.</p>
-                    </button>
-                    <button 
-                      className="p-10 rounded-[32px] bg-slate-50 border-2 border-slate-100 hover:border-featured-blue hover:bg-white transition-all text-left group hover:shadow-2xl hover:shadow-featured-blue/5 transform hover:-translate-y-1" 
-                      onClick={() => setApplicationType('no_interview')}
-                    >
-                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-sm group-hover:bg-featured-blue group-hover:text-white transition-all duration-500">📝</div>
-                      <h3 className="text-xl font-black text-slate-800 mb-2 uppercase tracking-tight">Apply without Interview</h3>
-                      <p className="text-sm text-slate-500 leading-relaxed font-medium">Fast-track for general membership and supportive roles.</p>
-                    </button>
-                  </div>
+                <div className="py-4">
+                   <div className="mb-12">
+                        <span className="inline-block px-3 py-1 rounded-full bg-featured-blue/10 text-featured-blue border border-featured-blue/20 text-[8px] font-black mb-4 uppercase tracking-widest">
+                            Phase 1: Screening
+                        </span>
+                        <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Candidate <span className="text-featured-blue">Profiling</span></h2>
+                        <p className="text-slate-500 mt-2 font-medium">All applicants require a technical/culture interview. Focus on clarity and commitment.</p>
+                   </div>
+                   <ApplicationForm onSubmit={handleApplicationSubmit} />
                 </div>
-              ) : (
-                <div>
-                   <button onClick={() => setApplicationType(null)} className="mb-8 text-xs font-black text-featured-blue flex items-center gap-2 hover:gap-3 transition-all uppercase tracking-widest">
-                      ← Back to Selection
-                   </button>
-                   <ApplicationForm onSubmit={handleApplicationSubmit} applicationType={applicationType} />
-                </div>
-              )
             ) : (
               <div className="text-center py-16">
-                <div className="w-20 h-20 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">🔒</div>
-                <h2 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">Recruitment Closed</h2>
-                <p className="text-slate-500 font-medium max-w-xs mx-auto">Applications are currently closed. Please follow our social media for announcements about the next cycle.</p>
+                <div className="w-20 h-20 bg-slate-50 text-slate-400 rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl shadow-sm border border-slate-100">🔒</div>
+                <h2 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">Recruitment Halted</h2>
+                <p className="text-slate-500 font-medium max-w-xs mx-auto">Engagements are currently closed. Monitor technical frequencies (Social Media) for the next deployment window.</p>
               </div>
             )
           )}

@@ -65,8 +65,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           html: finalHtml,
         });
         results.success++;
-      } catch (err) {
+      } catch (err: any) {
         results.failed++;
+        console.error(`Failed to send scheduled email to ${recipient.email}:`, err);
       }
     }
 

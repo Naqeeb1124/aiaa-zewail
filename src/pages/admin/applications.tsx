@@ -32,11 +32,15 @@ export default function Applications() {
     fetchApplications()
   }, [])
 
-  const filteredApps = applications.filter(app => 
-    app.name?.toLowerCase().includes(filter.toLowerCase()) || 
-    app.email?.toLowerCase().includes(filter.toLowerCase()) ||
-    app.teams?.some((t: string) => t.toLowerCase().includes(filter.toLowerCase()))
-  )
+  const filteredApps = applications.filter(app => {
+    const searchStr = filter.toLowerCase();
+    const teams = app.interests || app.teams || []; // Support both old and new fields
+    return (
+        app.name?.toLowerCase().includes(searchStr) || 
+        app.email?.toLowerCase().includes(searchStr) ||
+        teams.some((t: string) => t.toLowerCase().includes(searchStr))
+    );
+  })
 
   const getStatusColor = (status: string) => {
     switch(status) {
@@ -95,7 +99,7 @@ export default function Applications() {
                     <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-bold">
                       <th className="p-6">Applicant</th>
                       <th className="p-6">Academic Info</th>
-                      <th className="p-6">Teams</th>
+                      <th className="p-6">Interests</th>
                       <th className="p-6">Status</th>
                       <th className="p-6 text-right">Action</th>
                     </tr>
@@ -114,21 +118,21 @@ export default function Applications() {
                         </td>
                         <td className="p-6">
                           <div className="flex flex-wrap gap-1">
-                            {app.teams?.map((team: string) => (
-                              <span key={team} className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs font-bold border border-slate-200">
+                            {(app.interests || app.teams)?.map((team: string) => (
+                              <span key={team} className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-black uppercase border border-slate-200">
                                 {team}
                               </span>
                             ))}
                           </div>
                         </td>
                         <td className="p-6">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase border ${getStatusColor(app.status || 'pending')}`}>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(app.status || 'pending')}`}>
                             {app.status || 'pending'}
                           </span>
                         </td>
                         <td className="p-6 text-right">
                           <Link href={`/admin/application/${app.id}`} legacyBehavior>
-                            <a className="inline-block px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-featured-blue transition-colors shadow-sm">
+                            <a className="inline-block px-4 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-featured-blue transition-colors shadow-sm">
                               Review
                             </a>
                           </Link>

@@ -19,7 +19,7 @@ export default async function handler(
 
   const idToken = authHeader.split('Bearer ')[1];
   try {
-    const decodedToken = await verifyIdToken(idToken);
+    await verifyIdToken(idToken);
   } catch (error) {
     return res.status(401).json({ message: 'Invalid token' });
   }

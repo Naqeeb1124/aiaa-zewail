@@ -7,10 +7,12 @@ import Footer from '../../components/Footer';
 import Link from 'next/link';
 
 interface InterviewItem {
-    id: string;
+    id: string; // User UID
     status: 'pending' | 'scheduled';
     selectedSlot?: string;
     location?: string;
+    slots?: Array<{time: string, location: string}>;
+    applicantEmail?: string;
     [key: string]: any;
 }
 
@@ -21,19 +23,12 @@ export default function AdminInterviews() {
     const fetchInterviews = async () => {
         try {
             const querySnapshot = await getDocs(collection(db, 'interviews'));
-            const items: InterviewItem[] = querySnapshot.docs.map((d) => {
-                const data = d.data();
-                return {
-                    id: d.id, // User UID
-                    status: data.status,
-                    selectedSlot: data.selectedSlot,
-                    location: data.location,
-                    ...data
-                } as InterviewItem;
-            });
+            const items: InterviewItem[] = querySnapshot.docs.map((d) => ({
+                id: d.id,
+                ...d.data()
+            } as InterviewItem));
 
-            // Filter for only scheduled or pending
-            setInterviews(items.filter(i => i.status === 'scheduled' || i.status === 'pending'));
+            setInterviews(items);
         } catch (error) {
             console.error("Error fetching interviews:", error);
         } finally {
@@ -46,7 +41,7 @@ export default function AdminInterviews() {
     }, []);
 
     const handleCancelInterview = async (uid: string) => {
-        if(!confirm('Are you sure you want to cancel this interview?')) return;
+        if(!confirm('Are you sure you want to cancel/reset this interview?')) return;
         try {
             await updateDoc(doc(db, 'interviews', uid), {
                 status: 'pending',
@@ -58,6 +53,9 @@ export default function AdminInterviews() {
         }
     };
 
+    const scheduled = interviews.filter(i => i.status === 'scheduled');
+    const pending = interviews.filter(i => i.status === 'pending');
+
     return (
         <AdminGuard>
             <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -65,51 +63,58 @@ export default function AdminInterviews() {
                 
                 <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
                     <div className="max-w-7xl mx-auto px-6">
-                        <h1 className="text-4xl font-extrabold mb-2">Interview Manager</h1>
-                        <p className="text-slate-400">Track upcoming interviews and manage schedules.</p>
+                        <h1 className="text-4xl font-extrabold mb-2 uppercase tracking-tighter">Interview Manager</h1>
+                        <p className="text-slate-400 font-bold">Track upcoming mission briefings and pending engagements.</p>
                     </div>
                 </section>
 
-                <main className="max-w-7xl mx-auto px-6 py-12">
-                     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-                            <h2 className="text-2xl font-bold text-slate-800">Scheduled Interviews</h2>
-                            <button onClick={fetchInterviews} className="text-featured-blue font-bold text-sm">Refresh List</button>
+                <main className="max-w-7xl mx-auto px-6 py-12 space-y-12">
+                     {/* SCHEDULED SECTION */}
+                     <div className="bg-white rounded-[40px] shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Confirmed Briefings</h2>
+                                <p className="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">{scheduled.length} Engagements Locked</p>
+                            </div>
+                            <button onClick={fetchInterviews} className="px-6 py-2 bg-white border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm">Refresh Frequency</button>
                         </div>
                         
                         {loading ? (
-                            <div className="p-12 text-center text-slate-500">Loading schedule...</div>
-                        ) : interviews.filter(i => i.status === 'scheduled').length === 0 ? (
-                            <div className="p-12 text-center text-slate-500">No interviews are currently scheduled.</div>
+                            <div className="p-20 text-center text-slate-400 font-black uppercase tracking-[0.2em] animate-pulse">Scanning frequencies...</div>
+                        ) : scheduled.length === 0 ? (
+                            <div className="p-20 text-center text-slate-400 font-bold uppercase tracking-widest">No confirmed mission briefings.</div>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
-                                    <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-bold">
+                                    <thead className="bg-slate-50 text-[10px] uppercase text-slate-400 font-black tracking-[0.2em]">
                                         <tr>
-                                            <th className="p-6">Time Slot</th>
-                                            <th className="p-6">Applicant ID</th>
-                                            <th className="p-6">Location</th>
-                                            <th className="p-6 text-right">Actions</th>
+                                            <th className="p-8">Time & Date</th>
+                                            <th className="p-8">Candidate</th>
+                                            <th className="p-8">Location</th>
+                                            <th className="p-8 text-right">Protocol</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {interviews.filter(i => i.status === 'scheduled').sort((a,b) => new Date(a.selectedSlot!).getTime() - new Date(b.selectedSlot!).getTime()).map(interview => (
-                                            <tr key={interview.id} className="hover:bg-blue-50/50 transition-colors">
-                                                <td className="p-6 font-bold text-slate-800">
-                                                    {new Date(interview.selectedSlot!).toLocaleString()}
+                                        {scheduled.sort((a,b) => new Date(a.selectedSlot!).getTime() - new Date(b.selectedSlot!).getTime()).map(interview => (
+                                            <tr key={interview.id} className="hover:bg-blue-50/30 transition-colors">
+                                                <td className="p-8 font-black text-slate-800">
+                                                    {new Date(interview.selectedSlot!).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                 </td>
-                                                <td className="p-6 font-mono text-sm text-slate-600">
-                                                    {interview.id}
+                                                <td className="p-8">
+                                                    <div className="font-bold text-slate-700">{interview.applicantEmail}</div>
+                                                    <div className="text-[10px] font-mono text-slate-400 mt-1">{interview.id}</div>
                                                 </td>
-                                                <td className="p-6 text-sm text-slate-600">
-                                                    {interview.location}
+                                                <td className="p-8">
+                                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${interview.location?.toLowerCase().includes('online') ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}`}>
+                                                        {interview.location}
+                                                    </span>
                                                 </td>
-                                                <td className="p-6 text-right">
+                                                <td className="p-8 text-right">
                                                     <button 
                                                         onClick={() => handleCancelInterview(interview.id)}
-                                                        className="text-red-500 font-bold text-sm hover:underline"
+                                                        className="px-4 py-2 border border-red-100 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
                                                     >
-                                                        Cancel
+                                                        Reset
                                                     </button>
                                                 </td>
                                             </tr>
@@ -120,9 +125,63 @@ export default function AdminInterviews() {
                         )}
                      </div>
 
-                     <div className="mt-12 p-8 bg-blue-50 rounded-3xl border border-blue-100">
-                        <h3 className="text-xl font-bold text-blue-900 mb-2">Invite Applicants</h3>
-                        <p className="text-blue-700 mb-6">To invite an applicant to interview, go to the <Link href="/admin/applications" legacyBehavior><a className="underline font-bold">Applications</a></Link> page, review their application, and click &quot;Invite to Interview&quot;.</p>
+                     {/* PENDING SECTION */}
+                     <div className="bg-white rounded-[40px] shadow-sm border border-slate-200 overflow-hidden opacity-80">
+                        <div className="p-10 border-b border-slate-100 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-xl font-black text-slate-600 uppercase tracking-tight">Pending Selection</h2>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">{pending.length} Invitations Sent</p>
+                            </div>
+                        </div>
+                        
+                        {!loading && pending.length > 0 && (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 text-[9px] uppercase text-slate-400 font-black tracking-[0.2em]">
+                                        <tr>
+                                            <th className="p-8">Candidate</th>
+                                            <th className="p-8">Proposed Windows</th>
+                                            <th className="p-8 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {pending.map(interview => (
+                                            <tr key={interview.id}>
+                                                <td className="p-8">
+                                                    <div className="font-bold text-slate-500">{interview.applicantEmail}</div>
+                                                </td>
+                                                <td className="p-8">
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {interview.slots?.map((s, idx) => (
+                                                            <span key={idx} className="px-2 py-1 bg-slate-50 border border-slate-100 rounded text-[9px] font-bold text-slate-400 uppercase">
+                                                                {new Date(s.time).toLocaleDateString()}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                                <td className="p-8 text-right">
+                                                    <Link href={`/admin/application/${interview.id}`} legacyBehavior>
+                                                        <a className="text-[10px] font-black uppercase tracking-widest text-featured-blue hover:underline">View App</a>
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                     </div>
+
+                     <div className="p-10 bg-featured-blue rounded-[40px] text-white flex flex-col md:flex-row justify-between items-center gap-8">
+                        <div className="max-w-xl text-center md:text-left">
+                            <h3 className="text-2xl font-black uppercase tracking-tight mb-2">Recruitment Pipeline</h3>
+                            <p className="text-featured-blue-light font-medium opacity-80">To invite more applicants, browse the secure candidate database and initiate screening protocols.</p>
+                        </div>
+                        <Link href="/admin/applications" legacyBehavior>
+                            <a className="px-10 py-4 bg-white text-featured-blue rounded-full font-black uppercase tracking-widest text-xs hover:bg-featured-green hover:text-white transition-all shadow-xl">
+                                Browse Applications
+                            </a>
+                        </Link>
                      </div>
                 </main>
                 <Footer />
