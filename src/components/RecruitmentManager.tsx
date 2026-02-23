@@ -16,7 +16,7 @@ export default function RecruitmentManager() {
       const docSnap = await getDoc(docRef)
       if (docSnap.exists()) {
         const data = docSnap.data()
-        setIsOpen(data.isOpen)
+        setIsOpen(data.open ?? data.isOpen ?? false)
         setStartDate(data.startDate)
         setEndDate(data.endDate)
       }
@@ -46,18 +46,20 @@ export default function RecruitmentManager() {
     }
 
 
-    const dataToSave: { isOpen: boolean, startDate: string, endDate: string } = {
-      isOpen: isOpen,
+    const currentStatus = newIsOpenStatus !== undefined ? newIsOpenStatus : isOpen;
+
+    const dataToSave = {
+      open: currentStatus,
+      isOpen: currentStatus, // Keep both for compatibility
       startDate: newStartDate,
       endDate: newEndDate
     };
 
     if (newIsOpenStatus !== undefined) {
-      dataToSave.isOpen = newIsOpenStatus;
       setIsOpen(newIsOpenStatus);
     }
     
-    await setDoc(docRef, dataToSave)
+    await setDoc(docRef, dataToSave, { merge: true })
     if (newIsOpenStatus === undefined) {
       alert('Recruitment dates saved!')
     } else {

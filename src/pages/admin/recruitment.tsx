@@ -7,7 +7,7 @@ import Footer from '../../components/Footer';
 
 export default function RecruitmentCenter() {
     const [config, setConfig] = useState({
-        isOpen: false,
+        open: false,
         cycleName: '',
         startDate: '',
         endDate: '',
@@ -23,7 +23,14 @@ export default function RecruitmentCenter() {
                 const docRef = doc(db, 'recruitment', 'status');
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
-                    setConfig(docSnap.data() as any);
+                    const data = docSnap.data();
+                    // Map isOpen to open if only isOpen exists (for backward compatibility)
+                    setConfig({
+                        open: data.open ?? data.isOpen ?? false,
+                        cycleName: data.cycleName || '',
+                        startDate: data.startDate || '',
+                        endDate: data.endDate || '',
+                    });
                 }
             } catch (error) {
                 console.error("Error fetching recruitment status:", error);
@@ -40,7 +47,12 @@ export default function RecruitmentCenter() {
         setMessage(null);
         
         try {
-            await setDoc(doc(db, 'recruitment', 'status'), config, { merge: true });
+            // Save both field names for maximum compatibility during transition
+            const dataToSave = {
+                ...config,
+                isOpen: config.open // Keep isOpen for any legacy components
+            };
+            await setDoc(doc(db, 'recruitment', 'status'), dataToSave, { merge: true });
             setMessage({ type: 'success', text: 'Recruitment settings updated successfully.' });
         } catch (error) {
             console.error("Error updating recruitment status:", error);
@@ -50,9 +62,8 @@ export default function RecruitmentCenter() {
         }
     };
 
-    const toggleStatus = async () => {
-        const newState = !config.isOpen;
-        setConfig(prev => ({ ...prev, isOpen: newState }));
+    const toggleStatus = () => {
+        setConfig(prev => ({ ...prev, open: !prev.open }));
     };
 
     return (
@@ -62,36 +73,39 @@ export default function RecruitmentCenter() {
 
                 <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
                     <div className="max-w-5xl mx-auto px-6">
-                        <h1 className="text-4xl font-extrabold mb-2">Recruitment Center</h1>
-                        <p className="text-slate-400">Control application access and season timelines.</p>
+                        <h1 className="text-4xl font-extrabold mb-2 uppercase tracking-tighter leading-none">Recruitment Center</h1>
+                        <p className="text-slate-400 font-medium italic">Control application access and mission timelines.</p>
                     </div>
                 </section>
 
                 <main className="max-w-5xl mx-auto px-6 py-12">
                     {loading ? (
-                        <div className="text-center py-12">Loading settings...</div>
+                        <div className="text-center py-12">
+                            <div className="w-8 h-8 border-4 border-featured-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">Scanning status...</p>
+                        </div>
                     ) : (
                         <div className="grid md:grid-cols-3 gap-8">
                             {/* Status Card */}
                             <div className="md:col-span-1">
-                                <div className={`p-8 rounded-3xl border-2 text-center transition-all ${config.isOpen ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-100 border-slate-200'}`}>
-                                    <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-sm ${config.isOpen ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>
-                                        {config.isOpen ? '🔓' : '🔒'}
+                                <div className={`p-10 rounded-[40px] border-2 text-center transition-all ${config.open ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-100 border-slate-200'}`}>
+                                    <div className={`w-24 h-24 rounded-[32px] flex items-center justify-center mx-auto mb-8 text-4xl shadow-sm ${config.open ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>
+                                        {config.open ? '🔓' : '🔒'}
                                     </div>
-                                    <h2 className={`text-2xl font-bold mb-2 ${config.isOpen ? 'text-emerald-800' : 'text-slate-700'}`}>
-                                        {config.isOpen ? 'Recruitment OPEN' : 'Recruitment CLOSED'}
+                                    <h2 className={`text-2xl font-black mb-2 uppercase tracking-tight ${config.open ? 'text-emerald-800' : 'text-slate-700'}`}>
+                                        {config.open ? 'ACTIVE' : 'HALTED'}
                                     </h2>
-                                    <p className="text-sm text-slate-500 mb-8">
-                                        {config.isOpen 
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10 leading-relaxed">
+                                        {config.open 
                                             ? "Applications are currently being accepted on the Join page." 
-                                            : "The Join page is currently locked."}
+                                            : "The Join page is currently locked for all applicants."}
                                     </p>
                                     <button 
                                         onClick={toggleStatus}
                                         type="button"
-                                        className={`w-full py-3 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 ${config.isOpen ? 'bg-red-500 hover:bg-red-600' : 'bg-emerald-500 hover:bg-emerald-600'}`}
+                                        className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl transition-all active:scale-95 transform hover:-translate-y-1 ${config.open ? 'bg-red-500 hover:bg-red-600 shadow-red-200' : 'bg-featured-green hover:bg-featured-blue shadow-emerald-200'} text-white`}
                                     >
-                                        {config.isOpen ? 'Close Recruitment' : 'Open Recruitment'}
+                                        {config.open ? 'Shutdown Access' : 'Initiate Access'}
                                     </button>
                                 </div>
                             </div>
