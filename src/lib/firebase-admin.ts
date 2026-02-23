@@ -1,8 +1,13 @@
 import * as admin from 'firebase-admin';
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY 
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY) 
-  : null;
+let serviceAccount = null;
+try {
+  serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY 
+    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY) 
+    : null;
+} catch (e) {
+  console.error("FAILED TO PARSE FIREBASE_SERVICE_ACCOUNT_KEY:", e);
+}
 
 if (!admin.apps.length) {
   try {

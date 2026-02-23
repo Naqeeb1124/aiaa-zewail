@@ -7,14 +7,31 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' })
+  // 1. Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Allow', 'POST, GET, OPTIONS');
+    return res.status(200).end();
   }
 
-  console.log('Received email request body:', req.body);
+  // 2. Debugging helper for GET
+  if (req.method === 'GET') {
+    return res.status(200).json({ 
+        status: 'online',
+        message: 'Email API is active.',
+        config: {
+            hasUser: !!process.env.EMAIL_SERVER_USER,
+            hasPass: !!process.env.EMAIL_SERVER_PASSWORD,
+            hasFirebaseKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+        }
+    });
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: `Method ${req.method} not allowed` })
+  }
 
   try {
-    // Authentication check
+    // 3. Authentication check
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Unauthorized: Missing or invalid token' });
@@ -25,17 +42,21 @@ export default async function handler(
       await verifyIdToken(idToken);
     } catch (error: any) {
       console.error('Token verification failed:', error);
-      return res.status(401).json({ message: 'Unauthorized: Token verification failed', error: error.message });
+      return res.status(401).json({ 
+        message: 'Unauthorized: Token verification failed', 
+        error: error.message,
+        hint: 'This often happens if FIREBASE_SERVICE_ACCOUNT_KEY is invalid or missing.'
+      });
     }
 
+    // 4. Request validation
     const { to, subject, text, html } = req.body
-    
     if (!to || !subject) {
         return res.status(400).json({ message: 'Missing required fields: to or subject' });
     }
 
-    const SITE_URL = 'https://aiaa-zewail.vercel.app'; // Consistent fallback
-
+    // 5. Send Email
+    const SITE_URL = 'https://aiaa-zewail.vercel.app'; 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -44,7 +65,6 @@ export default async function handler(
       },
     });
 
-    // Always wrap the content in the branded template for consistency
     const contentHtml = html || `<div style="white-space: pre-wrap;">${text}</div>`;
     const finalHtml = getBrandedTemplate(contentHtml, SITE_URL);
 
@@ -60,7 +80,7 @@ export default async function handler(
     return res.status(200).json({ message: 'Email sent successfully' })
 
   } catch (error: any) {
-    console.error('API Error in send-email:', error);
+    console.error('CRITICAL API Error in send-email:', error);
     return res.status(500).json({ 
       message: 'Error processing email request',
       error: error.message || 'Unknown error'
