@@ -18,7 +18,7 @@ export default function OpportunityCard({ opportunity }: Props) {
         const unsubscribe = auth.onAuthStateChanged(user => {
             if (user) {
                 const unsubProfile = onSnapshot(doc(db, 'users', user.uid), (snap) => {
-                    if (doc.exists) setUserProfile(snap.data() as UserProfile);
+                    if (snap.exists()) setUserProfile(snap.data() as UserProfile);
                 });
                 return unsubProfile;
             } else {

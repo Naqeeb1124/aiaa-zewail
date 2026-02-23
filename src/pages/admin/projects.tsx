@@ -297,6 +297,7 @@ export default function ManageProjects() {
                                         <div key={proj.id} className="bg-white rounded-2xl border border-slate-200 flex flex-col hover:shadow-lg transition-all group overflow-hidden">
                                             {proj.coverImage ? (
                                                 <div className="h-48 overflow-hidden relative">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
                                                     <img src={proj.coverImage} alt={proj.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                                     {proj.isArchived && (
                                                         <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center">

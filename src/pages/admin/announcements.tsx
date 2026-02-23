@@ -201,6 +201,7 @@ export default function Announcements() {
                                 <div key={ann.id} className="bg-white p-6 rounded-2xl border border-slate-200 flex flex-col hover:shadow-md transition-shadow">
                                     {ann.imageUrl && (
                                         <div className="w-full h-48 bg-slate-100 rounded-xl overflow-hidden mb-4">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img src={ann.imageUrl} alt={ann.title} className="w-full h-full object-cover" />
                                         </div>
                                     )}

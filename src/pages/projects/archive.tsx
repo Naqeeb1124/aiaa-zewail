@@ -33,6 +33,15 @@ export default function ProjectArchive() {
     return () => unsubscribe()
   }, [])
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Completed': return 'bg-green-100 text-green-700 border-green-200';
+      case 'In Progress': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'Recruiting': return 'bg-purple-100 text-purple-700 border-purple-200';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <Navbar />
@@ -82,6 +91,7 @@ export default function ProjectArchive() {
                   <div className="relative h-64 overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer" onClick={() => setSelectedProject(project)}>
                     {project.coverImage ? (
                       <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={project.coverImage} alt={project.title} className="absolute inset-0 w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-slate-900/20"></div>
                         <div className="relative z-10 text-7xl drop-shadow-lg">
@@ -140,6 +150,7 @@ export default function ProjectArchive() {
                 <div className="bg-white w-full max-w-3xl max-h-[85vh] rounded-[40px] overflow-hidden shadow-2xl flex flex-col animate-scale-up" onClick={e => e.stopPropagation()}>
                     <div className="relative h-48 md:h-64 flex-shrink-0">
                         {selectedProject.coverImage ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
                             <img src={selectedProject.coverImage} alt={selectedProject.title} className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full bg-slate-100 flex items-center justify-center text-7xl">{selectedProject.icon}</div>

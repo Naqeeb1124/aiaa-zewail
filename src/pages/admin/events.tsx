@@ -222,6 +222,7 @@ export default function ManageEvents() {
                                     )}
                                     <div className="w-full md:w-48 h-32 bg-slate-100 rounded-2xl overflow-hidden relative flex-shrink-0">
                                         {event.imageUrl ? (
+                                            /* eslint-disable-next-line @next/next/no-img-element */
                                             <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-50 font-black text-xs uppercase">No Image</div>

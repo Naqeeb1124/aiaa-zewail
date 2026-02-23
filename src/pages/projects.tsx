@@ -151,6 +151,7 @@ export default function Projects() {
                   <div className="relative h-64 overflow-hidden bg-slate-50 flex items-center justify-center cursor-pointer" onClick={() => setSelectedProject(project)}>
                     {project.coverImage ? (
                       <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={project.coverImage} alt={project.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-500"></div>
                         <div className="relative z-10 text-7xl drop-shadow-lg group-hover:scale-110 transition-transform duration-700">
