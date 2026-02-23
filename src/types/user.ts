@@ -6,6 +6,7 @@ export interface UserProfile {
     lastName: string;
     studentId: string;
     joinedAt: any;
+    role?: 'member' | 'admin';
 
     // Track active flagship project to enforce "1 per semester" rule
     // Map key: semester (e.g., "Spring 2024"), Value: projectId

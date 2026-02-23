@@ -2,7 +2,7 @@ import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, orderBy, query } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, orderBy, query, updateDoc, serverTimestamp } from 'firebase/firestore';
 import AdminGuard from '../../components/AdminGuard';
 import ImageUpload from '../../components/ImageUpload'; 
 import Link from 'next/link';
@@ -10,6 +10,7 @@ import Link from 'next/link';
 export default function ManageEvents() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showArchived, setShowArchived] = useState(false);
   const [newEvent, setNewEvent] = useState({ 
     title: '', 
     date: '', 
@@ -18,7 +19,8 @@ export default function ManageEvents() {
     category: 'Workshop',
     description: '', 
     imageUrl: '',
-    isKickoff: false
+    isKickoff: false,
+    isArchived: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -59,6 +61,7 @@ export default function ManageEvents() {
         const eventData = {
             ...newEvent,
             date: combinedDateTime.toISOString(),
+            createdAt: serverTimestamp()
         };
 
         const docRef = await addDoc(collection(db, 'events'), eventData);
@@ -66,7 +69,7 @@ export default function ManageEvents() {
         setNewEvent({ 
             title: '', date: '', time: '', location: '', 
             category: 'Workshop', description: '', imageUrl: '', 
-            isKickoff: false 
+            isKickoff: false, isArchived: false 
         });
         alert('Event added successfully!');
     } catch (error) {
@@ -86,6 +89,25 @@ export default function ManageEvents() {
         alert('Error deleting event.');
     }
   };
+
+  const handleToggleArchive = async (event: any) => {
+    const newArchivedState = !event.isArchived;
+    if (!confirm(`${newArchivedState ? 'Archive' : 'Restore'} this event?`)) return;
+    try {
+        const eventRef = doc(db, 'events', event.id);
+        await updateDoc(eventRef, {
+            isArchived: newArchivedState,
+            updatedAt: serverTimestamp(),
+            // If archiving, we probably want to remove it from home page kickoff
+            ...(newArchivedState ? { isKickoff: false } : {})
+        });
+        fetchEvents();
+    } catch (error) {
+        alert('Error updating archive state');
+    }
+  };
+
+  const filteredEvents = events.filter(e => !!e.isArchived === showArchived);
 
   return (
     <AdminGuard>
@@ -170,21 +192,33 @@ export default function ManageEvents() {
 
                 {/* List Section */}
                 <div className="lg:col-span-2">
-                    <h2 className="text-xl font-black mb-6 text-slate-800 uppercase tracking-tight">Upcoming Events ({events.length})</h2>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">{showArchived ? 'Archived Events' : 'Upcoming Gatherings'} ({filteredEvents.length})</h2>
+                        <button 
+                            onClick={() => setShowArchived(!showArchived)}
+                            className="px-4 py-2 rounded-full bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-featured-blue hover:border-featured-blue transition-all shadow-sm"
+                        >
+                            {showArchived ? 'Show Active' : 'Show Archived'}
+                        </button>
+                    </div>
+
                     {loading ? (
                         <div className="text-center py-12 text-slate-500 font-bold uppercase tracking-widest animate-pulse">Loading events...</div>
-                    ) : events.length === 0 ? (
+                    ) : filteredEvents.length === 0 ? (
                         <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-slate-200">
-                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No events scheduled.</p>
+                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No {showArchived ? 'archived' : 'scheduled'} events.</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {events.map((event) => (
+                            {filteredEvents.map((event) => (
                                 <div key={event.id} className="bg-white p-6 rounded-3xl border border-slate-200 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow relative overflow-hidden group">
                                     {event.isKickoff && (
                                         <div className="absolute top-0 right-0 bg-zewail-cyan text-white text-[8px] font-black px-4 py-1 uppercase tracking-[0.2em] transform rotate-45 translate-x-4 translate-y-2 shadow-sm">
                                             Home Kickoff
                                         </div>
+                                    )}
+                                    {event.isArchived && (
+                                        <div className="absolute inset-0 bg-slate-900/5 backdrop-blur-[1px] pointer-events-none z-10"></div>
                                     )}
                                     <div className="w-full md:w-48 h-32 bg-slate-100 rounded-2xl overflow-hidden relative flex-shrink-0">
                                         {event.imageUrl ? (
@@ -204,14 +238,19 @@ export default function ManageEvents() {
                                                 <p className="text-[10px] font-black text-featured-green mb-3 uppercase tracking-widest">
                                                     {new Date(event.date).toLocaleDateString()} • {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {event.location}
                                                 </p>
-                                                <Link href={`/admin/events/${event.id}/registrations`} legacyBehavior>
-                                                    <a className="text-[10px] font-black text-featured-blue hover:text-featured-green transition-colors flex items-center gap-1 uppercase tracking-widest">
-                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                                                        View Registrants
-                                                    </a>
-                                                </Link>
+                                                {!event.isArchived && (
+                                                    <Link href={`/admin/events/${event.id}/registrations`} legacyBehavior>
+                                                        <a className="text-[10px] font-black text-featured-blue hover:text-featured-green transition-colors flex items-center gap-1 uppercase tracking-widest">
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                                            View Registrants
+                                                        </a>
+                                                    </Link>
+                                                )}
                                             </div>
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 relative z-20">
+                                                <button onClick={() => handleToggleArchive(event)} className="bg-amber-50 text-amber-300 hover:text-amber-600 p-2 rounded-xl transition-all border border-amber-100" title={event.isArchived ? "Restore" : "Archive"}>
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                                                </button>
                                                 <Link href={`/admin/events/${event.id}/edit`} legacyBehavior>
                                                     <a className="bg-slate-50 text-slate-400 hover:text-featured-blue p-2 rounded-xl transition-all border border-slate-100" title="Edit Event">
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>

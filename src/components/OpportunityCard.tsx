@@ -1,12 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Opportunity } from '../types/opportunity';
+import { auth, db } from '../lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { UserProfile } from '../types/user';
+import { useAdmin } from '../hooks/useAdmin';
 
 interface Props {
     opportunity: Opportunity;
 }
 
 export default function OpportunityCard({ opportunity }: Props) {
+    const { isAdmin } = useAdmin();
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const isExpired = opportunity.deadline ? new Date(opportunity.deadline) < new Date() : false;
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            if (user) {
+                const unsubProfile = onSnapshot(doc(db, 'users', user.uid), (snap) => {
+                    if (doc.exists) setUserProfile(snap.data() as UserProfile);
+                });
+                return unsubProfile;
+            } else {
+                setUserProfile(null);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
+
+    const isOfficialMember = userProfile?.role === 'member' || isAdmin;
 
     const getTypeColor = (type: string) => {
         switch (type) {
@@ -14,7 +36,19 @@ export default function OpportunityCard({ opportunity }: Props) {
             case 'scholarship': return 'bg-purple-50 text-purple-600 border-purple-100';
             case 'competition': return 'bg-amber-50 text-amber-600 border-amber-100';
             case 'research': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-            default: return 'bg-slate-50 text-slate-600 border-slate-100';
+            default: return 'bg-slate-100 text-slate-600 border-slate-200';
+        }
+    };
+
+    const handleApply = (e: React.MouseEvent) => {
+        if (!auth.currentUser) {
+            e.preventDefault();
+            alert("Please login to access opportunities.");
+            return;
+        }
+        if (!isOfficialMember) {
+            e.preventDefault();
+            alert("Only official branch members can access application links. Please apply for membership first.");
         }
     };
 
@@ -59,12 +93,17 @@ export default function OpportunityCard({ opportunity }: Props) {
                 </div>
 
                 <a 
-                    href={opportunity.link} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="px-6 py-2.5 bg-featured-blue text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-featured-green transition-all shadow-lg active:scale-95 transform hover:-translate-y-0.5"
+                    href={isOfficialMember ? opportunity.link : '#'} 
+                    target={isOfficialMember ? "_blank" : undefined}
+                    rel={isOfficialMember ? "noopener noreferrer" : undefined}
+                    onClick={handleApply}
+                    className={`px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-full transition-all shadow-lg active:scale-95 transform hover:-translate-y-0.5 ${
+                        isOfficialMember 
+                        ? 'bg-featured-blue text-white hover:bg-featured-green' 
+                        : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                    }`}
                 >
-                    Apply Now
+                    {isOfficialMember ? 'Apply Now' : 'Members Only'}
                 </a>
             </div>
         </div>

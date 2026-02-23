@@ -49,6 +49,11 @@ export const createJoinRequest = async (
 
         const userData = userSnap.data() as UserProfile;
 
+        // NEW: Check for official membership
+        if (userData.role !== 'member' && userData.role !== 'admin') {
+            throw new Error("Only official branch members can join projects. Please apply for membership first.");
+        }
+
         // 2. Get Project Data
         const projectRef = doc(db, PROJECTS_COLL, projectId);
         const projectSnap = await transaction.get(projectRef);

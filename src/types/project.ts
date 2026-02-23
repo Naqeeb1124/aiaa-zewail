@@ -10,6 +10,8 @@ export interface Project {
     description: string;
     status: ProjectStatus;
     icon: string;
+    coverImage?: string;
+    isArchived?: boolean;
     progress: number;
     maxSeats: number;
     currentSeats: number;

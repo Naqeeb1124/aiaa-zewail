@@ -1,1 +1,1 @@
-export const KICKOFF_MODE = true;
+export const KICKOFF_MODE = false;

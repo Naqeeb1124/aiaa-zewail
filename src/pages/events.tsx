@@ -16,6 +16,7 @@ interface Event {
   location?: string;
   category?: string;
   imageUrl?: string;
+  isArchived?: boolean;
 }
 
 export default function Events() {
@@ -27,10 +28,13 @@ export default function Events() {
       try {
         const q = query(collection(db, 'events'), orderBy('date', 'asc'));
         const querySnapshot = await getDocs(q);
-        const fetchedEvents = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Event));
+        const fetchedEvents = querySnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          } as Event))
+          .filter(event => !event.isArchived); // Filter out archived events
+        
         setEvents(fetchedEvents);
       } catch (error) {
         console.error("Error fetching events:", error);
@@ -59,6 +63,14 @@ export default function Events() {
           <p className="text-lg md:text-xl text-white/80 leading-relaxed font-medium max-w-2xl mx-auto">
             Discover our first season of workshops, talks, and gatherings designed to ignite your passion for aerospace.
           </p>
+          
+          <div className="mt-10">
+            <Link href="/events/archive" legacyBehavior>
+                <a className="text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-full border border-white/20 hover:bg-white hover:text-featured-blue transition-all">
+                    View Event Archive
+                </a>
+            </Link>
+          </div>
         </div>
       </section>
 

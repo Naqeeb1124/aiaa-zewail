@@ -1,6 +1,7 @@
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import FeaturedAnnouncements from '../components/FeaturedAnnouncements'
+import FeaturedProjects from '../components/FeaturedProjects'
 import FeaturedEvents from '../components/FeaturedEvents'
 import Seo from '../components/Seo'
 import HeroEgypt from '../components/HeroEgypt'
@@ -14,6 +15,7 @@ export default function Home(){
       <main className="pt-20 md:pt-[240px]">
         <HeroEgypt />
         <FeaturedAnnouncements />
+        <FeaturedProjects />
         <FeaturedEvents />
       </main>
       
