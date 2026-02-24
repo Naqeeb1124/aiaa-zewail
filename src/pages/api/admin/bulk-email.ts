@@ -93,21 +93,24 @@ export default async function handler(
 
   // 4. Audit Logging (The Black Box)
   try {
-      const db = getAdminDb();
-      if (db) {
-          await db.collection('audit_logs').add({
+      const adminDb = getAdminDb();
+      if (adminDb) {
+          const logData = {
               type: 'bulk_dispatch',
-              adminEmail,
+              adminEmail: adminEmail || 'unknown_admin',
               recipientCount: recipients.length,
               successCount: results.success,
               failedCount: results.failed,
               subject,
               timestamp: new Date().toISOString(),
               status: results.failed === 0 ? 'success' : 'partial'
-          });
+          };
+          console.log('Attempting to log bulk dispatch to Black Box:', logData.adminEmail, '->', logData.recipientCount, 'recipients');
+          await adminDb.collection('audit_logs').add(logData);
+          console.log('Successfully recorded bulk entry in Black Box.');
       }
-  } catch (logError) {
-      console.error('Failed to log bulk dispatch to audit_logs:', logError);
+  } catch (logError: any) {
+      console.error('Failed to log bulk dispatch to audit_logs:', logError.message);
   }
 
   res.status(200).json(results);

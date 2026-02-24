@@ -83,20 +83,26 @@ export default async function handler(
 
     // 6. Audit Logging (The Black Box)
     try {
-        const db = getAdminDb();
-        if (db) {
-            await db.collection('audit_logs').add({
+        const adminDb = getAdminDb();
+        if (adminDb) {
+            const logData = {
                 type: 'dispatch',
                 emailType: type,
-                adminEmail,
+                adminEmail: adminEmail || 'unknown_admin',
                 recipient: to,
                 subject,
                 timestamp: new Date().toISOString(),
                 status: 'success'
-            });
+            };
+            
+            console.log('Attempting to log transmission to Black Box:', logData.adminEmail, '->', logData.recipient);
+            await adminDb.collection('audit_logs').add(logData);
+            console.log('Successfully recorded entry in Black Box.');
+        } else {
+            console.warn('Black Box Logging failed: Firestore Admin not initialized.');
         }
-    } catch (logError) {
-        console.error('Failed to log to audit_logs:', logError);
+    } catch (logError: any) {
+        console.error('CRITICAL: Failed to write to audit_logs collection:', logError.message);
     }
 
     return res.status(200).json({ message: 'Email sent successfully' })
