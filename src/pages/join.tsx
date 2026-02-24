@@ -199,27 +199,6 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
         if (testMode) {
             alert("Test Submission Successful! Data has been recorded.");
         }
-
-        // 4. Send Emails
-        const emailBody = Object.entries(data)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join('\n');
-
-        const adminEmails = await getAdminEmails();
-        await Promise.all(adminEmails.map(email => 
-          fetch('/api/send-email', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              to: email,
-              subject: testMode ? '[TEST] New Revamped Application' : 'New AIAA Application',
-              text: emailBody,
-            }),
-          })
-        ));
     } catch (error: any) {
         console.error("Submission error:", error)
         alert(`Failed to submit: ${error.message}`)

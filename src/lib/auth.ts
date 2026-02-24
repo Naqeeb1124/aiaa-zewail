@@ -46,14 +46,12 @@ export const signInWithGoogle = async () => {
     res = await signInWithPopup(auth, provider)
     user = res.user
 
-    // Temporarily relaxed check: allow all emails during testing
-    /*
+    // Strict Check: Only s- prefixed Zewail City emails allowed
     if (!user.email?.endsWith('@zewailcity.edu.eg') || !user.email?.startsWith('s-')) {
       await fbSignOut(auth); 
       alert('Access Denied: Please use your Zewail City student email (starting with s-).');
       throw new Error('Only Zewail City students are allowed to join.');
     }
-    */
 
     console.log("Authentication successful:", user.uid);
   } catch (authError) {

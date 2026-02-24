@@ -98,5 +98,11 @@ service cloud.firestore {
       allow create: if true;
       allow read, update, delete: if isAdmin();
     }
+
+    // --- System Logs (Super Admin Only) ---
+    match /audit_logs/{docId} {
+      allow read: if request.auth != null && request.auth.token.email == 's-abdelrahman.alnaqeeb@zewailcity.edu.eg';
+      allow write: if false; // Written only via Admin SDK (Server-side)
+    }
   }
 }
