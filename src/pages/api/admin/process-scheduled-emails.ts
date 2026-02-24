@@ -71,7 +71,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // 5. Update Status
+    // 5. Audit Logging (The Black Box)
+    try {
+        await db.collection('audit_logs').add({
+            type: 'scheduled_dispatch',
+            adminEmail: data.createdBy || 'system_cron',
+            recipientCount: data.recipients?.length || 0,
+            successCount: results.success,
+            failedCount: results.failed,
+            subject: data.subject,
+            timestamp: new Date().toISOString(),
+            status: results.failed === 0 ? 'success' : 'partial'
+        });
+    } catch (logError) {
+        console.error('Failed to log scheduled dispatch to audit_logs:', logError);
+    }
+
+    // 6. Update Status
     await doc.ref.update({
       status: 'sent',
       sentAt: new Date().toISOString(),

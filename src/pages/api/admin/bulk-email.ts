@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import nodemailer from 'nodemailer'
-import { verifyIdToken } from '../../../lib/firebase-admin';
+import { verifyIdToken, getAdminDb } from '../../../lib/firebase-admin';
 import { getBrandedTemplate } from '../../../lib/emailTemplates';
 
 export default async function handler(
@@ -23,11 +23,14 @@ export default async function handler(
   }
 
   const idToken = authHeader.split('Bearer ')[1];
+  let decodedToken;
   try {
-    await verifyIdToken(idToken);
+    decodedToken = await verifyIdToken(idToken);
   } catch (error) {
     return res.status(401).json({ message: 'Invalid token' });
   }
+
+  const adminEmail = decodedToken.email;
 
   const { recipients, subject, htmlTemplate, useBranding, siteUrl } = req.body;
 
@@ -86,6 +89,25 @@ export default async function handler(
       results.failed++;
       results.errors.push(`Failed for ${recipient.email}: ${err.message}`);
     }
+  }
+
+  // 4. Audit Logging (The Black Box)
+  try {
+      const db = getAdminDb();
+      if (db) {
+          await db.collection('audit_logs').add({
+              type: 'bulk_dispatch',
+              adminEmail,
+              recipientCount: recipients.length,
+              successCount: results.success,
+              failedCount: results.failed,
+              subject,
+              timestamp: new Date().toISOString(),
+              status: results.failed === 0 ? 'success' : 'partial'
+          });
+      }
+  } catch (logError) {
+      console.error('Failed to log bulk dispatch to audit_logs:', logError);
   }
 
   res.status(200).json(results);

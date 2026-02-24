@@ -10,6 +10,7 @@ import { useAdmin } from '../hooks/useAdmin'
 export default function AdminDashboard() {
   const { user, isAdmin, loading } = useAdmin()
   const router = useRouter()
+  const SUPER_ADMIN_EMAIL = 's-abdelrahman.alnaqeeb@zewailcity.edu.eg';
 
   useEffect(() => {
     if (!loading && !user) router.push('/join')
@@ -26,7 +27,7 @@ export default function AdminDashboard() {
     </div>
   )
 
-  const ADMIN_MODULES = [
+  const modules = [
     { 
         title: "Recruitment Center", 
         desc: "Manage applications, interview schedules, and recruitment status.",
@@ -120,6 +121,17 @@ export default function AdminDashboard() {
     }
   ]
 
+  // Add Black Box only for Super Admin
+  if (user?.email === SUPER_ADMIN_EMAIL) {
+    modules.push({
+        title: "The Black Box",
+        desc: "Classified: Audit all outgoing transmissions and admin actions.",
+        icon: "⬛",
+        link: "/admin/blackbox",
+        color: "bg-red-50 text-red-600 border-red-100"
+    });
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <Navbar />
@@ -145,7 +157,7 @@ export default function AdminDashboard() {
 
       <main className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {ADMIN_MODULES.map((mod, idx) => (
+            {modules.map((mod, idx) => (
                 <Link 
                   key={idx} 
                   href={mod.link}

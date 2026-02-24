@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import nodemailer from 'nodemailer'
-import { verifyIdToken } from '../../lib/firebase-admin';
+import { verifyIdToken, getAdminDb } from '../../lib/firebase-admin';
 import { getBrandedTemplate } from '../../lib/emailTemplates';
 
 export default async function handler(
@@ -38,8 +38,9 @@ export default async function handler(
     }
 
     const idToken = authHeader.split('Bearer ')[1];
+    let decodedToken;
     try {
-      await verifyIdToken(idToken);
+      decodedToken = await verifyIdToken(idToken);
     } catch (error: any) {
       console.error('Token verification failed:', error);
       return res.status(401).json({ 
@@ -49,8 +50,10 @@ export default async function handler(
       });
     }
 
+    const adminEmail = decodedToken.email;
+
     // 4. Request validation
-    const { to, subject, text, html } = req.body
+    const { to, subject, text, html, type = 'single' } = req.body
     if (!to || !subject) {
         return res.status(400).json({ message: 'Missing required fields: to or subject' });
     }
@@ -77,6 +80,25 @@ export default async function handler(
     };
 
     await transporter.sendMail(mailOptions);
+
+    // 6. Audit Logging (The Black Box)
+    try {
+        const db = getAdminDb();
+        if (db) {
+            await db.collection('audit_logs').add({
+                type: 'dispatch',
+                emailType: type,
+                adminEmail,
+                recipient: to,
+                subject,
+                timestamp: new Date().toISOString(),
+                status: 'success'
+            });
+        }
+    } catch (logError) {
+        console.error('Failed to log to audit_logs:', logError);
+    }
+
     return res.status(200).json({ message: 'Email sent successfully' })
 
   } catch (error: any) {
