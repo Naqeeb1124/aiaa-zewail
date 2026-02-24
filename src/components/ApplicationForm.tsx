@@ -86,7 +86,44 @@ export default function ApplicationForm({ onSubmit }: ApplicationFormProps) {
             </div>
             <div>
                 <label className={labelClasses}>Major</label>
-                <input type="text" name="major" required value={formData.major} onChange={handleChange} className={inputClasses} placeholder="e.g. Aerospace Engineering" />
+                <select 
+                    name="major" 
+                    required 
+                    value={formData.major} 
+                    onChange={handleChange} 
+                    className={inputClasses}
+                >
+                    <option value="" disabled>Select your major...</option>
+                    
+                    <optgroup label="School of Computational Sciences and AI (CSAI)">
+                        <option value="Software Development">Software Development</option>
+                        <option value="Data Science and Artificial Intelligence">Data Science and Artificial Intelligence</option>
+                        <option value="Information Technology">Information Technology</option>
+                    </optgroup>
+
+                    <optgroup label="School of Business (BUS)">
+                        <option value="Actuarial Analysis and Risk Management">Actuarial Analysis and Risk Management</option>
+                        <option value="Finance and Investment Management">Finance and Investment Management</option>
+                        <option value="Marketing, Entrepreneurship and Innovation Management">Marketing, Entrepreneurship and Innovation Management</option>
+                        <option value="Operations, Supply Chain and Technology Management">Operations, Supply Chain and Technology Management</option>
+                    </optgroup>
+
+                    <optgroup label="School of Engineering (ENGR)">
+                        <option value="Aerospace Engineering">Aerospace Engineering</option>
+                        <option value="Communications and Information Engineering">Communications and Information Engineering</option>
+                        <option value="Environmental Engineering">Environmental Engineering</option>
+                        <option value="Nanotechnology and Nanoelectronics Engineering">Nanotechnology and Nanoelectronics Engineering</option>
+                        <option value="Renewable Energy Engineering">Renewable Energy Engineering</option>
+                        <option value="Energy and Bioprocess Engineering">Energy and Bioprocess Engineering</option>
+                    </optgroup>
+
+                    <optgroup label="School of Science (SCI)">
+                        <option value="Biomedical Sciences">Biomedical Sciences</option>
+                        <option value="Materials Science">Materials Science</option>
+                        <option value="Nanoscience">Nanoscience</option>
+                        <option value="Physics of Earth and Universe">Physics of Earth and Universe</option>
+                    </optgroup>
+                </select>
             </div>
             <div>
                 <label className={labelClasses}>Academic Year</label>
