@@ -88,30 +88,32 @@ export default async function handler(
       results.success++;
     } catch (err: any) {
       results.failed++;
-      results.errors.push(`Failed for ${recipient.email}: ${err.message}`);
+      const errorMessage = `Failed for ${recipient.email}: ${err.message}`;
+      results.errors.push(errorMessage);
+      console.error(errorMessage);
     }
   }
 
   // 4. Audit Logging (The Black Box)
   try {
       const adminDb = getAdminDb();
-      if (adminDb) {
+      if (adminDb && results.success > 0 || results.failed > 0) {
           const logData = {
-              type: 'bulk_dispatch',
+              type: 'bulk_dispatch_batch',
               adminEmail: adminEmail || 'unknown_admin',
               recipientCount: recipients.length,
               successCount: results.success,
               failedCount: results.failed,
               subject,
               timestamp: new Date().toISOString(),
-              status: results.failed === 0 ? 'success' : 'partial'
+              status: results.failed === 0 ? 'success' : 'partial',
+              errors: results.errors.length > 0 ? results.errors.slice(0, 10) : [] // Log first 10 errors
           };
-          console.log('Attempting to log bulk dispatch to Black Box:', logData.adminEmail, '->', logData.recipientCount, 'recipients');
+          console.log('Logging batch dispatch:', logData.adminEmail, '->', results.success, '/', recipients.length, 'success');
           await adminDb.collection('audit_logs').add(logData);
-          console.log('Successfully recorded bulk entry in Black Box.');
       }
   } catch (logError: any) {
-      console.error('Failed to log bulk dispatch to audit_logs:', logError.message);
+      console.error('Failed to log batch dispatch to audit_logs:', logError.message);
   }
 
   res.status(200).json(results);

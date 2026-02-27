@@ -157,25 +157,59 @@ export default function CommunicationsHub() {
             
             setProgress({ current: 0, total: recipients.length });
 
-            const res = await fetch('/api/admin/bulk-email', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ 
-                    recipients, 
-                    subject, 
-                    htmlTemplate: contentHtml, 
-                    useBranding,
-                    siteUrl: SITE_URL,
-                    ctaText,
-                    ctaUrl
-                })
-            });
+            const BATCH_SIZE = 5;
+            const DELAY_BETWEEN_BATCHES = 1500; // 1.5 seconds
+            
+            const totalResults = {
+                success: 0,
+                failed: 0,
+                errors: [] as string[]
+            };
 
-            const data = await res.json();
-            setResult(data);
+            for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+                const batch = recipients.slice(i, i + BATCH_SIZE);
+                
+                try {
+                    const res = await fetch('/api/admin/bulk-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ 
+                            recipients: batch, 
+                            subject, 
+                            htmlTemplate: contentHtml, 
+                            useBranding,
+                            siteUrl: SITE_URL,
+                            ctaText,
+                            ctaUrl
+                        })
+                    });
+
+                    const data = await res.json();
+                    
+                    totalResults.success += data.success || 0;
+                    totalResults.failed += data.failed || 0;
+                    if (data.errors) {
+                        totalResults.errors.push(...data.errors);
+                    }
+                } catch (batchError: any) {
+                    console.error('Batch failed:', batchError);
+                    totalResults.failed += batch.length;
+                    totalResults.errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1} failed completely: ${batchError.message}`);
+                }
+
+                const newProgress = Math.min(i + BATCH_SIZE, recipients.length);
+                setProgress({ current: newProgress, total: recipients.length });
+
+                // Wait for the next batch (except for the last one)
+                if (i + BATCH_SIZE < recipients.length) {
+                    await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+                }
+            }
+
+            setResult(totalResults);
         } catch (error) {
             console.error(error);
             alert('Failed to process.');
@@ -399,6 +433,19 @@ export default function CommunicationsHub() {
                                         <div className={`p-6 rounded-3xl border-2 ${result.failed === 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-amber-50 border-amber-100 text-amber-800'} animate-in fade-in slide-in-from-bottom duration-500 shadow-sm`}>
                                             <p className="font-black uppercase text-[10px] tracking-widest mb-1">Transmission Report</p>
                                             <p className="text-sm font-bold opacity-80">Success: {result.success} | Failures: {result.failed}</p>
+                                            {result.errors && result.errors.length > 0 && (
+                                                <div className="mt-4 space-y-1">
+                                                    <p className="text-[10px] font-black uppercase text-amber-600">Recent Failures:</p>
+                                                    <div className="max-h-32 overflow-y-auto pr-2">
+                                                        {result.errors.slice(0, 10).map((err: string, idx: number) => (
+                                                            <p key={idx} className="text-[10px] font-medium opacity-60 leading-tight">• {err}</p>
+                                                        ))}
+                                                        {result.errors.length > 10 && (
+                                                            <p className="text-[10px] font-black opacity-40 uppercase mt-1">And {result.errors.length - 10} more...</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
