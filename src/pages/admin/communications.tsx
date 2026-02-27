@@ -19,6 +19,8 @@ export default function CommunicationsHub() {
     const [csvFileName, setCsvFileName] = useState('');
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
+    const [ctaText, setCtaText] = useState('');
+    const [ctaUrl, setCtaUrl] = useState('');
     const [useBranding, setUseBranding] = useState(true);
     const [isScheduled, setIsScheduled] = useState(false);
     const [scheduledTime, setScheduledTime] = useState('');
@@ -141,6 +143,8 @@ export default function CommunicationsHub() {
                     htmlTemplate: contentHtml,
                     useBranding,
                     siteUrl: SITE_URL,
+                    ctaText,
+                    ctaUrl,
                     scheduledAt: new Date(scheduledTime).toISOString(),
                     status: 'pending',
                     createdAt: new Date().toISOString(),
@@ -164,7 +168,9 @@ export default function CommunicationsHub() {
                     subject, 
                     htmlTemplate: contentHtml, 
                     useBranding,
-                    siteUrl: SITE_URL
+                    siteUrl: SITE_URL,
+                    ctaText,
+                    ctaUrl
                 })
             });
 
@@ -263,11 +269,30 @@ export default function CommunicationsHub() {
                             <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
                                 <h2 className="font-black text-slate-800 mb-6 uppercase tracking-tight text-xs flex items-center gap-2">
                                     <span className="w-2 h-2 bg-featured-blue rounded-full"></span>
-                                    2. Personalize
+                                    2. Personalize & CTA
                                 </h2>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button type="button" onClick={() => insertTag('{{name}}')} className="p-3 bg-slate-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 border border-slate-100 hover:border-featured-blue hover:text-featured-blue transition-all">{"{{name}}"}</button>
-                                    <button type="button" onClick={() => insertTag('{{email}}')} className="p-3 bg-slate-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 border border-slate-100 hover:border-featured-blue hover:text-featured-blue transition-all">{"{{email}}"}</button>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button type="button" onClick={() => insertTag('{{name}}')} className="p-3 bg-slate-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 border border-slate-100 hover:border-featured-blue hover:text-featured-blue transition-all">{"{{name}}"}</button>
+                                        <button type="button" onClick={() => insertTag('{{email}}')} className="p-3 bg-slate-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 border border-slate-100 hover:border-featured-blue hover:text-featured-blue transition-all">{"{{email}}"}</button>
+                                    </div>
+                                    <div className="pt-4 border-t border-slate-100 space-y-3">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Call to Action Button</p>
+                                        <input 
+                                            type="text" 
+                                            value={ctaText}
+                                            onChange={(e) => setCtaText(e.target.value)}
+                                            placeholder="Button Text (e.g. Register Now)"
+                                            className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-featured-blue"
+                                        />
+                                        <input 
+                                            type="url" 
+                                            value={ctaUrl}
+                                            onChange={(e) => setCtaUrl(e.target.value)}
+                                            placeholder="Button URL (https://...)"
+                                            className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-featured-blue"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 

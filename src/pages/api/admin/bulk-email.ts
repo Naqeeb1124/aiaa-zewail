@@ -32,7 +32,7 @@ export default async function handler(
 
   const adminEmail = decodedToken.email;
 
-  const { recipients, subject, htmlTemplate, useBranding, siteUrl } = req.body;
+  const { recipients, subject, htmlTemplate, useBranding, siteUrl, ctaText, ctaUrl } = req.body;
 
   if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
     return res.status(400).json({ message: 'No recipients provided' });
@@ -75,7 +75,8 @@ export default async function handler(
       let finalHtml = personalizedContent;
       if (useBranding) {
           const unsubscribeUrl = recipient.id ? `${siteUrl}/api/unsubscribe?userId=${recipient.id}` : undefined;
-          finalHtml = getBrandedTemplate(personalizedContent, siteUrl || 'https://aiaa-zewail.vercel.app', unsubscribeUrl);
+          const cta = (ctaText && ctaUrl) ? { text: ctaText, url: ctaUrl } : undefined;
+          finalHtml = getBrandedTemplate(personalizedContent, siteUrl || 'https://aiaa-zewail.vercel.app', unsubscribeUrl, cta);
       }
 
       await transporter.sendMail({

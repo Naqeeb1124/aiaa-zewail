@@ -55,7 +55,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         let finalHtml = personalizedContent;
         if (data.useBranding) {
           const unsubscribeUrl = recipient.id ? `${data.siteUrl}/api/unsubscribe?userId=${recipient.id}` : undefined;
-          finalHtml = getBrandedTemplate(personalizedContent, data.siteUrl, unsubscribeUrl);
+          const cta = (data.ctaText && data.ctaUrl) ? { text: data.ctaText, url: data.ctaUrl } : undefined;
+          finalHtml = getBrandedTemplate(personalizedContent, data.siteUrl, unsubscribeUrl, cta);
         }
 
         await transporter.sendMail({

@@ -1,4 +1,4 @@
-export const getBrandedTemplate = (contentHtml: string, siteUrl: string, unsubscribeUrl?: string) => {
+export const getBrandedTemplate = (contentHtml: string, siteUrl: string, unsubscribeUrl?: string, cta?: { text: string, url: string }) => {
     const PROD_LOGO_URL = 'https://aiaa-zewail.vercel.app/aiaa-logo.png';
     return `
         <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #334155; max-width: 600px; margin: auto; padding: 20px;">
@@ -10,6 +10,15 @@ export const getBrandedTemplate = (contentHtml: string, siteUrl: string, unsubsc
             <div style="font-size: 16px; color: #334155;">
                 ${contentHtml}
             </div>
+
+            ${cta ? `
+            <div style="text-align: center; margin: 40px 0;">
+                <a href="${cta.url}" target="_blank" style="display: inline-block; padding: 16px 36px; background-color: #2b4b77; color: #ffffff; text-decoration: none; border-radius: 12px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; font-family: Helvetica, Arial, sans-serif; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+                    ${cta.text}
+                </a>
+            </div>
+            ` : ''}
+
             <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
                 <div style="margin-bottom: 15px;">
                     <a href="https://www.instagram.com/aiaazc/" target="_blank" style="text-decoration: none; margin: 0 10px; display: inline-block;">
@@ -26,7 +35,7 @@ export const getBrandedTemplate = (contentHtml: string, siteUrl: string, unsubsc
                     AIAA Student Branch — Zewail City
                 </p>
                 <div style="margin-top: 15px;">
-                    <a href="${siteUrl}" target="_blank" style="display: inline-block; padding: 8px 18px; background-color: #2b4b77; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; font-family: Helvetica, Arial, sans-serif;">
+                    <a href="${siteUrl}" target="_blank" style="display: inline-block; padding: 8px 18px; background-color: #f1f5f9; color: #2b4b77; text-decoration: none; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; font-family: Helvetica, Arial, sans-serif;">
                         Visit Website
                     </a>
                 </div>

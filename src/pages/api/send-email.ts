@@ -53,7 +53,7 @@ export default async function handler(
     const adminEmail = decodedToken.email;
 
     // 4. Request validation
-    const { to, subject, text, html, type = 'single' } = req.body
+    const { to, subject, text, html, type = 'single', ctaText, ctaUrl } = req.body
     if (!to || !subject) {
         return res.status(400).json({ message: 'Missing required fields: to or subject' });
     }
@@ -69,7 +69,8 @@ export default async function handler(
     });
 
     const contentHtml = html || `<div style="white-space: pre-wrap;">${text}</div>`;
-    const finalHtml = getBrandedTemplate(contentHtml, SITE_URL);
+    const cta = (ctaText && ctaUrl) ? { text: ctaText, url: ctaUrl } : undefined;
+    const finalHtml = getBrandedTemplate(contentHtml, SITE_URL, undefined, cta);
 
     const mailOptions = {
       from: `"AIAA Zewail City" <${process.env.EMAIL_SERVER_USER}>`,
