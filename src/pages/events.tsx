@@ -17,6 +17,7 @@ interface Event {
   category?: string;
   imageUrl?: string;
   isArchived?: boolean;
+  isDraft?: boolean;
 }
 
 export default function Events() {
@@ -33,7 +34,7 @@ export default function Events() {
             id: doc.id,
             ...doc.data()
           } as Event))
-          .filter(event => !event.isArchived); // Filter out archived events
+          .filter(event => !event.isArchived && !event.isDraft); // Filter out archived and draft events
         
         setEvents(fetchedEvents);
       } catch (error) {

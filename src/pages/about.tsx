@@ -12,7 +12,7 @@ export default function About() {
     useEffect(() => {
         const fetchCount = async () => {
             try {
-                const coll = collection(db, 'members');
+                const coll = collection(db, 'users');
                 const snapshot = await getCountFromServer(coll);
                 setMemberCount(snapshot.data().count);
             } catch (error) {

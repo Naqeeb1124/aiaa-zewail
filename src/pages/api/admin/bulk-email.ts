@@ -97,7 +97,7 @@ export default async function handler(
   // 4. Audit Logging (The Black Box)
   try {
       const adminDb = getAdminDb();
-      if (adminDb && results.success > 0 || results.failed > 0) {
+      if (adminDb && (results.success > 0 || results.failed > 0)) {
           const logData = {
               type: 'bulk_dispatch_batch',
               adminEmail: adminEmail || 'unknown_admin',

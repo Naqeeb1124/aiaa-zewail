@@ -56,7 +56,8 @@ export default function InterviewScheduler({ applicationId, applicantEmail, appl
           applicantEmail,
           slots, // Store the array of {time, location} objects
           status: 'pending',
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          adminEmail: user.email
         })
 
         const subject = 'Invitation to Schedule Your Interview with AIAA Zewail City';
@@ -107,6 +108,11 @@ export default function InterviewScheduler({ applicationId, applicantEmail, appl
         });
 
         if (response.ok) {
+            // Update Application Status
+            await setDoc(doc(db, 'applications', applicationId), {
+                status: 'awaiting response'
+            }, { merge: true });
+            
             alert('Interview invitation sent successfully!')
         } else {
             const contentType = response.headers.get("content-type");

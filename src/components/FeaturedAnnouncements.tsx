@@ -11,6 +11,7 @@ interface Announcement {
   content?: string;
   text?: string; // For backward compatibility
   imageUrl?: string;
+  isDraft?: boolean;
   createdAt: {
     toDate: () => Date;
   };
@@ -56,12 +57,17 @@ const FeaturedAnnouncements = () => {
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
-      const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(3));
+      // Fetch more than 3 to account for potential drafts
+      const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(10));
       const querySnapshot = await getDocs(q);
-      const fetchedAnnouncements = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Announcement));
+      const fetchedAnnouncements = querySnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Announcement))
+        .filter(ann => !ann.isDraft)
+        .slice(0, 3);
+      
       setAnnouncements(fetchedAnnouncements);
     };
 

@@ -102,6 +102,12 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
           status: 'scheduled',
         })
 
+        // Also update application status
+        const appRef = doc(db, 'applications', user.uid)
+        await updateDoc(appRef, {
+          status: 'scheduled'
+        })
+
         const subject = `Interview Scheduled for Your AIAA Zewail City Application`;
         const text = `Dear applicant,\n\nYour interview has been scheduled for ${new Date(selectedSlot.time).toLocaleString()} at ${selectedSlot.location}.\n\nBest regards,\nAIAA Zewail City Team`;
 
@@ -120,9 +126,15 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
           }),
         });
 
-        // Notify all admins
-        const adminEmails = await getAdminEmails();
-        await Promise.all(adminEmails.map(email => 
+        // Notify the relevant admin (or all if not found)
+        let targets: string[] = [];
+        if (interview?.adminEmail) {
+            targets = [interview.adminEmail];
+        } else {
+            targets = await getAdminEmails();
+        }
+
+        await Promise.all(targets.map(email => 
           fetch('/api/send-email', {
             method: 'POST',
             headers: {

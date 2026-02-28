@@ -173,11 +173,23 @@ export default function EventDetails() {
                                 </div>
                                 <h4 className="text-lg font-black text-green-900 mb-2 uppercase tracking-tight">Access Confirmed</h4>
                                 <p className="text-green-700 text-sm mb-10 font-medium">Your mission slot is reserved. <br/> Check your portal for more intel.</p>
-                                <Link href="/dashboard?tab=registrations" legacyBehavior>
-                                    <a className="block w-full py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-[10px] hover:bg-featured-green transition-all text-center shadow-lg transform hover:-translate-y-0.5">
-                                        Open Dashboard
-                                    </a>
-                                </Link>
+                                <div className="space-y-3">
+                                    {event.ctaText && event.ctaUrl && (
+                                        <a 
+                                            href={event.ctaUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block w-full py-4 rounded-full bg-featured-green text-white font-black uppercase tracking-widest text-[10px] hover:bg-slate-900 transition-all text-center shadow-lg transform hover:-translate-y-0.5"
+                                        >
+                                            {event.ctaText}
+                                        </a>
+                                    )}
+                                    <Link href="/dashboard?tab=registrations" legacyBehavior>
+                                        <a className="block w-full py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-[10px] hover:bg-featured-green transition-all text-center shadow-lg transform hover:-translate-y-0.5">
+                                            Open Dashboard
+                                        </a>
+                                    </Link>
+                                </div>
                             </div>
                         ) : (
                             <div>
@@ -189,6 +201,16 @@ export default function EventDetails() {
                                 >
                                     {registering ? 'Processing...' : 'Register for Event'}
                                 </button>
+                                {event.ctaText && event.ctaUrl && (
+                                    <a 
+                                        href={event.ctaUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block w-full py-4 rounded-full border-2 border-slate-100 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:border-featured-blue hover:text-featured-blue transition-all text-center mt-4"
+                                    >
+                                        {event.ctaText}
+                                    </a>
+                                )}
                                 {!user && (
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center mt-6 text-slate-400">
                                         Already a member? <Link href="/join" legacyBehavior><a className="text-featured-blue hover:text-featured-green transition-colors">Sign in</a></Link>

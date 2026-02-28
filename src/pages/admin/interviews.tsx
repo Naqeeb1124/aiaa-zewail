@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 interface InterviewItem {
     id: string; // User UID
-    status: 'pending' | 'scheduled';
+    status: 'pending' | 'scheduled' | 'done';
     selectedSlot?: string;
     location?: string;
     slots?: Array<{time: string, location: string}>;
@@ -53,8 +53,21 @@ export default function AdminInterviews() {
         }
     };
 
+    const handleMarkDone = async (uid: string) => {
+        if(!confirm('Mark this interview as completed?')) return;
+        try {
+            await updateDoc(doc(db, 'interviews', uid), {
+                status: 'done'
+            });
+            fetchInterviews();
+        } catch (error) {
+            alert('Error updating status');
+        }
+    };
+
     const scheduled = interviews.filter(i => i.status === 'scheduled');
     const pending = interviews.filter(i => i.status === 'pending');
+    const completed = interviews.filter(i => i.status === 'done');
 
     return (
         <AdminGuard>
@@ -110,12 +123,20 @@ export default function AdminInterviews() {
                                                     </span>
                                                 </td>
                                                 <td className="p-8 text-right">
-                                                    <button 
-                                                        onClick={() => handleCancelInterview(interview.id)}
-                                                        className="px-4 py-2 border border-red-100 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
-                                                    >
-                                                        Reset
-                                                    </button>
+                                                    <div className="flex justify-end gap-2">
+                                                        <button 
+                                                            onClick={() => handleMarkDone(interview.id)}
+                                                            className="px-4 py-2 bg-featured-green text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:shadow-lg hover:shadow-featured-green/20 transition-all"
+                                                        >
+                                                            Done
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleCancelInterview(interview.id)}
+                                                            className="px-4 py-2 border border-red-100 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 transition-all"
+                                                        >
+                                                            Reset
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -124,6 +145,46 @@ export default function AdminInterviews() {
                             </div>
                         )}
                      </div>
+
+                     {/* COMPLETED SECTION */}
+                     {completed.length > 0 && (
+                        <div className="bg-white rounded-[40px] shadow-sm border border-slate-200 overflow-hidden opacity-60">
+                            <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+                                <div>
+                                    <h2 className="text-xl font-black text-slate-600 uppercase tracking-tight">Completed Briefings</h2>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">{completed.length} Missions Accomplished</p>
+                                </div>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 text-[9px] uppercase text-slate-400 font-black tracking-[0.2em]">
+                                        <tr>
+                                            <th className="p-8">Time & Date</th>
+                                            <th className="p-8">Candidate</th>
+                                            <th className="p-8 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {completed.map(interview => (
+                                            <tr key={interview.id}>
+                                                <td className="p-8 text-slate-500 font-bold">
+                                                    {new Date(interview.selectedSlot!).toLocaleString()}
+                                                </td>
+                                                <td className="p-8">
+                                                    <div className="font-bold text-slate-500">{interview.applicantEmail}</div>
+                                                </td>
+                                                <td className="p-8 text-right">
+                                                    <Link href={`/admin/application/${interview.id}`} legacyBehavior>
+                                                        <a className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-featured-blue hover:underline">Review App</a>
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                     )}
 
                      {/* PENDING SECTION */}
                      <div className="bg-white rounded-[40px] shadow-sm border border-slate-200 overflow-hidden opacity-80">

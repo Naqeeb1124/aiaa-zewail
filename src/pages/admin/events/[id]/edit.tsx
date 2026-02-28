@@ -21,6 +21,8 @@ export default function EditEvent() {
     category: 'Workshop',
     description: '',
     imageUrl: '',
+    ctaText: '',
+    ctaUrl: '',
     isKickoff: false
   });
 
@@ -43,6 +45,8 @@ export default function EditEvent() {
           category: data.category || 'Workshop',
           description: data.description || '',
           imageUrl: data.imageUrl || '',
+          ctaText: data.ctaText || '',
+          ctaUrl: data.ctaUrl || '',
           isKickoff: data.isKickoff || false
         });
       } else {
@@ -175,6 +179,31 @@ export default function EditEvent() {
                     <option>Social</option>
                     <option>Competition</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">CTA Text</label>
+                  <input
+                    type="text"
+                    name="ctaText"
+                    value={event.ctaText}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Join Meeting"
+                    className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-featured-blue outline-none font-bold text-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">CTA URL</label>
+                  <input
+                    type="url"
+                    name="ctaUrl"
+                    value={event.ctaUrl}
+                    onChange={handleInputChange}
+                    placeholder="https://..."
+                    className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-featured-blue outline-none font-bold text-slate-800"
+                  />
                 </div>
               </div>
 

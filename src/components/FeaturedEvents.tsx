@@ -12,6 +12,7 @@ interface Event {
   date: string;
   imageUrl?: string;
   isArchived?: boolean;
+  isDraft?: boolean;
 }
 
 const EventCard = ({ event }: { event: Event }) => {
@@ -57,15 +58,15 @@ const FeaturedEvents = () => {
 
   useEffect(() => {
     const fetchEvents = async () => {
-      // Fetch more than 3 so we can filter archived ones and still potentially have 3
-      const q = query(collection(db, 'events'), orderBy('date', 'desc'), limit(10));
+      // Fetch more than 3 so we can filter archived/draft ones and still potentially have 3
+      const q = query(collection(db, 'events'), orderBy('date', 'desc'), limit(15));
       const querySnapshot = await getDocs(q);
       const fetchedEvents = querySnapshot.docs
         .map(doc => ({
           id: doc.id,
           ...doc.data()
         } as Event))
-        .filter(event => !event.isArchived)
+        .filter(event => !event.isArchived && !event.isDraft)
         .slice(0, 3);
       
       setEvents(fetchedEvents);
