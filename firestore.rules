@@ -61,6 +61,7 @@ service cloud.firestore {
 
     // Registrations: Read/Write own registration
     match /registrations/{regId} {
+      
       allow read: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin());
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
       allow update, delete: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.userId);

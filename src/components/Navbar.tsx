@@ -5,12 +5,13 @@ import { useRouter } from 'next/router'
 import { useAdmin } from '../hooks/useAdmin'
 import { signOut } from '../lib/auth'
 import { KICKOFF_MODE } from '../lib/config'
+import { useContentCheck } from '../hooks/useContentCheck'
 
 const NAV_LINKS = [
   { href: '/about', label: 'About' },
-  { href: '/events', label: 'Events' },
-  { href: '/projects', label: 'Projects' },
-  { href: '/opportunities', label: 'Opportunities' },
+  { href: '/events', label: 'Events', id: 'events' },
+  { href: '/projects', label: 'Projects', id: 'projects' },
+  { href: '/opportunities', label: 'Opportunities', id: 'opportunities' },
   { href: '/tools', label: 'Resources' },
   { href: '/team', label: 'Team' },
   { href: '/join', label: 'Join' },
@@ -18,6 +19,7 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const { user, isAdmin } = useAdmin()
+  const { hasEvents, hasProjects, hasOpportunities } = useContentCheck()
   const router = useRouter()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -28,7 +30,12 @@ export default function Navbar() {
         { href: '/#board', label: 'Team' },
         { href: '/join', label: 'Register' }
       ]
-    : NAV_LINKS;
+    : NAV_LINKS.filter(link => {
+        if (link.id === 'events') return hasEvents;
+        if (link.id === 'projects') return hasProjects;
+        if (link.id === 'opportunities') return hasOpportunities;
+        return true;
+      });
 
   useEffect(() => {
     const handleScroll = () => {

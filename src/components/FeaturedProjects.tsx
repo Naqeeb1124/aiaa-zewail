@@ -94,6 +94,9 @@ const FeaturedProjects = () => {
     fetchProjects();
   }, []);
 
+  if (loading) return null;
+  if (projects.length === 0) return null;
+
   return (
     <section className="py-24 bg-slate-50 border-y border-slate-100">
       <div className="max-w-7xl mx-auto px-6">
@@ -113,21 +116,11 @@ const FeaturedProjects = () => {
             </Link>
         </div>
         
-        {loading ? (
-            <div className="flex justify-center py-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-featured-blue"></div>
-            </div>
-        ) : projects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map(project => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-slate-200">
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Missions are currently in preparation.</p>
-          </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {projects.map(project => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
       </div>
     </section>
   );

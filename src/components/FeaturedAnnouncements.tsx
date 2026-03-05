@@ -54,25 +54,35 @@ const FeatureCard = ({ announcement }: { announcement: Announcement }) => {
 
 const FeaturedAnnouncements = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
-      // Fetch more than 3 to account for potential drafts
-      const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(10));
-      const querySnapshot = await getDocs(q);
-      const fetchedAnnouncements = querySnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Announcement))
-        .filter(ann => !ann.isDraft)
-        .slice(0, 3);
-      
-      setAnnouncements(fetchedAnnouncements);
+      try {
+        // Fetch more than 3 to account for potential drafts
+        const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(10));
+        const querySnapshot = await getDocs(q);
+        const fetchedAnnouncements = querySnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          } as Announcement))
+          .filter(ann => !ann.isDraft)
+          .slice(0, 3);
+        
+        setAnnouncements(fetchedAnnouncements);
+      } catch (error) {
+        console.error("Error fetching announcements:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchAnnouncements();
   }, []);
+
+  if (loading) return null;
+  if (announcements.length === 0) return null;
 
   return (
     <section className="py-24 bg-slate-50">
@@ -87,17 +97,11 @@ const FeaturedAnnouncements = () => {
                 </h2>
             </div>
         </div>
-        {announcements.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {announcements.map(ann => (
-              <FeatureCard key={ann.id} announcement={ann} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-slate-200">
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Announcements will appear here.</p>
-          </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {announcements.map(ann => (
+            <FeatureCard key={ann.id} announcement={ann} />
+          ))}
+        </div>
       </div>
     </section>
   );

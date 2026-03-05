@@ -51,7 +51,7 @@ export default function About() {
                     <div className="order-2 md:order-1">
                         <div className="relative rounded-[40px] overflow-hidden shadow-2xl border border-slate-100 group h-[300px] md:h-[600px]">
                              <Image 
-                                src="/hero-mock.jpg" 
+                                src="/zewail-city-campus.png" 
                                 alt="Zewail City Campus" 
                                 fill
                                 className="object-cover transition-transform duration-700 group-hover:scale-105"

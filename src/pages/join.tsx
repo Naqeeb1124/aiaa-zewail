@@ -44,8 +44,14 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
   const [testMode, setTestMode] = useState(false)
 
   useEffect(() => {
-    // Handle redirect if user is logged in
-    if (user && router.query.redirect) {
+    // Handle redirect if user is logged in AND is already a member
+    if (user && applicationStatus === 'accepted' && router.query.redirect) {
+      router.push(router.query.redirect as string);
+      return;
+    }
+
+    // Also handle redirect if user is admin (they can join projects too)
+    if (user && isAdmin && router.query.redirect) {
       router.push(router.query.redirect as string);
       return;
     }
@@ -86,7 +92,7 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
       if (!loading && !user) setApplicationStatus('not_applied')
       return () => unsubStatus()
     }
-  }, [user, isAdmin, loading, router])
+  }, [user, isAdmin, loading, router, applicationStatus])
 
   const handleConfirmSlot = async () => {
     if (!selectedSlot || !user) {
@@ -211,6 +217,12 @@ export default function Join({initialRecruitmentOpen}: {initialRecruitmentOpen: 
         if (testMode) {
             alert("Test Submission Successful! Data has been recorded.");
         }
+
+        // If there's a redirect query, we might want to tell the user they'll be redirected after review
+        // But the user requested "after they fill it they can finally apply to join the project"
+        // Since they aren't 'accepted' yet, we can't fully redirect them back to APPLY.
+        // However, we can at least keep them informed. 
+        // For now, let's just stay on the "Application Transmitted" state.
     } catch (error: any) {
         console.error("Submission error:", error)
         alert(`Failed to submit: ${error.message}`)

@@ -55,25 +55,35 @@ const EventCard = ({ event }: { event: Event }) => {
 
 const FeaturedEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchEvents = async () => {
-      // Fetch more than 3 so we can filter archived/draft ones and still potentially have 3
-      const q = query(collection(db, 'events'), orderBy('date', 'desc'), limit(15));
-      const querySnapshot = await getDocs(q);
-      const fetchedEvents = querySnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Event))
-        .filter(event => !event.isArchived && !event.isDraft)
-        .slice(0, 3);
-      
-      setEvents(fetchedEvents);
+      try {
+        // Fetch more than 3 so we can filter archived/draft ones and still potentially have 3
+        const q = query(collection(db, 'events'), orderBy('date', 'desc'), limit(15));
+        const querySnapshot = await getDocs(q);
+        const fetchedEvents = querySnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          } as Event))
+          .filter(event => !event.isArchived && !event.isDraft)
+          .slice(0, 3);
+        
+        setEvents(fetchedEvents);
+      } catch (error) {
+        console.error("Error fetching featured events:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchEvents();
   }, []);
+
+  if (loading) return null;
+  if (events.length === 0) return null;
 
   return (
     <section className="py-24 bg-white">
@@ -93,17 +103,11 @@ const FeaturedEvents = () => {
                 </a>
             </Link>
         </div>
-        {events.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {events.map(event => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 bg-slate-50 rounded-[40px] border border-dashed border-slate-200">
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No upcoming events. Please check back soon!</p>
-          </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {events.map(event => (
+            <EventCard key={event.id} event={event} />
+          ))}
+        </div>
       </div>
     </section>
   );

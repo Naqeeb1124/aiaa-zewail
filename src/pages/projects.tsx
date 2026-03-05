@@ -8,10 +8,13 @@ import { Project } from '../types/project'
 import { UserProfile } from '../types/user'
 import Link from 'next/link'
 import { useAdmin } from '../hooks/useAdmin'
+import { useRouter } from 'next/router'
+import { signInWithGoogle } from '../lib/auth'
 
 
 export default function Projects() {
   const { isAdmin } = useAdmin()
+  const router = useRouter()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
@@ -60,17 +63,37 @@ export default function Projects() {
   }
 
   const handleJoin = async (project: Project) => {
+    const currentPath = router.asPath;
+
     if (!auth.currentUser) {
-      alert("Please login to join a project.")
-      return
+      try {
+        const res = await signInWithGoogle();
+        const user = res.user;
+        if (user) {
+            // Check member status after login
+            const userRef = doc(db, 'users', user.uid);
+            const userSnap = await getDoc(userRef);
+            const data = userSnap.data() as UserProfile;
+            
+            if (data?.role !== 'member' && !isAdmin) {
+                router.push(`/join?redirect=${encodeURIComponent(currentPath)}`);
+                return;
+            }
+        }
+      } catch (error) {
+        console.error("Login failed:", error);
+        return;
+      }
     }
 
     if (!isOfficialMember) {
-      alert("Only official branch members can join projects. Please apply to join the branch first.")
-      return
+      router.push(`/join?redirect=${encodeURIComponent(currentPath)}`);
+      return;
     }
 
     if (!confirm(`Apply to join ${project.title}?`)) return
+
+    if (!auth.currentUser) return; // Should not happen after above checks
 
     setProcessingId(project.id)
     try {
@@ -219,18 +242,16 @@ export default function Projects() {
                       <button
                         onClick={() => handleJoin(project)}
                         disabled={
-                          userProfile === null || 
                           processingId === project.id ||
                           applicationStatus !== undefined || // Already applied
                           project.status !== 'Recruiting' ||
-                          (project.maxSeats > 0 && project.currentSeats >= project.maxSeats) ||
-                          !isOfficialMember // Must be a member
+                          (project.maxSeats > 0 && project.currentSeats >= project.maxSeats)
                         }
                         className={`w-full py-4 rounded-full font-black uppercase tracking-widest text-xs transition-all disabled:opacity-50 
                           ${applicationStatus === 'accepted' ? 'bg-green-500 text-white border-green-500' : 
                             applicationStatus === 'rejected' ? 'bg-red-500 text-white border-red-500' :
                             applicationStatus === 'pending' ? 'bg-amber-500 text-white border-amber-500' :
-                            !isOfficialMember ? 'bg-slate-200 text-slate-400 border-slate-300' :
+                            !isOfficialMember ? 'bg-slate-800 text-white border-transparent' :
                             'bg-featured-blue text-white hover:bg-featured-green border-transparent shadow-lg hover:shadow-featured-green/20'} 
                           disabled:bg-slate-100 disabled:text-slate-400 transform hover:-translate-y-0.5`}
                       >
@@ -238,7 +259,7 @@ export default function Projects() {
                           applicationStatus === 'accepted' ? 'Active Member' :
                           applicationStatus === 'rejected' ? 'Application Closed' :
                           applicationStatus === 'pending' ? 'Review Pending' :
-                          !isOfficialMember ? 'Membership Required' :
+                          !isOfficialMember ? 'Join to apply' :
                           project.status !== 'Recruiting' ? 'Not Recruiting' :
                           (project.maxSeats > 0 && project.currentSeats >= project.maxSeats) ? 'Capacity Reached' :
                           'Join Project'}
@@ -304,10 +325,9 @@ export default function Projects() {
                         </div>
                         <button 
                             onClick={() => { handleJoin(selectedProject); setSelectedProject(null); }}
-                            disabled={!isOfficialMember}
-                            className="px-8 py-3 bg-featured-blue text-white rounded-full font-black uppercase tracking-widest text-[10px] hover:bg-featured-green transition-all disabled:bg-slate-200 disabled:text-slate-400"
+                            className="px-8 py-3 bg-featured-blue text-white rounded-full font-black uppercase tracking-widest text-[10px] hover:bg-featured-green transition-all"
                         >
-                            {isOfficialMember ? 'Apply to Join' : 'Membership Required'}
+                            {isOfficialMember ? 'Apply to Join' : 'Join to apply'}
                         </button>
                     </div>
                 </div>
