@@ -541,9 +541,9 @@ export default function CommunicationsHub() {
                                                                     const match = err.match(/Failed for ([^:]+):/);
                                                                     return match ? match[1] : null;
                                                                 })
-                                                                .filter(Boolean);
+                                                                .filter((email: string | null): email is string => email !== null);
                                                             
-                                                            const csv = Papa.unparse(failedEmails.map(email => ({ email })));
+                                                            const csv = Papa.unparse(failedEmails.map((email: string) => ({ email })));
                                                             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                                                             const link = document.createElement('a');
                                                             const url = URL.createObjectURL(blob);
