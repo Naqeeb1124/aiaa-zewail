@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db, auth } from '../../lib/firebase';
-import { collection, getDocs, query, where, doc, getDoc, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, addDoc, orderBy, limit } from 'firebase/firestore';
 import AdminGuard from '../../components/AdminGuard';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
@@ -29,6 +29,9 @@ export default function CommunicationsHub() {
     const [result, setResult] = useState<any>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+    const [recoveryList, setRecoveryList] = useState<string[]>([]);
+    const [recovering, setRecovery] = useState(false);
+
     const SITE_URL = 'https://aiaa-zewail.vercel.app'; 
 
     useEffect(() => {
@@ -39,6 +42,61 @@ export default function CommunicationsHub() {
         };
         fetchEvents();
     }, []);
+
+    const extractFailedFromLogs = async () => {
+        setRecovery(true);
+        try {
+            // Fetch more logs to be sure
+            const q = query(
+                collection(db, 'audit_logs'), 
+                orderBy('timestamp', 'desc'),
+                limit(200)
+            );
+            const snap = await getDocs(q);
+            
+            if (snap.empty) {
+                alert("No audit logs found at all.");
+                setRecovery(false);
+                return;
+            }
+
+            const allFailed = new Set<string>();
+            let logCount = 0;
+
+            snap.docs.forEach(d => {
+                const data = d.data();
+                // Look into ANY field that might contain errors
+                const possibleErrorSources = [
+                    ...(data.errors || []),
+                    data.error,
+                    data.message,
+                    data.recipient // Sometimes single failures log here
+                ].filter(Boolean);
+
+                possibleErrorSources.forEach((str: any) => {
+                    if (typeof str !== 'string') return;
+                    
+                    // Regex to find emails in error strings like "Failed for email@ex.com: ..."
+                    const emailMatch = str.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/);
+                    if (emailMatch && (str.toLowerCase().includes('failed') || str.toLowerCase().includes('error'))) {
+                        allFailed.add(emailMatch[1]);
+                    }
+                });
+                logCount++;
+            });
+            
+            if (allFailed.size === 0) {
+                alert(`Scanned ${logCount} recent logs but found no failed email patterns. Try checking the Black Box page directly to see if logs exist.`);
+            } else {
+                setRecoveryList(Array.from(allFailed));
+            }
+        } catch (error: any) {
+            console.error("Recovery error:", error);
+            alert(`Access Denied or Database Error: ${error.message}`);
+        } finally {
+            setRecovery(false);
+        }
+    };
 
     const insertTag = (tag: string, closeTag: string = '') => {
         if (!textareaRef.current) return;
@@ -231,6 +289,35 @@ export default function CommunicationsHub() {
                 </section>
 
                 <main className="max-w-5xl mx-auto px-6 py-12">
+                    {/* Recovery Section (Temporary) */}
+                    {recoveryList.length > 0 && (
+                        <div className="mb-8 p-8 bg-amber-900 text-white rounded-[40px] shadow-2xl border-4 border-amber-500/30 animate-fade-in">
+                            <h2 className="text-2xl font-black uppercase tracking-tighter mb-4">🚨 Recovery Protocol: Failed Emails</h2>
+                            <p className="text-amber-200 text-sm mb-6 font-bold uppercase tracking-widest">Found {recoveryList.length} unique failed addresses in recent logs.</p>
+                            <textarea 
+                                readOnly
+                                value={recoveryList.join('\n')}
+                                className="w-full h-40 bg-black/30 rounded-2xl p-4 font-mono text-xs border border-white/10 outline-none mb-6"
+                            />
+                            <div className="flex gap-4">
+                                <button 
+                                    onClick={() => {
+                                        const csv = Papa.unparse(recoveryList.map(email => ({ email })));
+                                        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                                        const link = document.createElement('a');
+                                        link.href = URL.createObjectURL(blob);
+                                        link.download = `recovered_failed_emails.csv`;
+                                        link.click();
+                                    }}
+                                    className="px-8 py-3 bg-white text-amber-900 rounded-full font-black uppercase tracking-widest text-[10px] hover:bg-amber-100 transition-all"
+                                >
+                                    Download Recovery CSV
+                                </button>
+                                <button onClick={() => setRecoveryList([])} className="px-8 py-3 border border-white/20 rounded-full font-black uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all">Dismiss</button>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="grid lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-1 space-y-6">
                             <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
@@ -298,6 +385,16 @@ export default function CommunicationsHub() {
                                         </label>
                                     </div>
                                 )}
+
+                                <div className="mt-6 pt-6 border-t border-slate-100">
+                                    <button 
+                                        onClick={extractFailedFromLogs}
+                                        disabled={recovering}
+                                        className="w-full py-3 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-100 hover:text-amber-700 transition-all disabled:opacity-50"
+                                    >
+                                        {recovering ? 'Scanning Blackbox...' : 'Recover Failed Emails from Logs'}
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
@@ -431,8 +528,38 @@ export default function CommunicationsHub() {
 
                                     {result && (
                                         <div className={`p-6 rounded-3xl border-2 ${result.failed === 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-amber-50 border-amber-100 text-amber-800'} animate-in fade-in slide-in-from-bottom duration-500 shadow-sm`}>
-                                            <p className="font-black uppercase text-[10px] tracking-widest mb-1">Transmission Report</p>
-                                            <p className="text-sm font-bold opacity-80">Success: {result.success} | Failures: {result.failed}</p>
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <p className="font-black uppercase text-[10px] tracking-widest mb-1">Transmission Report</p>
+                                                    <p className="text-sm font-bold opacity-80">Success: {result.success} | Failures: {result.failed}</p>
+                                                </div>
+                                                {result.failed > 0 && (
+                                                    <button 
+                                                        onClick={() => {
+                                                            const failedEmails = result.errors
+                                                                .map((err: string) => {
+                                                                    const match = err.match(/Failed for ([^:]+):/);
+                                                                    return match ? match[1] : null;
+                                                                })
+                                                                .filter(Boolean);
+                                                            
+                                                            const csv = Papa.unparse(failedEmails.map(email => ({ email })));
+                                                            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                                                            const link = document.createElement('a');
+                                                            const url = URL.createObjectURL(blob);
+                                                            link.setAttribute('href', url);
+                                                            link.setAttribute('download', `failed_emails_${new Date().getTime()}.csv`);
+                                                            link.style.visibility = 'hidden';
+                                                            document.body.appendChild(link);
+                                                            link.click();
+                                                            document.body.removeChild(link);
+                                                        }}
+                                                        className="px-4 py-2 bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-md active:scale-95"
+                                                    >
+                                                        Download Failed CSV
+                                                    </button>
+                                                )}
+                                            </div>
                                             {result.errors && result.errors.length > 0 && (
                                                 <div className="mt-4 space-y-1">
                                                     <p className="text-[10px] font-black uppercase text-amber-600">Recent Failures:</p>

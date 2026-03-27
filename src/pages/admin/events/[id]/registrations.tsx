@@ -74,12 +74,14 @@ export default function EventRegistrations() {
     const handleExportCSV = () => {
         if (registrations.length === 0) return;
         
-        const headers = ["Name", "Email", "Status", "Registered At"];
+        const headers = ["Name", "Email", "Status", "Registered At", "University", "Is External"];
         const rows = registrations.map(r => [
             r.userName,
             r.userEmail,
             r.status,
-            r.registeredAt
+            r.registeredAt,
+            r.university || 'Zewail City',
+            r.isExternal ? 'Yes' : 'No'
         ]);
 
         const csvContent = "data:text/csv;charset=utf-8," 
@@ -173,7 +175,14 @@ export default function EventRegistrations() {
                                         {filteredRegistrations.sort((a,b) => new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime()).map(reg => (
                                             <tr key={reg.id} className="hover:bg-blue-50/50 transition-colors">
                                                 <td className="p-6 font-bold text-slate-800">
-                                                    {reg.userName}
+                                                    <div className="flex flex-col">
+                                                        <span>{reg.userName}</span>
+                                                        {reg.isExternal && (
+                                                            <span className="text-[10px] text-emerald-600 font-black uppercase tracking-widest mt-1">
+                                                                External: {reg.university || 'N/A'}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="p-6 text-slate-600">
                                                     {reg.userEmail}

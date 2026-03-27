@@ -107,7 +107,7 @@ export default async function handler(
               subject,
               timestamp: new Date().toISOString(),
               status: results.failed === 0 ? 'success' : 'partial',
-              errors: results.errors.length > 0 ? results.errors.slice(0, 10) : [] // Log first 10 errors
+              errors: results.errors // Log all errors
           };
           console.log('Logging batch dispatch:', logData.adminEmail, '->', results.success, '/', recipients.length, 'success');
           await adminDb.collection('audit_logs').add(logData);

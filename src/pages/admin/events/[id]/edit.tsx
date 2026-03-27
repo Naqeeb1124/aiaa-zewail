@@ -23,7 +23,8 @@ export default function EditEvent() {
     imageUrl: '',
     ctaText: '',
     ctaUrl: '',
-    isKickoff: false
+    isKickoff: false,
+    allowExternal: false
   });
 
   const fetchEvent = useCallback(async () => {
@@ -47,7 +48,8 @@ export default function EditEvent() {
           imageUrl: data.imageUrl || '',
           ctaText: data.ctaText || '',
           ctaUrl: data.ctaUrl || '',
-          isKickoff: data.isKickoff || false
+          isKickoff: data.isKickoff || false,
+          allowExternal: data.allowExternal || false
         });
       } else {
         alert('Event not found');
@@ -212,16 +214,29 @@ export default function EditEvent() {
                 <ImageUpload onUploadSuccess={handleImageUploadSuccess} initialImageUrl={event.imageUrl} />
               </div>
 
-              <div className="flex items-center gap-2 py-2">
-                <input 
-                    type="checkbox" 
-                    name="isKickoff" 
-                    id="isKickoff"
-                    checked={event.isKickoff} 
-                    onChange={handleInputChange}
-                    className="w-4 h-4 text-featured-blue rounded border-slate-300 focus:ring-featured-blue"
-                />
-                <label htmlFor="isKickoff" className="text-xs font-bold text-slate-600 uppercase tracking-wide cursor-pointer">Set as Home Page Countdown</label>
+              <div className="flex flex-col gap-3 py-2">
+                <div className="flex items-center gap-2">
+                  <input 
+                      type="checkbox" 
+                      name="isKickoff" 
+                      id="isKickoff"
+                      checked={event.isKickoff} 
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-featured-blue rounded border-slate-300 focus:ring-featured-blue"
+                  />
+                  <label htmlFor="isKickoff" className="text-xs font-bold text-slate-600 uppercase tracking-wide cursor-pointer">Set as Home Page Countdown</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input 
+                      type="checkbox" 
+                      name="allowExternal" 
+                      id="allowExternal"
+                      checked={event.allowExternal} 
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                  />
+                  <label htmlFor="allowExternal" className="text-xs font-bold text-emerald-600 uppercase tracking-wide cursor-pointer">Allow External Participants</label>
+                </div>
               </div>
 
               <div>

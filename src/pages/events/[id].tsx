@@ -17,6 +17,12 @@ export default function EventDetails() {
     const [registration, setRegistration] = useState<any>(null);
     const [registering, setRegistering] = useState(false);
 
+    // Guest registration form state
+    const [isGuestFormOpen, setIsGuestFormOpen] = useState(false);
+    const [guestName, setGuestName] = useState('');
+    const [guestEmail, setGuestEmail] = useState('');
+    const [guestUniversity, setGuestUniversity] = useState('');
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (u) => {
             setUser(u);
@@ -59,6 +65,10 @@ export default function EventDetails() {
 
     const handleRegister = async () => {
         if (!user) {
+            if (event?.allowExternal) {
+                setIsGuestFormOpen(true);
+                return;
+            }
             router.push('/join');
             return;
         }
@@ -77,6 +87,32 @@ export default function EventDetails() {
             alert('Successfully registered!');
         } catch (error) {
             console.error("Error registering:", error);
+            alert("Registration failed. Please try again.");
+        } finally {
+            setRegistering(false);
+        }
+    };
+
+    const handleGuestRegister = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setRegistering(true);
+        try {
+            const regData = {
+                eventId: id,
+                userId: 'guest_' + Math.random().toString(36).substr(2, 9),
+                userEmail: guestEmail,
+                userName: guestName,
+                university: guestUniversity,
+                isExternal: true,
+                status: 'registered',
+                registeredAt: new Date().toISOString()
+            };
+            const docRef = await addDoc(collection(db, 'registrations'), regData);
+            setRegistration({ id: docRef.id, ...regData });
+            setIsGuestFormOpen(false);
+            alert('Successfully registered as a guest!');
+        } catch (error) {
+            console.error("Error registering guest:", error);
             alert("Registration failed. Please try again.");
         } finally {
             setRegistering(false);
@@ -172,7 +208,7 @@ export default function EventDetails() {
                                     ✓
                                 </div>
                                 <h4 className="text-lg font-black text-green-900 mb-2 uppercase tracking-tight">Access Confirmed</h4>
-                                <p className="text-green-700 text-sm mb-10 font-medium">Your mission slot is reserved. <br/> Check your portal for more intel.</p>
+                                <p className="text-green-700 text-sm mb-10 font-medium">Your mission slot is reserved. <br/> Check your email for more intel.</p>
                                 <div className="space-y-3">
                                     {event.ctaText && event.ctaUrl && (
                                         <a 
@@ -184,37 +220,87 @@ export default function EventDetails() {
                                             {event.ctaText}
                                         </a>
                                     )}
-                                    <Link href="/dashboard?tab=registrations" legacyBehavior>
-                                        <a className="block w-full py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-[10px] hover:bg-featured-green transition-all text-center shadow-lg transform hover:-translate-y-0.5">
-                                            Open Dashboard
-                                        </a>
-                                    </Link>
+                                    {user && (
+                                        <Link href="/dashboard?tab=registrations" legacyBehavior>
+                                            <a className="block w-full py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-[10px] hover:bg-featured-green transition-all text-center shadow-lg transform hover:-translate-y-0.5">
+                                                Open Dashboard
+                                            </a>
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         ) : (
                             <div>
-                                <p className="text-slate-500 mb-10 font-medium leading-relaxed">Secure your spot for this session. Participation certificates will be issued to all attendees.</p>
-                                <button
-                                    onClick={handleRegister}
-                                    disabled={registering}
-                                    className="w-full py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-xs hover:bg-featured-green transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:-translate-y-0.5"
-                                >
-                                    {registering ? 'Processing...' : 'Register for Event'}
-                                </button>
-                                {event.ctaText && event.ctaUrl && (
-                                    <a 
-                                        href={event.ctaUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block w-full py-4 rounded-full border-2 border-slate-100 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:border-featured-blue hover:text-featured-blue transition-all text-center mt-4"
-                                    >
-                                        {event.ctaText}
-                                    </a>
-                                )}
-                                {!user && (
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center mt-6 text-slate-400">
-                                        Already a member? <Link href="/join" legacyBehavior><a className="text-featured-blue hover:text-featured-green transition-colors">Sign in</a></Link>
-                                    </p>
+                                {isGuestFormOpen ? (
+                                    <form onSubmit={handleGuestRegister} className="space-y-4">
+                                        <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">External Registration</h4>
+                                        <input
+                                            type="text"
+                                            placeholder="Full Name"
+                                            required
+                                            value={guestName}
+                                            onChange={(e) => setGuestName(e.target.value)}
+                                            className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-featured-blue font-bold text-sm"
+                                        />
+                                        <input
+                                            type="email"
+                                            placeholder="Email Address"
+                                            required
+                                            value={guestEmail}
+                                            onChange={(e) => setGuestEmail(e.target.value)}
+                                            className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-featured-blue font-bold text-sm"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="University / Organization"
+                                            required
+                                            value={guestUniversity}
+                                            onChange={(e) => setGuestUniversity(e.target.value)}
+                                            className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-featured-blue font-bold text-sm"
+                                        />
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsGuestFormOpen(false)}
+                                                className="flex-1 py-3 rounded-full border border-slate-200 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all"
+                                            >
+                                                Back
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                disabled={registering}
+                                                className="flex-[2] py-3 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-[10px] hover:bg-featured-green transition-all shadow-lg"
+                                            >
+                                                {registering ? '...' : 'Complete Registration'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                ) : (
+                                    <>
+                                        <p className="text-slate-500 mb-10 font-medium leading-relaxed">Secure your spot for this session. Participation certificates will be issued to all attendees.</p>
+                                        <button
+                                            onClick={handleRegister}
+                                            disabled={registering}
+                                            className="w-full py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-xs hover:bg-featured-green transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:-translate-y-0.5"
+                                        >
+                                            {registering ? 'Processing...' : (event.allowExternal && !user ? 'Register (External/Guest)' : 'Register for Event')}
+                                        </button>
+                                        {event.ctaText && event.ctaUrl && (
+                                            <a 
+                                                href={event.ctaUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="block w-full py-4 rounded-full border-2 border-slate-100 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:border-featured-blue hover:text-featured-blue transition-all text-center mt-4"
+                                            >
+                                                {event.ctaText}
+                                            </a>
+                                        )}
+                                        {!user && (
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center mt-6 text-slate-400">
+                                                Already a member? <Link href="/join" legacyBehavior><a className="text-featured-blue hover:text-featured-green transition-colors">Sign in</a></Link>
+                                            </p>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         )}

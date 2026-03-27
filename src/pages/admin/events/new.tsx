@@ -13,6 +13,7 @@ export default function NewEvent() {
     const [time, setTime] = useState('');
     const [location, setLocation] = useState('');
     const [imageUrl, setImageUrl] = useState('');
+    const [allowExternal, setAllowExternal] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -29,6 +30,7 @@ export default function NewEvent() {
                 time, // Keep the raw time string as well for display if needed
                 location,
                 imageUrl,
+                allowExternal,
                 createdAt: serverTimestamp(),
             });
             router.push('/admin/events');
@@ -44,9 +46,9 @@ export default function NewEvent() {
         <AdminGuard>
             <div className="min-h-screen bg-slate-900 text-white">
                 <Navbar />
-                <div className="pt-32 px-6 max-w-3xl mx-auto">
+                <div className="pt-32 px-6 max-w-3xl mx-auto pb-20">
                     <h1 className="text-3xl font-bold mb-8">Create New Event</h1>
-                    <form onSubmit={handleSubmit} className="bg-slate-800 p-8 rounded-2xl border border-slate-800 space-y-6">
+                    <form onSubmit={handleSubmit} className="bg-slate-800 p-8 rounded-2xl border border-slate-700 space-y-6">
                         <div>
                             <label className="block text-slate-400 mb-2">Event Title</label>
                             <input
@@ -111,11 +113,23 @@ export default function NewEvent() {
                                 placeholder="https://example.com/event-banner.jpg"
                             />
                         </div>
+
+                        <div className="flex items-center gap-2 py-2">
+                            <input 
+                                type="checkbox" 
+                                id="allowExternal"
+                                checked={allowExternal} 
+                                onChange={(e) => setAllowExternal(e.target.checked)}
+                                className="w-4 h-4 text-emerald-600 rounded border-slate-700 focus:ring-emerald-500 bg-slate-900"
+                            />
+                            <label htmlFor="allowExternal" className="text-sm font-bold text-emerald-500 uppercase tracking-wide cursor-pointer">Allow External Participants</label>
+                        </div>
+
                         <div className="flex justify-end gap-4 pt-4">
                             <button
                                 type="button"
                                 onClick={() => router.back()}
-                                className="px-6 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                                className="px-6 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
                             >
                                 Cancel                            </button>
                             <button
