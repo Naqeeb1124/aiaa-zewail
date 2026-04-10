@@ -42,33 +42,56 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 4. Send Emails (Same logic as bulk-email.ts)
     const results = { success: 0, failed: 0 };
-    for (const recipient of data.recipients) {
+    
+    if (data.useBcc) {
       try {
-        let personalizedContent = data.htmlTemplate;
-        let firstName = recipient.firstName || (recipient.name ? recipient.name.split(' ')[0] : '');
-
-        if (firstName) {
-          personalizedContent = personalizedContent.replace(/{{name}}/g, firstName);
-        }
-        personalizedContent = personalizedContent.replace(/{{email}}/g, recipient.email);
-
-        let finalHtml = personalizedContent;
+        let finalHtml = data.htmlTemplate;
         if (data.useBranding) {
-          const unsubscribeUrl = recipient.id ? `${data.siteUrl}/api/unsubscribe?userId=${recipient.id}` : undefined;
-          const cta = (data.ctaText && data.ctaUrl) ? { text: data.ctaText, url: data.ctaUrl } : undefined;
-          finalHtml = getBrandedTemplate(personalizedContent, data.siteUrl, unsubscribeUrl, cta);
+            const cta = (data.ctaText && data.ctaUrl) ? { text: data.ctaText, url: data.ctaUrl } : undefined;
+            finalHtml = getBrandedTemplate(data.htmlTemplate, data.siteUrl || 'https://aiaa-zewail.vercel.app', undefined, cta);
         }
 
         await transporter.sendMail({
           from: `"AIAA Zewail City" <${process.env.EMAIL_SERVER_USER}>`,
-          to: recipient.email,
+          to: 'aiaa@zewailcity.edu.eg',
+          bcc: data.recipients.map((r: any) => r.email).join(', '),
           subject: data.subject,
           html: finalHtml,
         });
-        results.success++;
+        results.success = data.recipients.length;
       } catch (err: any) {
-        results.failed++;
-        console.error(`Failed to send scheduled email to ${recipient.email}:`, err);
+        results.failed = data.recipients.length;
+        console.error('Scheduled BCC Error:', err);
+      }
+    } else {
+      for (const recipient of data.recipients) {
+        try {
+          let personalizedContent = data.htmlTemplate;
+          let firstName = recipient.firstName || (recipient.name ? recipient.name.split(' ')[0] : '');
+
+          if (firstName) {
+            personalizedContent = personalizedContent.replace(/{{name}}/g, firstName);
+          }
+          personalizedContent = personalizedContent.replace(/{{email}}/g, recipient.email);
+
+          let finalHtml = personalizedContent;
+          if (data.useBranding) {
+            const unsubscribeUrl = recipient.id ? `${data.siteUrl}/api/unsubscribe?userId=${recipient.id}` : undefined;
+            const cta = (data.ctaText && data.ctaUrl) ? { text: data.ctaText, url: data.ctaUrl } : undefined;
+            finalHtml = getBrandedTemplate(personalizedContent, data.siteUrl, unsubscribeUrl, cta);
+          }
+
+          await transporter.sendMail({
+            from: `"AIAA Zewail City" <${process.env.EMAIL_SERVER_USER}>`,
+            to: recipient.email,
+            subject: data.subject,
+            html: finalHtml,
+          });
+          results.success++;
+        } catch (err: any) {
+          results.failed++;
+          console.error(`Failed to send scheduled email to ${recipient.email}:`, err);
+        }
       }
     }
 

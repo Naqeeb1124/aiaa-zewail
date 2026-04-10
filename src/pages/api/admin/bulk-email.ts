@@ -31,8 +31,26 @@ export default async function handler(
   }
 
   const adminEmail = decodedToken.email;
+  if (!adminEmail) {
+    return res.status(401).json({ message: 'Unauthorized: No email' });
+  }
 
-  const { recipients, subject, htmlTemplate, useBranding, siteUrl, ctaText, ctaUrl } = req.body;
+  // Verify Admin Status
+  try {
+    const adminDb = getAdminDb();
+    if (!adminDb) {
+      throw new Error('Could not access Firestore');
+    }
+    const adminDoc = await adminDb.collection('admins').doc(adminEmail).get();
+    if (!adminDoc.exists) {
+      return res.status(403).json({ message: 'Forbidden: Admin access required' });
+    }
+  } catch (err: any) {
+    console.error('Admin verification error:', err);
+    return res.status(500).json({ message: 'Internal server error during authorization' });
+  }
+
+  const { recipients, subject, htmlTemplate, useBranding, siteUrl, ctaText, ctaUrl, useBcc } = req.body;
 
   if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
     return res.status(400).json({ message: 'No recipients provided' });
@@ -53,44 +71,69 @@ export default async function handler(
     errors: [] as string[]
   };
 
-  // 3. Send Emails (Mail Merge Logic)
-  for (const recipient of recipients) {
+  // 3. Send Emails (Mail Merge OR BCC Logic)
+  if (useBcc) {
     try {
-      let personalizedContent = htmlTemplate;
-      
-      // Smart First Name logic
-      let firstName = '';
-      if (recipient.firstName) {
-        firstName = recipient.firstName;
-      } else if (recipient.name) {
-        firstName = recipient.name.split(' ')[0].replace(/\d+$/, '');
-      }
-
-      // Basic Mail Merge: Replace placeholders
-      if (firstName) {
-        personalizedContent = personalizedContent.replace(/{{name}}/g, firstName);
-      }
-      personalizedContent = personalizedContent.replace(/{{email}}/g, recipient.email);
-
-      let finalHtml = personalizedContent;
+      // In BCC mode, we send ONE email with multiple BCC recipients
+      // Personalization like {{name}} will NOT work properly for all recipients
+      let finalHtml = htmlTemplate;
       if (useBranding) {
-          const unsubscribeUrl = recipient.id ? `${siteUrl}/api/unsubscribe?userId=${recipient.id}` : undefined;
           const cta = (ctaText && ctaUrl) ? { text: ctaText, url: ctaUrl } : undefined;
-          finalHtml = getBrandedTemplate(personalizedContent, siteUrl || 'https://aiaa-zewail.vercel.app', unsubscribeUrl, cta);
+          finalHtml = getBrandedTemplate(htmlTemplate, siteUrl || 'https://aiaa-zewail.vercel.app', undefined, cta);
       }
 
       await transporter.sendMail({
         from: `"AIAA Zewail City" <${process.env.EMAIL_SERVER_USER}>`,
-        to: recipient.email,
+        to: 'aiaa@zewailcity.edu.eg',
+        bcc: recipients.map(r => r.email).join(', '),
         subject: subject,
         html: finalHtml,
       });
-      results.success++;
+      results.success = recipients.length;
     } catch (err: any) {
-      results.failed++;
-      const errorMessage = `Failed for ${recipient.email}: ${err.message}`;
-      results.errors.push(errorMessage);
-      console.error(errorMessage);
+      results.failed = recipients.length;
+      results.errors.push(`BCC Batch failed: ${err.message}`);
+      console.error('BCC Error:', err);
+    }
+  } else {
+    for (const recipient of recipients) {
+      try {
+        let personalizedContent = htmlTemplate;
+        
+        // Smart First Name logic
+        let firstName = '';
+        if (recipient.firstName) {
+          firstName = recipient.firstName;
+        } else if (recipient.name) {
+          firstName = recipient.name.split(' ')[0].replace(/\d+$/, '');
+        }
+
+        // Basic Mail Merge: Replace placeholders
+        if (firstName) {
+          personalizedContent = personalizedContent.replace(/{{name}}/g, firstName);
+        }
+        personalizedContent = personalizedContent.replace(/{{email}}/g, recipient.email);
+
+        let finalHtml = personalizedContent;
+        if (useBranding) {
+            const unsubscribeUrl = recipient.id ? `${siteUrl}/api/unsubscribe?userId=${recipient.id}` : undefined;
+            const cta = (ctaText && ctaUrl) ? { text: ctaText, url: ctaUrl } : undefined;
+            finalHtml = getBrandedTemplate(personalizedContent, siteUrl || 'https://aiaa-zewail.vercel.app', unsubscribeUrl, cta);
+        }
+
+        await transporter.sendMail({
+          from: `"AIAA Zewail City" <${process.env.EMAIL_SERVER_USER}>`,
+          to: recipient.email,
+          subject: subject,
+          html: finalHtml,
+        });
+        results.success++;
+      } catch (err: any) {
+        results.failed++;
+        const errorMessage = `Failed for ${recipient.email}: ${err.message}`;
+        results.errors.push(errorMessage);
+        console.error(errorMessage);
+      }
     }
   }
 

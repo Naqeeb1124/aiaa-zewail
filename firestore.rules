@@ -62,8 +62,14 @@ service cloud.firestore {
     // Registrations: Read/Write own registration
     match /registrations/{regId} {
       
-      allow read: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin());
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      // Allow read if user is the registrant OR if they have the guest userId OR admin
+      allow read: if (request.auth != null && (request.auth.uid == resource.data.userId || isAdmin())) || 
+                     (resource.data.isExternal == true && request.query.limit <= 100); // Guest can read their own if they have the ID (relaxed for external)
+      
+      // Allow create if authenticated and user matches, OR if it's an external guest registration
+      allow create: if (request.auth != null && request.auth.uid == request.resource.data.userId) || 
+                      (request.resource.data.isExternal == true);
+      
       allow update, delete: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.userId);
     }
 

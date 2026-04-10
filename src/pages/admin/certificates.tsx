@@ -7,19 +7,27 @@ import { auth } from '../../lib/firebase';
 const CATEGORIES: Record<string, { label: string, roles: string[] }> = {
     event: {
         label: "Event / Workshop",
-        roles: ["Participant", "Speaker", "Organizer", "Volunteer", "Attendee"]
+        roles: ["Participant", "Speaker", "Organizer", "Volunteer", "Attendee", "Mentor", "Instructor"]
+    },
+    webinar: {
+        label: "Webinar",
+        roles: ["Attendee", "Guest Speaker", "Moderator", "Organizer"]
     },
     project: {
         label: "Technical Project",
-        roles: ["Project Lead", "Active Member", "Core Contributor", "Researcher", "Developer"]
+        roles: ["Project Lead", "Active Member", "Core Contributor", "Researcher", "Developer", "Junior Developer", "Intern"]
     },
     competition: {
         label: "Competition",
-        roles: ["Winner", "Runner-up", "Finalist", "Participant", "Honorable Mention"]
+        roles: ["Winner", "Runner-up", "Finalist", "Participant", "Honorable Mention", "Judge", "Technical Committee"]
     },
     leadership: {
         label: "Leadership / Board",
-        roles: ["Head of Team", "Vice Head", "Executive Member", "Board Member", "Team Lead"]
+        roles: ["Chairperson", "Vice Chair", "Head of Team", "Vice Head", "Executive Member", "Board Member", "Team Lead", "Specialist"]
+    },
+    appreciation: {
+        label: "Appreciation / Merit",
+        roles: ["Outstanding Contribution", "Member of the Month", "Excellence Award", "Service Award"]
     }
 };
 
@@ -29,7 +37,8 @@ export default function AdminCertificates() {
         eventTitle: '',
         date: new Date().toISOString().split('T')[0],
         role: 'Participant',
-        category: 'event'
+        category: 'event',
+        customWording: ''
     });
     const [loading, setLoading] = useState(false);
 
@@ -41,7 +50,7 @@ export default function AdminCertificates() {
         }));
     }, [formData.category]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
@@ -174,7 +183,33 @@ export default function AdminCertificates() {
                                     {CATEGORIES[formData.category].roles.map(role => (
                                         <option key={role} value={role}>{role}</option>
                                     ))}
+                                    <option value="custom">-- Custom Role --</option>
                                 </select>
+                            </div>
+
+                            {formData.role === 'custom' && (
+                                <div className="md:col-span-2 animate-in fade-in slide-in-from-top-2">
+                                    <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Enter Custom Role</label>
+                                    <input 
+                                        type="text" 
+                                        onChange={(e) => setFormData({...formData, role: e.target.value})}
+                                        placeholder="e.g. Lead System Architect" 
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-featured-blue outline-none transition-all" 
+                                    />
+                                </div>
+                            )}
+
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Custom Description (Optional Override)</label>
+                                <textarea 
+                                    name="customWording" 
+                                    value={formData.customWording} 
+                                    onChange={handleInputChange} 
+                                    placeholder="Leave empty for default wording based on category." 
+                                    rows={2}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-featured-blue outline-none transition-all resize-none" 
+                                />
+                                <p className="text-[10px] text-slate-400 mt-1 font-medium">This replaces the &quot;has successfully...&quot; part. Use if you need a specific sentence.</p>
                             </div>
 
                             <div className="md:col-span-2 mt-6">

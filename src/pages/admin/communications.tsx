@@ -7,7 +7,7 @@ import Footer from '../../components/Footer';
 import Papa from 'papaparse';
 import { getBrandedTemplate } from '../../lib/emailTemplates';
 
-type Audience = 'official' | 'all' | 'events' | 'custom' | 'single';
+type Audience = 'official' | 'all' | 'events' | 'custom' | 'single' | 'auth';
 
 export default function CommunicationsHub() {
     const [audience, setAudience] = useState<Audience>('official');
@@ -22,6 +22,7 @@ export default function CommunicationsHub() {
     const [ctaText, setCtaText] = useState('');
     const [ctaUrl, setCtaUrl] = useState('');
     const [useBranding, setUseBranding] = useState(true);
+    const [useBcc, setUseBcc] = useState(false);
     const [isScheduled, setIsScheduled] = useState(false);
     const [scheduledTime, setScheduledTime] = useState('');
     const [sending, setSending] = useState(false);
@@ -146,7 +147,22 @@ export default function CommunicationsHub() {
             return [{ name: '', email: singleRecipient, firstName: '' }];
         }
         if (audience === 'custom') return customRecipients.map(r => ({ ...r, firstName: r.name ? r.name.split(' ')[0] : '' }));
+        
+        const user = auth.currentUser;
+        const token = await user?.getIdToken();
+
         let recipients: { name: string, email: string, firstName?: string }[] = [];
+        if (audience === 'auth') {
+            try {
+                const res = await fetch('/api/admin/auth-emails', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                return await res.json();
+            } catch (err) {
+                console.error('Failed to fetch auth emails:', err);
+                return [];
+            }
+        }
         if (audience === 'official') {
             const snap = await getDocs(collection(db, 'members'));
             recipients = snap.docs.map(d => ({
@@ -193,30 +209,40 @@ export default function CommunicationsHub() {
             const token = await user?.getIdToken();
             let contentHtml = message.replace(/\n/g, '<br/>');
 
+            const activeBcc = useBcc || audience === 'auth';
+
             if (isScheduled) {
-                // Save to scheduled_emails collection
-                await addDoc(collection(db, 'scheduled_emails'), {
-                    recipients,
-                    subject,
-                    htmlTemplate: contentHtml,
-                    useBranding,
-                    siteUrl: SITE_URL,
-                    ctaText,
-                    ctaUrl,
-                    scheduledAt: new Date(scheduledTime).toISOString(),
-                    status: 'pending',
-                    createdAt: new Date().toISOString(),
-                    createdBy: user?.email
-                });
-                alert('Email successfully scheduled!');
+                // Batch recipients for scheduling to avoid cron timeouts
+                const SCHED_BATCH_SIZE = activeBcc ? 50 : 25;
+                for (let i = 0; i < recipients.length; i += SCHED_BATCH_SIZE) {
+                    const batch = recipients.slice(i, i + SCHED_BATCH_SIZE);
+                    await addDoc(collection(db, 'scheduled_emails'), {
+                        recipients: batch,
+                        subject,
+                        htmlTemplate: contentHtml,
+                        useBranding,
+                        useBcc: activeBcc,
+                        siteUrl: SITE_URL,
+                        ctaText,
+                        ctaUrl,
+                        scheduledAt: new Date(scheduledTime).toISOString(),
+                        status: 'pending',
+                        createdAt: new Date().toISOString(),
+                        createdBy: user?.email,
+                        batchIndex: Math.floor(i / SCHED_BATCH_SIZE) + 1,
+                        totalBatches: Math.ceil(recipients.length / SCHED_BATCH_SIZE)
+                    });
+                }
+                alert(`Email successfully scheduled in ${Math.ceil(recipients.length / SCHED_BATCH_SIZE)} batches!`);
                 setSending(false);
                 return;
             }
             
             setProgress({ current: 0, total: recipients.length });
 
-            const BATCH_SIZE = 5;
-            const DELAY_BETWEEN_BATCHES = 1500; // 1.5 seconds
+            // If BCC is active, we can send much larger batches
+            const BATCH_SIZE = activeBcc ? 50 : 5;
+            const DELAY_BETWEEN_BATCHES = activeBcc ? 2000 : 1500; 
             
             const totalResults = {
                 success: 0,
@@ -239,6 +265,7 @@ export default function CommunicationsHub() {
                             subject, 
                             htmlTemplate: contentHtml, 
                             useBranding,
+                            useBcc: activeBcc,
                             siteUrl: SITE_URL,
                             ctaText,
                             ctaUrl
@@ -329,6 +356,7 @@ export default function CommunicationsHub() {
                                     {[ 
                                         { id: 'official', label: 'Official Members', sub: 'Approved directory' },
                                         { id: 'all', label: 'All Accounts', sub: 'Sign-in history' },
+                                        { id: 'auth', label: 'Firebase Auth (BCC)', sub: 'Full Auth Directory' },
                                         { id: 'events', label: 'Event Group', sub: 'Based on attendance' },
                                         { id: 'custom', label: 'Custom CSV', sub: 'Manual upload' },
                                         { id: 'single', label: 'Single Recipient', sub: 'Direct message' }
@@ -386,7 +414,21 @@ export default function CommunicationsHub() {
                                     </div>
                                 )}
 
-                                <div className="mt-6 pt-6 border-t border-slate-100">
+                                <div className="mt-6 pt-6 border-t border-slate-100 space-y-4">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setUseBcc(!useBcc)}
+                                        className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${useBcc ? 'border-featured-blue bg-blue-50/50 text-featured-blue' : 'border-slate-50 text-slate-400'}`}
+                                    >
+                                        <div className="text-left">
+                                            <p className="text-[10px] font-black uppercase tracking-widest">BCC Method</p>
+                                            <p className="text-[8px] font-bold uppercase opacity-60 mt-0.5">Send to self, hide recipients</p>
+                                        </div>
+                                        <div className={`w-8 h-4 rounded-full relative transition-all ${useBcc ? 'bg-featured-blue' : 'bg-slate-200'}`}>
+                                            <div className={`absolute top-1 w-2 h-2 bg-white rounded-full transition-all ${useBcc ? 'right-1' : 'left-1'}`} />
+                                        </div>
+                                    </button>
+
                                     <button 
                                         onClick={extractFailedFromLogs}
                                         disabled={recovering}

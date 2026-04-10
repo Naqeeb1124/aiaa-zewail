@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(401).json({ message: 'Unauthorized: Token verification failed' });
     }
 
-    const { name, eventTitle, date, role, category } = req.body;
+    const { name, eventTitle, date, role, category, customWording } = req.body;
 
     if (!name || !eventTitle || !date) {
         return res.status(400).json({ message: 'Missing required fields' });
@@ -86,7 +86,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             contextWording = "in the competition";
         } else if (category === 'leadership') {
             mainWording = "has successfully served with excellence as";
-            contextWording = "within the organization unit";
+            contextWording = "within the organizational unit";
+        } else if (category === 'webinar') {
+            mainWording = "has successfully attended the webinar";
+            contextWording = "as a";
+        } else if (category === 'appreciation') {
+            mainWording = "has been awarded the distinction of";
+            contextWording = "for exceptional service in";
+        }
+
+        // Override if custom wording provided
+        if (customWording) {
+            mainWording = customWording;
         }
 
         // --- Main Content Rendering ---
@@ -99,14 +110,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Achievement Text (Line 1)
         doc.fillColor(greyText).fontSize(18).font('Helvetica').text(mainWording, 0, 300, { align: 'center' });
         
-        // Role
-        doc.fillColor(sectionBlue).fontSize(24).font('Helvetica-Bold').text(role || 'Participant', 0, 335, { align: 'center' });
-
-        // Context (Line 2)
-        doc.fillColor(greyText).fontSize(18).font('Helvetica').text(contextWording, 0, 375, { align: 'center' });
-        
-        // Event/Project/Competition Title
-        doc.fillColor(deepBlue).fontSize(28).font('Helvetica-Bold').text(eventTitle, 0, 410, { align: 'center' });
+        // Role (Swapped position logic for Webinar)
+        if (category === 'webinar') {
+            // Context (Event Title)
+            doc.fillColor(deepBlue).fontSize(28).font('Helvetica-Bold').text(eventTitle, 0, 335, { align: 'center' });
+            // Role
+            doc.fillColor(greyText).fontSize(18).font('Helvetica').text(contextWording, 0, 375, { align: 'center' });
+            doc.fillColor(sectionBlue).fontSize(24).font('Helvetica-Bold').text(role || 'Participant', 0, 410, { align: 'center' });
+        } else {
+            // Default: Role then Context
+            doc.fillColor(sectionBlue).fontSize(24).font('Helvetica-Bold').text(role || 'Participant', 0, 335, { align: 'center' });
+            doc.fillColor(greyText).fontSize(18).font('Helvetica').text(contextWording, 0, 375, { align: 'center' });
+            doc.fillColor(deepBlue).fontSize(28).font('Helvetica-Bold').text(eventTitle, 0, 410, { align: 'center' });
+        }
 
         // --- Signature & Date Section ---
         const footerY = 490;
