@@ -274,10 +274,16 @@ export default function CommunicationsHub() {
 
                     const data = await res.json();
                     
-                    totalResults.success += data.success || 0;
-                    totalResults.failed += data.failed || 0;
-                    if (data.errors) {
-                        totalResults.errors.push(...data.errors);
+                    if (res.ok) {
+                        totalResults.success += data.success || 0;
+                        totalResults.failed += data.failed || 0;
+                        if (data.errors) {
+                            totalResults.errors.push(...data.errors);
+                        }
+                    } else {
+                        // API returned an error (e.g. 401, 403, 500)
+                        totalResults.failed += batch.length;
+                        totalResults.errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1} failed: ${data.message || 'Unknown server error'}`);
                     }
                 } catch (batchError: any) {
                     console.error('Batch failed:', batchError);
