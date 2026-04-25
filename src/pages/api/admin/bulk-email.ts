@@ -47,7 +47,11 @@ export default async function handler(
     }
   } catch (err: any) {
     console.error('Admin verification error:', err);
-    return res.status(500).json({ message: 'Internal server error during authorization' });
+    return res.status(500).json({ 
+        message: 'Internal server error during authorization', 
+        error: err.message,
+        stack: err.stack 
+    });
   }
 
   const { recipients, subject, htmlTemplate, useBranding, siteUrl, ctaText, ctaUrl, useBcc } = req.body;
