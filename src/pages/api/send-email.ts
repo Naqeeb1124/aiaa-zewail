@@ -16,6 +16,7 @@ export default async function handler(
   }
 
   // 2. Debugging helper for GET
+  if (req.method === 'GET') {
     let firebaseParses = false;
     let firebaseError = '';
     try {
