@@ -22,8 +22,10 @@ export default async function handler(
     try {
         let keyString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
         if (keyString) {
-            if ((keyString.startsWith("'") && keyString.endsWith("'")) || (keyString.startsWith('"') && keyString.endsWith('"'))) {
-                keyString = keyString.slice(1, -1);
+            const firstBrace = keyString.indexOf('{');
+            const lastBrace = keyString.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1) {
+                keyString = keyString.substring(firstBrace, lastBrace + 1);
             }
             JSON.parse(keyString);
             firebaseParses = true;

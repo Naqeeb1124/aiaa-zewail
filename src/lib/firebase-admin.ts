@@ -4,9 +4,11 @@ let serviceAccount = null;
 try {
   let keyString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
   if (keyString) {
-      // Remove surrounding single or double quotes if accidentally added in Vercel
-      if ((keyString.startsWith("'") && keyString.endsWith("'")) || (keyString.startsWith('"') && keyString.endsWith('"'))) {
-          keyString = keyString.slice(1, -1);
+      // Bulletproof extraction: find the actual JSON object bounds
+      const firstBrace = keyString.indexOf('{');
+      const lastBrace = keyString.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1) {
+          keyString = keyString.substring(firstBrace, lastBrace + 1);
       }
       serviceAccount = JSON.parse(keyString);
   }
