@@ -7,6 +7,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  const startTime = Date.now();
+  const log = (msg: string) => console.log(`[send-email] [${Date.now() - startTime}ms] ${msg}`);
   // 1. Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.setHeader('Allow', 'POST, GET, OPTIONS');
@@ -22,7 +24,9 @@ export default async function handler(
             hasUser: !!process.env.EMAIL_SERVER_USER,
             hasPass: !!process.env.EMAIL_SERVER_PASSWORD,
             hasFirebaseKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-        }
+        },
+        runtime: process.env.VERCEL ? 'vercel' : 'local',
+        nodeVersion: process.version
     });
   }
 
@@ -32,16 +36,21 @@ export default async function handler(
 
   try {
     // 3. Authentication check
+    log('Processing POST request');
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      log('REJECTED: Missing or invalid auth header');
       return res.status(401).json({ message: 'Unauthorized: Missing or invalid token' });
     }
 
     const idToken = authHeader.split('Bearer ')[1];
+    log(`Token received (${idToken ? idToken.length : 0} chars)`);
     let decodedToken;
     try {
       decodedToken = await verifyIdToken(idToken);
+      log(`Token verified for: ${decodedToken.email}`);
     } catch (error: any) {
+      log(`Token verification FAILED: ${error.message}`);
       console.error('Token verification failed:', error);
       return res.status(401).json({ 
         message: 'Unauthorized: Token verification failed', 
@@ -59,6 +68,7 @@ export default async function handler(
     }
 
     // 5. Send Email
+    log(`Preparing email to: ${to}, subject: ${subject}`);
     const SITE_URL = 'https://aiaa-zewail.vercel.app'; 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -67,6 +77,7 @@ export default async function handler(
         pass: process.env.EMAIL_SERVER_PASSWORD,
       },
     });
+    log('Transporter created');
 
     const contentHtml = html || `<div style="white-space: pre-wrap;">${text}</div>`;
     const cta = (ctaText && ctaUrl) ? { text: ctaText, url: ctaUrl } : undefined;
@@ -81,6 +92,7 @@ export default async function handler(
     };
 
     await transporter.sendMail(mailOptions);
+    log('Email sent successfully');
 
     // 6. Audit Logging (The Black Box)
     try {
@@ -109,10 +121,12 @@ export default async function handler(
     return res.status(200).json({ message: 'Email sent successfully' })
 
   } catch (error: any) {
+    log(`CRITICAL ERROR: ${error.message}`);
     console.error('CRITICAL API Error in send-email:', error);
     return res.status(500).json({ 
       message: 'Error processing email request',
-      error: error.message || 'Unknown error'
+      error: error.message || 'Unknown error',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     })
   }
 }

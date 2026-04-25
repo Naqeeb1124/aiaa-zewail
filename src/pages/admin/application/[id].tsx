@@ -85,7 +85,7 @@ export default function ApplicationDetail() {
 
         const token = await auth.currentUser?.getIdToken();
 
-        await fetch('/api/send-email', {
+        const emailRes = await fetch('/api/send-email', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -98,7 +98,13 @@ export default function ApplicationDetail() {
           }),
         });
 
-        alert(`Application ${status} successfully and notification email sent.`);
+        if (!emailRes.ok) {
+          const errData = await emailRes.json().catch(() => ({ message: 'Unknown error' }));
+          console.error('Email API error:', emailRes.status, errData);
+          alert(`Application ${status} successfully, but notification email FAILED: ${errData.message || errData.error || 'Unknown error'}`);
+        } else {
+          alert(`Application ${status} successfully and notification email sent.`);
+        }
         router.push('/admin/applications');
     } catch (error: any) {
         console.error("Status update error:", error);
