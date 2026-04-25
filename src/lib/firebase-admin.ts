@@ -2,9 +2,14 @@ import * as admin from 'firebase-admin';
 
 let serviceAccount = null;
 try {
-  serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY 
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY) 
-    : null;
+  let keyString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (keyString) {
+      // Remove surrounding single or double quotes if accidentally added in Vercel
+      if ((keyString.startsWith("'") && keyString.endsWith("'")) || (keyString.startsWith('"') && keyString.endsWith('"'))) {
+          keyString = keyString.slice(1, -1);
+      }
+      serviceAccount = JSON.parse(keyString);
+  }
 } catch (e) {
   console.error("FAILED TO PARSE FIREBASE_SERVICE_ACCOUNT_KEY:", e);
 }

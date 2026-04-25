@@ -20,8 +20,12 @@ export default async function handler(
     let firebaseParses = false;
     let firebaseError = '';
     try {
-        if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-            JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+        let keyString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+        if (keyString) {
+            if ((keyString.startsWith("'") && keyString.endsWith("'")) || (keyString.startsWith('"') && keyString.endsWith('"'))) {
+                keyString = keyString.slice(1, -1);
+            }
+            JSON.parse(keyString);
             firebaseParses = true;
         }
     } catch (e: any) {
