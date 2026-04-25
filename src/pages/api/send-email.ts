@@ -16,14 +16,26 @@ export default async function handler(
   }
 
   // 2. Debugging helper for GET
-  if (req.method === 'GET') {
+    let firebaseParses = false;
+    let firebaseError = '';
+    try {
+        if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+            JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+            firebaseParses = true;
+        }
+    } catch (e: any) {
+        firebaseError = e.message;
+    }
+
     return res.status(200).json({ 
         status: 'online',
         message: 'Email API is active.',
         config: {
             hasUser: !!process.env.EMAIL_SERVER_USER,
             hasPass: !!process.env.EMAIL_SERVER_PASSWORD,
-            hasFirebaseKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+            hasFirebaseKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
+            firebaseParses,
+            firebaseError
         },
         runtime: process.env.VERCEL ? 'vercel' : 'local',
         nodeVersion: process.version
