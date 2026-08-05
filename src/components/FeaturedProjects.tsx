@@ -6,63 +6,87 @@ import imageLoader from '../lib/imageLoader';
 import Link from 'next/link';
 import { Project } from '../types/project';
 
+/**
+ * FeaturedProjects — human-crafted:
+ *   • Asymmetric card layout: one chip + one progress arc, no
+ *     "everything is feature-blue slop".
+ *   • Progress bar colour follows state (growth for completed,
+ *     ember for in-progress, deep for recruiting/cold).
+ *   • Off-black body copy.
+ */
+
 const ProjectCard = ({ project }: { project: Project }) => {
-  // Strip HTML tags for preview text
-  const plainDescription = project.description.replace(/<[^>]*>?/gm, '');
-  const previewText = plainDescription.length > 100 ? `${plainDescription.substring(0, 100)}...` : plainDescription;
+  const plain = (project.description || '').replace(/<[^>]*>?/gm, '');
+  const preview = plain.length > 110 ? `${plain.substring(0, 110)}[..]` : plain;
+
+  const statusClass =
+    project.status === 'Completed'   ? 'chip chip-completed'
+  : project.status === 'In Progress' ? 'chip chip-progress'
+  : project.status === 'Recruiting'  ? 'chip chip-recruiting'
+  :                                    'chip chip-neutral';
+
+  const progressColor =
+    project.status === 'Completed'   ? 'bg-growth'
+  : project.status === 'Recruiting'  ? 'bg-ember'
+  :                                    'bg-deep';
 
   return (
-    <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1 group">
-      <Link href={`/projects`}>
-        <div className="relative w-full cursor-pointer overflow-hidden bg-slate-50" style={{ paddingTop: '56.25%' }}>
-          {project.coverImage ? (
-            <Image
-              src={project.coverImage}
-              alt={project.title}
-              layout="fill"
-              objectFit="cover"
-              loader={project.coverImage?.includes('cloudinary.com') ? undefined : imageLoader}
-              className="group-hover:scale-110 transition-transform duration-700"
+    <article className="card overflow-hidden flex flex-col">
+      <Link href="/projects" className="group block relative w-full bg-canvas-surface" style={{ paddingTop: '58%' }}>
+        {project.coverImage ? (
+          <Image
+            src={project.coverImage}
+            alt={project.title}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            style={{ objectFit: 'cover' }}
+            loader={project.coverImage?.includes('cloudinary.com') ? undefined : imageLoader}
+            className="photo-natural duration-slow ease-human group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-6xl text-ink-muted">
+            {project.icon || ' '}
+          </div>
+        )}
+        <span className="absolute top-4 left-4 chip chip-neutral z-10">
+          {project.category}
+        </span>
+        {project.type === 'Flagship' && (
+          <span className="absolute top-4 right-4 chip chip-flagship z-10">
+            Flagship
+          </span>
+        )}
+      </Link>
+      <div className="p-7 flex-grow flex flex-col">
+        <p className="eyebrow text-ink-muted">{project.semester}</p>
+        <h3 className="mt-2 font-display font-semibold text-[1.25rem] leading-snug text-ink">
+          {project.title}
+        </h3>
+        <p className="mt-3 text-[14.5px] text-ink-soft leading-relaxed flex-grow">
+          {preview}
+        </p>
+
+        <div className="mt-5">
+          <div className="flex justify-between items-baseline text-[11px] eyebrow text-ink-muted">
+            <span>{project.status || 'Planning'}</span>
+            <span>{project.progress ?? 0}%</span>
+          </div>
+          <div className="mt-2 w-full bg-canvas-surface h-1.5 overflow-hidden">
+            <div
+              className={`${progressColor} h-1.5 duration-1000 ease-human`}
+              style={{ width: `${project.progress ?? 0}%` }}
             />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-6xl group-hover:scale-110 transition-transform duration-700">
-              {project.icon || '🚀'}
-            </div>
-          )}
-          <div className="absolute top-4 right-4 z-10">
-            <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-featured-blue text-[8px] font-black uppercase tracking-widest border border-slate-100 shadow-sm">
-                {project.category}
-            </span>
           </div>
         </div>
-      </Link>
-      <div className="p-8 flex-grow flex flex-col">
-        <div className="flex items-center gap-2 mb-3">
-            <span className="text-[10px] font-black text-featured-blue uppercase tracking-widest">{project.semester}</span>
-            {project.type === 'Flagship' && (
-                <span className="px-2 py-0.5 rounded bg-featured-blue text-white text-[8px] font-black uppercase tracking-widest">Flagship</span>
-            )}
-        </div>
-        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-4 leading-tight group-hover:text-featured-blue transition-colors">{project.title}</h3>
-        <p className="text-slate-500 text-sm leading-relaxed mb-6 flex-grow font-medium">
-          {previewText}
-        </p>
-        
-        <div className="mb-6">
-            <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                <span>Progress</span>
-                <span>{project.progress}%</span>
-            </div>
-            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                <div className="bg-featured-blue h-1.5 rounded-full transition-all duration-1000 ease-out" style={{ width: `${project.progress}%` }}></div>
-            </div>
-        </div>
 
-        <Link href={`/projects`} className="text-featured-green font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:gap-3 transition-all">
-          EXPLORE MISSIONS <span className="text-lg">→</span>
+        <Link
+          href="/projects"
+          className="mt-6 marker-line text-[13px] font-display font-semibold text-ink self-start"
+        >
+          Read the mission briefing
         </Link>
       </div>
-    </div>
+    </article>
   );
 };
 
@@ -74,51 +98,48 @@ const FeaturedProjects = () => {
     const fetchProjects = async () => {
       try {
         const q = query(collection(db, 'projects'), orderBy('createdAt', 'desc'), limit(10));
-        const querySnapshot = await getDocs(q);
-        const fetchedProjects = querySnapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as Project))
-          .filter(project => !project.isArchived)
+        const snap = await getDocs(q);
+        const items = snap.docs
+          .map(doc => ({ id: doc.id, ...(doc.data() as Omit<Project, 'id'>) } as Project))
+          .filter(p => !p.isArchived)
           .slice(0, 3);
-        
-        setProjects(fetchedProjects);
-      } catch (error) {
-        console.error("Error fetching featured projects:", error);
+        setProjects(items);
+      } catch (err) {
+        console.error('Error fetching featured projects:', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchProjects();
   }, []);
 
-  if (loading) return null;
-  if (projects.length === 0) return null;
+  if (loading || projects.length === 0) return null;
 
   return (
-    <section className="py-24 bg-slate-50 border-y border-slate-100">
+    <section className="canvas-surface py-20 md:py-28 border-y border-line">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-            <div>
-                <span className="inline-block px-3 py-1 rounded-full bg-featured-blue/10 text-featured-blue border border-featured-blue/20 text-[10px] font-black mb-4 uppercase tracking-widest">
-                    The Workshop
-                </span>
-                <h2 className="text-3xl md:text-4xl font-black text-slate-900 uppercase tracking-tighter">
-                    Active <span className="text-featured-blue">Missions</span>
-                </h2>
-            </div>
-            <Link href="/projects" legacyBehavior>
-                <a className="px-8 py-3 rounded-full border-2 border-slate-100 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:border-featured-blue hover:text-featured-blue transition-all">
-                    View All Projects
-                </a>
-            </Link>
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-14 gap-6">
+          <div className="max-w-xl">
+            <span className="eyebrow text-deep">Active missions</span>
+            <h2 className="mt-2 font-display text-[clamp(1.7rem,3.5vw,2.4rem)] font-semibold leading-tight text-ink">
+              The projects we&apos;re shipping this semester.
+            </h2>
+            <p className="lead mt-3">
+              Real builds. Real failures. Real &ldquo;oops, that broke&rdquo;
+              debriefs. Open to members who want to build alongside us.
+            </p>
+          </div>
+          <Link
+            href="/projects"
+            className="btn btn-secondary self-start md:self-auto"
+          >
+            All projects
+          </Link>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map(project => (
-            <ProjectCard key={project.id} project={project} />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
+          {projects.map(p => (
+            <ProjectCard key={p.id} project={p} />
           ))}
         </div>
       </div>

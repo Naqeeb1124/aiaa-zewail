@@ -1,357 +1,487 @@
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
-import { useState, useEffect } from 'react'
-import { db, auth } from '../lib/firebase'
-import { collection, getDocs, query, orderBy, doc, getDoc, onSnapshot, where } from 'firebase/firestore'
-import { createJoinRequest } from '../lib/projects'
-import { Project } from '../types/project'
-import { UserProfile } from '../types/user'
-import Link from 'next/link'
-import { useAdmin } from '../hooks/useAdmin'
-import { useRouter } from 'next/router'
-import { signInWithGoogle } from '../lib/auth'
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import { useState, useEffect } from 'react';
+import { db, auth } from '../lib/firebase';
+import {
+  collection, getDocs, query, orderBy, doc, getDoc, onSnapshot,
+} from 'firebase/firestore';
+import { createJoinRequest } from '../lib/projects';
+import { Project } from '../types/project';
+import { UserProfile } from '../types/user';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useAdmin } from '../hooks/useAdmin';
+import { useRouter } from 'next/router';
+import { signInWithGoogle } from '../lib/auth';
+import imageLoader from '../lib/imageLoader';
 
+/**
+ * Projects — human-crafted:
+ *   • Magazine-style grid: the flagship project anchors the page on the
+ *     left (8 cols x full-bleed-ish); the rest live in a 4-col cadence.
+ *   • Semantic chips (recruiting / in-progress / completed) rather than
+ *     the previous color-jumble.
+ *   • Storytelling focus: each card tells a tiny story of "what we did".
+ *   • Off-black body; warm-primary CTA for join action.
+ */
+
+const statusChip = (status?: string) => {
+  switch (status) {
+    case 'Completed':   return 'chip chip-completed';
+    case 'In Progress': return 'chip chip-progress';
+    case 'Recruiting':  return 'chip chip-recruiting';
+    default:            return 'chip chip-neutral';
+  }
+};
+
+const progressColor = (status?: string) => {
+  switch (status) {
+    case 'Completed':   return 'bg-growth';
+    case 'Recruiting':  return 'bg-ember';
+    default:            return 'bg-deep';
+  }
+};
+
+const applicationChip = (status?: string) => {
+  switch (status) {
+    case 'accepted': return 'chip chip-completed';
+    case 'rejected': return 'chip chip-recruiting';
+    case 'pending':  return 'chip chip-progress';
+    default:         return null;
+  }
+};
 
 export default function Projects() {
-  const { isAdmin } = useAdmin()
-  const router = useRouter()
-  const [projects, setProjects] = useState<Project[]>([])
-  const [loading, setLoading] = useState(true)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [processingId, setProcessingId] = useState<string | null>(null)
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const { isAdmin } = useAdmin();
+  const router = useRouter();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const isOfficialMember = userProfile?.role === 'member' || isAdmin;
 
   useEffect(() => {
-    const qAll = query(collection(db, 'projects'), orderBy('createdAt', 'desc'))
+    const qAll = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
+    const unsubProjects = onSnapshot(qAll, (snap) => {
+      const projList = snap.docs
+        .map(d => ({ id: d.id, ...(d.data() as Omit<Project, 'id'>) } as Project))
+        .filter(p => !p.isArchived);
+      setProjects(projList);
+      setLoading(false);
+    }, () => setLoading(false));
 
-    const unsubscribe = onSnapshot(qAll, (snapshot) => {
-      const projList = snapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Project))
-        .filter(p => !p.isArchived) 
-
-      setProjects(projList)
-      setLoading(false)
-    }, (error) => {
-      console.error("Error listening to projects:", error)
-      setLoading(false)
-    })
-
-    fetchUserProfile()
-    return () => unsubscribe()
-  }, [])
-
-  const fetchUserProfile = async () => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    const unsubAuth = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const userRef = doc(db, 'users', user.uid)
+        const userRef = doc(db, 'users', user.uid);
         const unsubUser = onSnapshot(userRef, (docSnap) => {
-          if (docSnap.exists()) {
-            setUserProfile(docSnap.data() as UserProfile)
-          }
-        })
-        return unsubUser
+          if (docSnap.exists()) setUserProfile(docSnap.data() as UserProfile);
+        });
+        return unsubUser;
       } else {
-        setUserProfile(null)
+        setUserProfile(null);
       }
-    })
-    return () => unsubscribe()
-  }
+    });
+
+    return () => { unsubProjects(); unsubAuth(); };
+  }, []);
 
   const handleJoin = async (project: Project) => {
     const currentPath = router.asPath;
-
     if (!auth.currentUser) {
       try {
-        const res = await signInWithGoogle();
-        const user = res.user;
-        if (user) {
-            // Check member status after login
-            const userRef = doc(db, 'users', user.uid);
-            const userSnap = await getDoc(userRef);
-            const data = userSnap.data() as UserProfile;
-            
-            if (data?.role !== 'member' && !isAdmin) {
-                router.push(`/join?redirect=${encodeURIComponent(currentPath)}`);
-                return;
-            }
-        }
-      } catch (error) {
-        console.error("Login failed:", error);
+        await signInWithGoogle();
+      } catch (err) {
+        console.error('Login failed:', err);
         return;
       }
     }
-
     if (!isOfficialMember) {
       router.push(`/join?redirect=${encodeURIComponent(currentPath)}`);
       return;
     }
+    if (!confirm(`Apply to join ${project.title}?`)) return;
+    if (!auth.currentUser) return;
 
-    if (!confirm(`Apply to join ${project.title}?`)) return
-
-    if (!auth.currentUser) return; // Should not happen after above checks
-
-    setProcessingId(project.id)
+    setProcessingId(project.id);
     try {
-      await createJoinRequest(project.id, auth.currentUser.uid, project.semester)
-      alert("Application submitted! Check your status with an admin.")
-      fetchUserProfile()
+      await createJoinRequest(project.id, auth.currentUser.uid, project.semester);
+      alert('Application submitted! Check your status with an admin.');
     } catch (error: any) {
-      console.error("Join error:", error)
-      alert(error.message)
+      console.error('Join error:', error);
+      alert(error.message);
     } finally {
-      setProcessingId(null)
+      setProcessingId(null);
     }
-  }
+  };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed': return 'bg-green-100 text-green-700 border-green-200';
-      case 'In Progress': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'Recruiting': return 'bg-purple-100 text-purple-700 border-purple-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
-  }
+  const flagship = projects.find(p => p.type === 'Flagship') || projects[0];
+  const rest     = projects.filter(p => p.id !== flagship?.id);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-screen paper-surface text-ink">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="pt-32 md:pt-72 pb-16 md:pb-32 bg-featured-blue text-white text-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/10 to-transparent pointer-events-none"></div>
-        <div className="max-w-4xl mx-auto px-6 relative z-10">
-          <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-white border border-white/20 text-[10px] font-black mb-6 uppercase tracking-widest">
-            The Workshop
-          </span>
-          <h1 className="text-4xl md:text-7xl font-black mb-8 uppercase tracking-tighter leading-tight">
-            Our <span className="text-white/70 italic text-white/90">Projects</span>
-          </h1>
-          <p className="text-lg md:text-xl text-white/80 leading-relaxed max-w-2xl mx-auto font-medium">
-            From the drafting board to the launchpad. Explore the technical initiatives defining our first season at Zewail City.
-          </p>
-          
-          <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <Link href="/projects/archive" legacyBehavior>
-                <a className="text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-full border border-white/20 hover:bg-white hover:text-featured-blue transition-all">
-                    View Project Archive
-                </a>
-            </Link>
-            {!isOfficialMember && !loading && (
-                <Link href="/join" legacyBehavior>
-                    <a className="text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-full bg-featured-green text-white hover:bg-white hover:text-featured-green transition-all shadow-lg">
-                        Become a Member to Join
-                    </a>
+      {/* Hero */}
+      <section className="relative bg-deep text-white topo-wash overflow-hidden pt-28 md:pt-36 pb-16 md:pb-24">
+        <div className="relative max-w-7xl mx-auto px-6">
+          <div className="grid md:grid-cols-12 gap-10 items-end">
+            <div className="md:col-span-7">
+              <span className="eyebrow text-spark">The workshop</span>
+              <h1 className="mt-3 font-display text-[clamp(2.5rem,6vw,4.5rem)] font-semibold leading-[1.02] tracking-tight">
+                Projects in flight<br /><span className="text-spark">right now.</span>
+              </h1>
+            </div>
+            <div className="md:col-span-5 text-white/85 text-[15.5px] leading-relaxed">
+              <p>
+                Each project here is owned and built by members. Some are
+                flight-ready this semester; others are in the messy early
+                phase where things always go wrong. Either way, you&apos;re
+                welcome to dig in.
+              </p>
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <Link href="/projects/archive" className="marker-line text-spark font-medium">
+                  Past archives
                 </Link>
-            )}
+                {!isOfficialMember && !loading && (
+                  <Link href="/join" className="btn btn-primary">
+                    Become a member
+                  </Link>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Projects Grid */}
-      <main className="max-w-7xl mx-auto px-6 py-16 md:py-32">
+      <main className="max-w-7xl mx-auto px-6 py-14 md:py-24">
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-featured-blue"></div>
+            <span className="inline-block w-10 h-10 border-2 border-line border-t-deep animate-orbit" />
           </div>
         ) : projects.length === 0 ? (
-          <div className="text-center py-24 bg-white rounded-[40px] border border-dashed border-slate-200">
-            <p className="text-slate-400 font-black uppercase tracking-widest text-xs">No active missions at the moment.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {projects.map((project) => {
-              const applicationStatus = userProfile?.projectHistory?.find(p => p.projectId === project.id)?.status;
-              const plainDescription = project.description.replace(/<[^>]*>?/gm, '');
-              const previewText = plainDescription.length > 120 ? `${plainDescription.substring(0, 120)}...` : plainDescription;
-
-              return (
-                <div key={project.id} className="bg-white rounded-[40px] overflow-hidden shadow-sm border border-slate-100 flex flex-col hover:shadow-xl transition-all duration-500 group hover:-translate-y-2">
-                  <div className="relative h-64 overflow-hidden bg-slate-50 flex items-center justify-center cursor-pointer" onClick={() => setSelectedProject(project)}>
-                    {project.coverImage ? (
-                      <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={project.coverImage} alt={project.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-500"></div>
-                        <div className="relative z-10 text-7xl drop-shadow-lg group-hover:scale-110 transition-transform duration-700">
-                           {project.icon || '🚀'}
-                        </div>
-                      </>
-                    ) : (
-                      <span className="text-9xl group-hover:scale-110 transition-transform duration-700">{project.icon || '🚀'}</span>
-                    )}
-                    <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full text-[10px] font-black text-featured-blue shadow-sm uppercase tracking-widest border border-slate-50 z-20">
-                      {project.category}
-                    </div>
-                  </div>
-
-                  <div className="p-10 flex-grow flex flex-col">
-                    <div className="flex items-center gap-2 mb-6">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border tracking-widest ${getStatusColor(project.status)}`}>
-                        {project.status}
-                      </span>
-                      {applicationStatus && (
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border tracking-widest ${
-                          applicationStatus === 'accepted' ? 'bg-green-100 text-green-700 border-green-200' :
-                          applicationStatus === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' :
-                          'bg-amber-100 text-amber-700 border-amber-200'
-                        }`}>
-                          {applicationStatus === 'accepted' ? 'Joined' : applicationStatus}
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-featured-blue transition-colors leading-tight uppercase tracking-tight">
-                      {project.title}
-                    </h3>
-
-                    <p className="text-slate-500 leading-relaxed mb-6 text-sm font-medium h-20 line-clamp-3">
-                      {previewText}
-                    </p>
-
-                    <button 
-                        onClick={() => setSelectedProject(project)}
-                        className="text-[10px] font-black text-featured-blue uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all mb-8 w-fit"
-                    >
-                        Read Mission Briefing <span className="text-lg">→</span>
-                    </button>
-
-                    <div className="mt-auto">
-                      <div className="flex justify-between items-end mb-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        <div>
-                          <div className="mb-2">Capacity</div>
-                          <div className="text-sm font-bold text-slate-700">
-                            {project.currentSeats || 0} / {project.maxSeats || '∞'} 
-                          </div>
-                        </div>
-                        {project.type === 'Flagship' && (
-                          <span className="bg-featured-blue/10 text-featured-blue px-3 py-1 rounded-full border border-featured-blue/20">
-                            Flagship
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden mb-8">
-                        <div className="bg-featured-blue h-1.5 rounded-full transition-all duration-1000 ease-out" style={{ width: `${project.progress || 0}%` }}></div>
-                      </div>
-
-                      <button
-                        onClick={() => handleJoin(project)}
-                        disabled={
-                          processingId === project.id ||
-                          applicationStatus !== undefined || // Already applied
-                          project.status !== 'Recruiting' ||
-                          (project.maxSeats > 0 && project.currentSeats >= project.maxSeats)
-                        }
-                        className={`w-full py-4 rounded-full font-black uppercase tracking-widest text-xs transition-all disabled:opacity-50 
-                          ${applicationStatus === 'accepted' ? 'bg-green-500 text-white border-green-500' : 
-                            applicationStatus === 'rejected' ? 'bg-red-500 text-white border-red-500' :
-                            applicationStatus === 'pending' ? 'bg-amber-500 text-white border-amber-500' :
-                            !isOfficialMember ? 'bg-slate-800 text-white border-transparent' :
-                            'bg-featured-blue text-white hover:bg-featured-green border-transparent shadow-lg hover:shadow-featured-green/20'} 
-                          disabled:bg-slate-100 disabled:text-slate-400 transform hover:-translate-y-0.5`}
-                      >
-                        {processingId === project.id ? 'Processing...' :
-                          applicationStatus === 'accepted' ? 'Active Member' :
-                          applicationStatus === 'rejected' ? 'Application Closed' :
-                          applicationStatus === 'pending' ? 'Review Pending' :
-                          !isOfficialMember ? 'Join to apply' :
-                          project.status !== 'Recruiting' ? 'Not Recruiting' :
-                          (project.maxSeats > 0 && project.currentSeats >= project.maxSeats) ? 'Capacity Reached' :
-                          'Join Project'}
-                      </button>
-                      {!auth.currentUser && (
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center text-slate-400 mt-4">Account Required</p>
-                      )}
-                      {auth.currentUser && !isOfficialMember && (
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center text-slate-400 mt-4 underline decoration-featured-green decoration-2">Official Membership Required</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Project Details Modal */}
-        {selectedProject && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/90 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedProject(null)}>
-                <div className="bg-white w-full max-w-3xl max-h-[85vh] rounded-[40px] overflow-hidden shadow-2xl flex flex-col animate-scale-up" onClick={e => e.stopPropagation()}>
-                    <div className="relative h-48 md:h-64 flex-shrink-0">
-                        {selectedProject.coverImage ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img src={selectedProject.coverImage} alt={selectedProject.title} className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="w-full h-full bg-slate-100 flex items-center justify-center text-7xl">{selectedProject.icon}</div>
-                        )}
-                        <button 
-                            onClick={() => setSelectedProject(null)}
-                            className="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white hover:text-featured-blue transition-all"
-                        >
-                            ✕
-                        </button>
-                        <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/60 to-transparent">
-                            <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">{selectedProject.title}</h2>
-                        </div>
-                    </div>
-                    
-                    <div className="p-8 md:p-12 overflow-y-auto flex-grow custom-scrollbar">
-                        <div className="flex flex-wrap items-center gap-3 mb-8">
-                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border tracking-widest ${getStatusColor(selectedProject.status)}`}>
-                                {selectedProject.status}
-                            </span>
-                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase border border-slate-100 bg-slate-50 text-slate-500 tracking-widest">
-                                {selectedProject.category}
-                            </span>
-                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase border border-slate-100 bg-slate-50 text-slate-500 tracking-widest">
-                                {selectedProject.semester}
-                            </span>
-                        </div>
-
-                        <div 
-                            className="prose prose-slate max-w-none text-slate-600 font-medium leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: selectedProject.description }}
-                        />
-                    </div>
-
-                    <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            Progress: {selectedProject.progress}%
-                        </div>
-                        <button 
-                            onClick={() => { handleJoin(selectedProject); setSelectedProject(null); }}
-                            className="px-8 py-3 bg-featured-blue text-white rounded-full font-black uppercase tracking-widest text-[10px] hover:bg-featured-green transition-all"
-                        >
-                            {isOfficialMember ? 'Apply to Join' : 'Join to apply'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {/* Technical Call to Action */}
-        <div className="mt-20 bg-featured-blue rounded-[40px] p-12 text-center text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-black mb-4">Have a Project Idea?</h2>
-            <p className="text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed text-lg font-medium">
-              We provide the resources, mentorship, and community to turn your aerospace concepts into reality. Our project proposals are always open for members.
+          <section className="text-center py-20 card border-dashed">
+            <h2 className="font-display text-[1.5rem] font-semibold text-ink">
+              No active missions yet.
+            </h2>
+            <p className="lead mt-3 mx-auto max-w-md">
+              Our first round of proposals opens soon. Or pitch us one via{' '}
+              <Link href="/contact" className="marker-line text-deep">the contact page</Link>.
             </p>
-            <Link href="/contact" legacyBehavior>
-              <a className="inline-block px-10 py-4 rounded-full bg-featured-green text-white font-bold text-lg hover:bg-white hover:text-featured-blue transition-all shadow-xl transform hover:-translate-y-0.5">
-                Pitch Your Idea
-              </a>
-            </Link>
-          </div>
-        </div>
+          </section>
+        ) : (
+          <>
+            {/* Flagship section (asymmetric, 8-col anchors, 4-col side facts) */}
+            {flagship && (
+              <section className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-7 mb-8 md:mb-12">
+                <FlagshipCard project={flagship} onOpen={() => setSelectedProject(flagship)} onJoin={handleJoin} />
+                <SideFacts project={flagship} />
+              </section>
+            )}
+
+            {/* Magazine grid */}
+            {rest.length > 0 && (
+              <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
+                {rest.map(project => (
+                  <ProjectTile
+                    key={project.id}
+                    project={project}
+                    onOpen={() => setSelectedProject(project)}
+                    onJoin={() => handleJoin(project)}
+                    processing={processingId === project.id}
+                    userProfile={userProfile}
+                    isOfficialMember={isOfficialMember}
+                  />
+                ))}
+              </section>
+            )}
+
+            {/* Pitch CTA */}
+            <section className="mt-16 md:mt-24 paper-surface border border-line p-8 md:p-14 relative overflow-hidden">
+              <div className="grid md:grid-cols-12 gap-6 items-center">
+                <div className="md:col-span-8">
+                  <span className="eyebrow text-deep">Have an idea?</span>
+                  <h3 className="mt-2 font-display text-[clamp(1.5rem,3vw,2.2rem)] font-semibold leading-tight text-ink">
+                    Pitch us your aerospace project.
+                  </h3>
+                  <p className="mt-3 text-[15.5px] text-ink-soft leading-relaxed max-w-xl">
+                    We help with space, mentorship, and budget. Bring a one-page
+                    pitch. We&apos;ll meet you within a week.
+                  </p>
+                </div>
+                <div className="md:col-span-4 md:text-right">
+                  <Link href="/contact" className="btn btn-primary">
+                    Pitch an idea
+                  </Link>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* Details modal */}
+        {selectedProject && (
+          <ProjectModal
+            project={selectedProject}
+            onClose={() => setSelectedProject(null)}
+            onJoin={() => { handleJoin(selectedProject); setSelectedProject(null); }}
+            isOfficialMember={isOfficialMember}
+          />
+        )}
       </main>
 
       <Footer />
     </div>
-  )
+  );
+}
+
+/* ---------------- Subcomponents ---------------- */
+
+function FlagshipCard({
+  project, onOpen, onJoin,
+}: { project: Project; onOpen: () => void; onJoin: (p: Project) => void }) {
+  return (
+    <article className="card overflow-hidden md:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-0">
+      <button
+        onClick={onOpen}
+        className="relative aspect-[4/3] md:aspect-auto md:h-full w-full bg-canvas-surface text-left"
+        style={{ minHeight: '260px' }}
+      >
+        {project.coverImage ? (
+          <Image
+            src={project.coverImage}
+            alt={project.title}
+            fill
+            sizes="(max-width: 768px) 100vw, 40vw"
+            style={{ objectFit: 'cover' }}
+            loader={imageLoader}
+            className="photo-natural"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-7xl text-ink-muted">
+            {project.icon || ' '}
+          </div>
+        )}
+        <span className="absolute top-5 left-5 chip chip-flagship">Flagship</span>
+      </button>
+      <div className="p-8 md:p-12 flex flex-col justify-center">
+        <p className="eyebrow text-ember">This semester&apos;s flagship</p>
+        <h3 className="mt-3 font-display text-[clamp(1.7rem,3vw,2.3rem)] font-semibold leading-tight text-ink">
+          {project.title}
+        </h3>
+        <p className="mt-4 text-[15.5px] text-ink-soft leading-relaxed line-clamp-4">
+          {(project.description || '').replace(/<[^>]*>?/gm, '')}
+        </p>
+
+        <div className="mt-6">
+          <div className="flex justify-between items-baseline text-[11px] eyebrow text-ink-muted">
+            <span className={statusChip(project.status).split(' ')[1]}>{project.status}</span>
+            <span>{project.progress ?? 0}% complete</span>
+          </div>
+          <div className="mt-2 w-full bg-canvas-surface h-1.5 overflow-hidden">
+            <div
+              className={`${progressColor(project.status)} h-1.5 duration-1000 ease-human`}
+              style={{ width: `${project.progress ?? 0}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="mt-8 flex flex-wrap gap-3">
+          <button onClick={onOpen} className="btn btn-secondary">Read the briefing</button>
+          <button onClick={() => onJoin(project)} className="btn btn-primary">Join this project</button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SideFacts({ project }: { project: Project }) {
+  return (
+    <aside className="md:col-span-4 card p-8">
+      <span className="eyebrow text-deep">Quick facts</span>
+      <ul className="mt-4 space-y-4 text-[14.5px]">
+        <FactRow label="Category" value={project.category} />
+        <FactRow label="Semester" value={project.semester} />
+        <FactRow
+          label="Team capacity"
+          value={`${project.currentSeats || 0} / ${project.maxSeats || '∞'}`}
+        />
+        <FactRow
+          label="Status"
+          value={project.status || 'Planning'}
+        />
+      </ul>
+      <p className="mt-6 text-[13px] text-ink-muted leading-relaxed">
+        Flagships are the projects we&apos;re putting real weight behind: bigger
+        budget mentorship, more demo opportunities, and a higher bar for what
+        we ship.
+      </p>
+    </aside>
+  );
+}
+
+function FactRow({ label, value }: { label: string; value?: string }) {
+  return (
+    <li className="flex justify-between items-baseline border-b border-line pb-3 last:border-0">
+      <span className="eyebrow text-ink-muted">{label}</span>
+      <span className="text-ink font-medium">{value || '—'}</span>
+    </li>
+  );
+}
+
+function ProjectTile({
+  project, onOpen, onJoin, processing, userProfile, isOfficialMember,
+}: {
+  project: Project;
+  onOpen: () => void;
+  onJoin: () => void;
+  processing: boolean;
+  userProfile: UserProfile | null;
+  isOfficialMember: boolean;
+}) {
+  const applicationStatus = userProfile?.projectHistory?.find(p => p.projectId === project.id)?.status;
+  const plain = (project.description || '').replace(/<[^>]*>?/gm, '');
+  const preview = plain.length > 110 ? `${plain.substring(0, 110)}[..]` : plain;
+  const aChip = applicationChip(applicationStatus);
+
+  const buttonText =
+    processing ? 'Working on it[..]'
+    : applicationStatus === 'accepted' ? 'You&apos;re in'
+    : applicationStatus === 'rejected' ? 'Closed'
+    : applicationStatus === 'pending' ? 'Review pending'
+    : !isOfficialMember ? 'Join the branch first'
+    : project.status !== 'Recruiting' ? 'Not recruiting'
+    : (project.maxSeats > 0 && project.currentSeats >= project.maxSeats) ? 'Full'
+    : 'Join this project';
+
+  return (
+    <article className="card overflow-hidden flex flex-col">
+      <button
+        onClick={onOpen}
+        className="relative aspect-[16/10] w-full bg-canvas-surface text-left"
+      >
+        {project.coverImage ? (
+          <Image
+            src={project.coverImage}
+            alt={project.title}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            style={{ objectFit: 'cover' }}
+            loader={imageLoader}
+            className="photo-natural"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-6xl text-ink-muted">
+            {project.icon || ' '}
+          </div>
+        )}
+        <span className={`absolute top-4 left-4 ${statusChip(project.status)}`}>
+          {project.status}
+        </span>
+        {aChip && (
+          <span className={`absolute top-4 right-4 ${aChip}`}>
+            {applicationStatus}
+          </span>
+        )}
+      </button>
+      <div className="p-6 flex flex-col flex-grow">
+        <p className="eyebrow text-ink-muted">{project.category} · {project.semester}</p>
+        <h4 className="mt-2 font-display font-semibold text-[1.2rem] leading-snug text-ink">
+          {project.title}
+        </h4>
+        <p className="mt-3 text-[14.5px] text-ink-soft leading-relaxed flex-grow">
+          {preview}
+        </p>
+        <div className="mt-6">
+          <div className="w-full bg-canvas-surface h-1 overflow-hidden">
+            <div
+              className={`${progressColor(project.status)} h-1 duration-1000 ease-human`}
+              style={{ width: `${project.progress ?? 0}%` }}
+            />
+          </div>
+        </div>
+        <div className="mt-6 flex items-center justify-between">
+          <button onClick={onOpen} className="marker-line text-[13px] font-display font-semibold text-ink">
+            Read briefing
+          </button>
+          <button onClick={onJoin} className="btn btn-primary py-2 px-4 text-[12px]">
+            {buttonText}
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ProjectModal({ project, onClose, onJoin, isOfficialMember }: {
+  project: Project;
+  onClose: () => void;
+  onJoin: () => void;
+  isOfficialMember: boolean;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-ink/85 animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div
+        className="bg-paper w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col animate-scale-up border border-line"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative h-56 md:h-64 flex-shrink-0">
+          {project.coverImage ? (
+            <Image
+              src={project.coverImage}
+              alt={project.title}
+              fill
+              sizes="100vw"
+              style={{ objectFit: 'cover' }}
+              loader={imageLoader}
+              className="photo-natural"
+            />
+          ) : (
+            <div className="w-full h-full bg-canvas-surface flex items-center justify-center text-7xl text-ink-muted">
+              {project.icon}
+            </div>
+          )}
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute top-5 right-5 w-10 h-10 bg-paper/85 flex items-center justify-center text-ink hover:bg-deep hover:text-white duration-base ease-human"
+          >
+            [X]
+          </button>
+          <div className="absolute bottom-0 inset-x-0 p-6 from-ink/65 to-transparent">
+            <h3 className="font-display text-[1.6rem] md:text-[2rem] font-semibold leading-tight text-white">
+              {project.title}
+            </h3>
+          </div>
+        </div>
+
+        <div className="p-6 md:p-10 overflow-y-auto custom-scrollbar flex-grow">
+          <div className="flex flex-wrap items-center gap-2 mb-6">
+            <span className={statusChip(project.status)}>{project.status}</span>
+            <span className="chip chip-neutral">{project.category}</span>
+            <span className="chip chip-neutral">{project.semester}</span>
+          </div>
+
+          <div className="whitespace-pre-wrap text-ink-soft leading-relaxed">
+            {(project.description || '').replace(/<[^>]*>?/gm, '')}
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-line bg-canvas-surface flex justify-between items-center gap-4">
+          <p className="eyebrow text-ink-muted">
+            Progress {project.progress ?? 0}%
+          </p>
+          <button onClick={onJoin} className="btn btn-primary">
+            {isOfficialMember ? 'Apply to join' : 'Become a member first'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

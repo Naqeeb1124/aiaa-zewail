@@ -19,18 +19,18 @@ export default function SeedProjects() {
 
             const projects = [
                 {
-                    title: 'Sounding Rocket Alpha',
-                    category: 'Propulsion & Aerodynamics',
-                    description: 'Our flagship project for Season 1. Designing and manufacturing a high-powered rocket to reach 1km altitude, featuring a custom recovery system.',
+                    title: 'Flight Test Alpha',
+                    category: 'Flight Testing',
+                    description: 'Our flagship project for Season 1. Designing and building a flight test platform for control systems and telemetry.',
                     status: 'Recruiting',
-                    icon: '🚀',
+                    icon: ' ',
                     progress: 10,
                     createdAt: new Date().toISOString()
                 },
                 {
-                    title: 'Autonomous UAV',
-                    category: 'Unmanned Systems',
-                    description: 'Developing a fixed-wing UAV capable of autonomous waypoint navigation and aerial surveillance for environmental monitoring.',
+                    title: 'Autonomous Glider',
+                    category: 'Glider Systems',
+                    description: 'Developing a fixed-wing autonomous glider capable of waypoint navigation for environmental monitoring.',
                     status: 'Planning',
                     icon: '✈️',
                     progress: 5,
@@ -60,7 +60,7 @@ export default function SeedProjects() {
     }, []);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white font-sans">
+        <div className="min-h-screen flex items-center justify-center bg-ink text-white font-sans">
             <h1 className="text-2xl font-black uppercase tracking-tight">{status}</h1>
         </div>
     );

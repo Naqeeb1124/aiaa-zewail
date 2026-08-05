@@ -131,18 +131,18 @@ export default function InterviewScheduler({ applicationId, applicantEmail, appl
     }
   }
 
-  const inputClasses = "p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue outline-none text-sm font-medium";
+  const inputClasses = "p-3 border border-line focus:ring-4 focus:ring-deep/5 focus:border-deep outline-none text-sm font-medium";
 
   return (
-    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200">
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6">Proposed Windows</h3>
+    <div className="bg-canvas p-6 border border-line">
+      <h3 className="text-sm font-black uppercase tracking-widest text-ink-muted mb-6">Proposed Windows</h3>
       
       <div className="space-y-4">
         {slots.map((slot, index) => (
-          <div key={index} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative group">
+          <div key={index} className="bg-white p-4 border border-line relative group">
             <div className="grid grid-cols-1 gap-3">
                 <div className="flex flex-col">
-                    <label className="text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">Time & Date</label>
+                    <label className="text-[9px] font-black text-ink-muted uppercase mb-1 ml-1">Time & Date</label>
                     <input
                       type="datetime-local"
                       value={slot.time}
@@ -151,7 +151,7 @@ export default function InterviewScheduler({ applicationId, applicantEmail, appl
                     />
                 </div>
                 <div className="flex flex-col">
-                    <label className="text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">Location</label>
+                    <label className="text-[9px] font-black text-ink-muted uppercase mb-1 ml-1">Location</label>
                     <input
                       type="text"
                       value={slot.location}
@@ -165,9 +165,9 @@ export default function InterviewScheduler({ applicationId, applicantEmail, appl
             {slots.length > 1 && (
                 <button 
                     onClick={() => removeSlot(index)} 
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs shadow-lg hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100"
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-accent-orange-soft text-white flex items-center justify-center text-xs hover:bg-text-ember transition-all opacity-0 group-hover:opacity-100"
                 >
-                    ✕
+                    [X]
                 </button>
             )}
           </div>
@@ -176,14 +176,14 @@ export default function InterviewScheduler({ applicationId, applicantEmail, appl
 
       <button 
         onClick={addSlot} 
-        className="w-full mt-4 py-3 border-2 border-dashed border-slate-200 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-featured-blue hover:text-featured-blue hover:bg-white transition-all"
+        className="w-full mt-4 py-3 border-2 border-dashed border-line text-ink-muted text-[10px] font-black uppercase tracking-widest hover:border-deep hover:text-deep hover:bg-white transition-all"
       >
         + Add Another Option
       </button>
 
       <button 
         onClick={handleSchedule} 
-        className="w-full mt-8 py-4 bg-featured-blue text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-featured-green transition-all shadow-xl hover:shadow-featured-green/20"
+        className="w-full mt-8 py-4 bg-deep text-white font-black uppercase tracking-widest text-[10px] hover:bg-growth transition-all "
       >
         Transmit Invitation
       </button>

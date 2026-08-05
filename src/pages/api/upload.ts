@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { v2 as cloudinary } from 'cloudinary';
 import formidable from 'formidable';
-import { verifyIdToken } from '../../lib/firebase-admin';
+import { verifyIdToken, isAdminEmail } from '../../lib/firebase-admin';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -34,7 +34,10 @@ const handleUpload = async (req: NextApiRequest, res: NextApiResponse) => {
 
   const idToken = authHeader.split('Bearer ')[1];
   try {
-    await verifyIdToken(idToken);
+    const decodedToken = await verifyIdToken(idToken);
+    if (!(await isAdminEmail(decodedToken.email))) {
+      return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    }
   } catch (error) {
     console.error('Token verification failed:', error);
     return res.status(401).json({ error: 'Unauthorized: Token verification failed' });
@@ -42,7 +45,11 @@ const handleUpload = async (req: NextApiRequest, res: NextApiResponse) => {
 
   try {
     const file = await new Promise<formidable.File>((resolve, reject) => {
-      const form = formidable({});
+      const form = formidable({
+        maxFileSize: 10 * 1024 * 1024,
+        allowEmptyFiles: false,
+        filter: ({ mimetype }) => Boolean(mimetype?.startsWith('image/')),
+      });
       form.parse(req, (err, fields, files) => {
         if (err) {
           return reject(err);

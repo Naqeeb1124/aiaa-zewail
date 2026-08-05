@@ -47,17 +47,16 @@ export default async function handler(
     }
   } catch (err: any) {
     console.error('Admin verification error:', err);
-    return res.status(500).json({ 
-        message: 'Internal server error during authorization', 
-        error: err.message,
-        stack: err.stack 
+    return res.status(500).json({
+        message: 'Internal server error during authorization',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 
   const { recipients, subject, htmlTemplate, useBranding, siteUrl, ctaText, ctaUrl, useBcc } = req.body;
 
-  if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
-    return res.status(400).json({ message: 'No recipients provided' });
+  if (!recipients || !Array.isArray(recipients) || recipients.length === 0 || recipients.length > 500) {
+    return res.status(400).json({ message: 'Provide between 1 and 500 recipients' });
   }
 
   // 2. Setup Transporter

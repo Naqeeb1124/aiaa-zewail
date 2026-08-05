@@ -104,76 +104,76 @@ export default function EditEvent() {
 
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      <div className="min-h-screen bg-canvas font-sans text-ink">
         <Seo title="Edit Event - Admin" />
         <Navbar />
 
-        <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
+        <section className="pt-72 pb-12 bg-ink text-white border-b border-ink">
           <div className="max-w-7xl mx-auto px-6">
             <h1 className="text-4xl font-extrabold mb-2 uppercase tracking-tighter">Edit Event</h1>
-            <p className="text-slate-400 font-medium">Update the details for &quot;{event.title}&quot;</p>
+            <p className="text-ink-muted font-medium">Update the details for &quot;{event.title}&quot;</p>
           </div>
         </section>
 
         <main className="max-w-3xl mx-auto px-6 py-12">
-          <div className="bg-white p-8 md:p-12 rounded-[40px] shadow-sm border border-slate-100">
+          <div className="bg-white p-8 md:p-12 border border-line">
             <form onSubmit={handleUpdateEvent} className="space-y-6">
               <div>
-                <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Event Title</label>
+                <label className="block text-xs font-black uppercase text-ink-muted tracking-widest mb-2">Event Title</label>
                 <input
                   required
                   type="text"
                   name="title"
                   value={event.title}
                   onChange={handleInputChange}
-                  className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-featured-blue outline-none font-bold text-slate-800"
+                  className="w-full p-4 bg-canvas border border-line focus:ring-2 focus:ring-deep outline-none font-bold text-ink"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Date</label>
+                  <label className="block text-xs font-black uppercase text-ink-muted tracking-widest mb-2">Date</label>
                   <input
                     required
                     type="date"
                     name="date"
                     value={event.date}
                     onChange={handleInputChange}
-                    className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-featured-blue outline-none font-bold text-slate-800"
+                    className="w-full p-4 bg-canvas border border-line focus:ring-2 focus:ring-deep outline-none font-bold text-ink"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Time</label>
+                  <label className="block text-xs font-black uppercase text-ink-muted tracking-widest mb-2">Time</label>
                   <input
                     required
                     type="time"
                     name="time"
                     value={event.time}
                     onChange={handleInputChange}
-                    className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-featured-blue outline-none font-bold text-slate-800"
+                    className="w-full p-4 bg-canvas border border-line focus:ring-2 focus:ring-deep outline-none font-bold text-ink"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Location</label>
+                  <label className="block text-xs font-black uppercase text-ink-muted tracking-widest mb-2">Location</label>
                   <input
                     required
                     type="text"
                     name="location"
                     value={event.location}
                     onChange={handleInputChange}
-                    className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-featured-blue outline-none font-bold text-slate-800"
+                    className="w-full p-4 bg-canvas border border-line focus:ring-2 focus:ring-deep outline-none font-bold text-ink"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Category</label>
+                  <label className="block text-xs font-black uppercase text-ink-muted tracking-widest mb-2">Category</label>
                   <select
                     name="category"
                     value={event.category}
                     onChange={handleInputChange}
-                    className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-featured-blue outline-none font-bold text-slate-800"
+                    className="w-full p-4 bg-canvas border border-line focus:ring-2 focus:ring-deep outline-none font-bold text-ink"
                   >
                     <option>Workshop</option>
                     <option>Ceremony</option>
@@ -186,31 +186,31 @@ export default function EditEvent() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">CTA Text</label>
+                  <label className="block text-xs font-black uppercase text-ink-muted tracking-widest mb-2">CTA Text</label>
                   <input
                     type="text"
                     name="ctaText"
                     value={event.ctaText}
                     onChange={handleInputChange}
                     placeholder="e.g. Join Meeting"
-                    className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-featured-blue outline-none font-bold text-slate-800"
+                    className="w-full p-4 bg-canvas border border-line focus:ring-2 focus:ring-deep outline-none font-bold text-ink"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">CTA URL</label>
+                  <label className="block text-xs font-black uppercase text-ink-muted tracking-widest mb-2">CTA URL</label>
                   <input
                     type="url"
                     name="ctaUrl"
                     value={event.ctaUrl}
                     onChange={handleInputChange}
                     placeholder="https://..."
-                    className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-featured-blue outline-none font-bold text-slate-800"
+                    className="w-full p-4 bg-canvas border border-line focus:ring-2 focus:ring-deep outline-none font-bold text-ink"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Cover Image</label>
+                <label className="block text-xs font-black uppercase text-ink-muted tracking-widest mb-2">Cover Image</label>
                 <ImageUpload onUploadSuccess={handleImageUploadSuccess} initialImageUrl={event.imageUrl} />
               </div>
 
@@ -222,9 +222,9 @@ export default function EditEvent() {
                       id="isKickoff"
                       checked={event.isKickoff} 
                       onChange={handleInputChange}
-                      className="w-4 h-4 text-featured-blue rounded border-slate-300 focus:ring-featured-blue"
+                      className="w-4 h-4 text-deep border-ink-muted focus:ring-deep"
                   />
-                  <label htmlFor="isKickoff" className="text-xs font-bold text-slate-600 uppercase tracking-wide cursor-pointer">Set as Home Page Countdown</label>
+                  <label htmlFor="isKickoff" className="text-xs font-bold text-ink-soft uppercase tracking-wide cursor-pointer">Set as Home Page Countdown</label>
                 </div>
                 <div className="flex items-center gap-2">
                   <input 
@@ -233,21 +233,21 @@ export default function EditEvent() {
                       id="allowExternal"
                       checked={event.allowExternal} 
                       onChange={handleInputChange}
-                      className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                      className="w-4 h-4 text-growth border-ink-muted focus:ring-growth"
                   />
-                  <label htmlFor="allowExternal" className="text-xs font-bold text-emerald-600 uppercase tracking-wide cursor-pointer">Allow External Participants</label>
+                  <label htmlFor="allowExternal" className="text-xs font-bold text-growth uppercase tracking-wide cursor-pointer">Allow External Participants</label>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase text-slate-400 tracking-widest mb-2">Description</label>
+                <label className="block text-xs font-black uppercase text-ink-muted tracking-widest mb-2">Description</label>
                 <textarea
                   required
                   name="description"
                   value={event.description}
                   onChange={handleInputChange}
                   rows={6}
-                  className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:ring-2 focus:ring-featured-blue outline-none font-medium text-slate-600"
+                  className="w-full p-4 bg-canvas border border-line focus:ring-2 focus:ring-deep outline-none font-medium text-ink-soft"
                 />
               </div>
 
@@ -255,14 +255,14 @@ export default function EditEvent() {
                 <button
                   type="button"
                   onClick={() => router.push('/admin/events')}
-                  className="flex-1 py-4 px-6 rounded-full border-2 border-slate-100 text-slate-400 font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all"
+                  className="flex-1 py-4 px-6 border-2 border-line text-ink-muted font-black uppercase tracking-widest text-xs hover:bg-canvas transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-[2] py-4 px-6 bg-featured-blue text-white font-black uppercase tracking-widest text-xs rounded-full hover:bg-featured-green transition-all shadow-lg disabled:opacity-50"
+                  className="flex-[2] py-4 px-6 bg-deep text-white font-black uppercase tracking-widest text-xs hover:bg-growth transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? 'Updating...' : 'Update Event'}
                 </button>

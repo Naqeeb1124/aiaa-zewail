@@ -97,29 +97,29 @@ export default function EventRegistrations() {
         document.body.removeChild(link);
     };
 
-    if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center">Loading...</div>;
+    if (loading) return <div className="min-h-screen bg-canvas flex items-center justify-center">Loading...</div>;
 
     return (
         <AdminGuard>
-            <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+            <div className="min-h-screen bg-canvas font-sans text-ink">
                 <Navbar />
                 
-                <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
+                <section className="pt-72 pb-12 bg-ink text-white border-b border-ink">
                     <div className="max-w-7xl mx-auto px-6 flex justify-between items-end">
                         <div>
                             <h1 className="text-4xl font-extrabold mb-2">Event Registrations</h1>
-                            <p className="text-slate-400">Viewing attendees for: <span className="text-zewail-cyan font-bold">{event?.title}</span></p>
+                            <p className="text-ink-muted">Viewing attendees for: <span className="text-sea font-bold">{event?.title}</span></p>
                         </div>
                         <div className="flex gap-4">
                             <button 
                                 onClick={() => setShowQR(true)}
-                                className="px-6 py-2 bg-featured-blue text-white font-bold rounded-xl hover:bg-featured-green transition-all text-sm flex items-center gap-2"
+                                className="px-6 py-2 bg-deep text-white font-bold hover:bg-growth transition-all text-sm flex items-center gap-2"
                             >
                                 <span>📱</span> Show Check-in QR
                             </button>
                             <button 
                                 onClick={handleExportCSV}
-                                className="px-6 py-2 bg-zewail-cyan text-white font-bold rounded-xl hover:bg-opacity-90 transition-all text-sm"
+                                className="px-6 py-2 bg-sea text-white font-bold hover:bg-opacity-90 transition-all text-sm"
                             >
                                 Export to CSV
                             </button>
@@ -131,38 +131,38 @@ export default function EventRegistrations() {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                         <button 
                             onClick={() => router.back()}
-                            className="text-featured-blue font-bold flex items-center gap-2 hover:underline"
+                            className="text-deep font-bold flex items-center gap-2 hover:underline"
                         >
                             ← Back to Events
                         </button>
                         
                         <div className="w-full md:w-96 relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted">[Q]</span>
                             <input 
                                 type="text"
                                 placeholder="Search by name or email..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-featured-blue outline-none bg-white shadow-sm"
+                                className="w-full pl-10 pr-4 py-3 border border-line focus:ring-2 focus:ring-deep outline-none bg-white"
                             />
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-                            <h2 className="text-2xl font-bold text-slate-800">Attendee List ({filteredRegistrations.length})</h2>
-                            <div className="flex gap-4 text-xs font-black uppercase tracking-widest text-slate-400">
-                                <span>Checked in: <span className="text-emerald-600">{registrations.filter(r => r.status === 'attended').length}</span></span>
-                                <span>Pending: <span className="text-amber-600">{registrations.filter(r => r.status !== 'attended').length}</span></span>
+                    <div className="bg-white border border-line overflow-hidden">
+                        <div className="p-8 border-b border-line flex justify-between items-center">
+                            <h2 className="text-2xl font-bold text-ink">Attendee List ({filteredRegistrations.length})</h2>
+                            <div className="flex gap-4 text-xs font-black uppercase tracking-widest text-ink-muted">
+                                <span>Checked in: <span className="text-growth">{registrations.filter(r => r.status === 'attended').length}</span></span>
+                                <span>Pending: <span className="text-ember">{registrations.filter(r => r.status !== 'attended').length}</span></span>
                             </div>
                         </div>
                         
                         {registrations.length === 0 ? (
-                            <div className="p-12 text-center text-slate-500">No one has registered for this event yet.</div>
+                            <div className="p-12 text-center text-ink-soft">No one has registered for this event yet.</div>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
-                                    <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-bold">
+                                    <thead className="bg-canvas text-xs uppercase text-ink-soft font-bold">
                                         <tr>
                                             <th className="p-6">Name</th>
                                             <th className="p-6">Email</th>
@@ -171,24 +171,24 @@ export default function EventRegistrations() {
                                             <th className="p-6 text-right">Registered At</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-line">
                                         {filteredRegistrations.sort((a,b) => new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime()).map(reg => (
-                                            <tr key={reg.id} className="hover:bg-blue-50/50 transition-colors">
-                                                <td className="p-6 font-bold text-slate-800">
+                                            <tr key={reg.id} className="hover:bg-canvas/50 transition-colors">
+                                                <td className="p-6 font-bold text-ink">
                                                     <div className="flex flex-col">
                                                         <span>{reg.userName}</span>
                                                         {reg.isExternal && (
-                                                            <span className="text-[10px] text-emerald-600 font-black uppercase tracking-widest mt-1">
+                                                            <span className="text-[10px] text-growth font-black uppercase tracking-widest mt-1">
                                                                 External: {reg.university || 'N/A'}
                                                             </span>
                                                         )}
                                                     </div>
                                                 </td>
-                                                <td className="p-6 text-slate-600">
+                                                <td className="p-6 text-ink-soft">
                                                     {reg.userEmail}
                                                 </td>
                                                 <td className="p-6">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${reg.status === 'attended' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                    <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider ${reg.status === 'attended' ? 'bg-signal-soft text-growth' : 'bg-line text-ink-soft'}`}>
                                                         {reg.status}
                                                     </span>
                                                 </td>
@@ -196,12 +196,12 @@ export default function EventRegistrations() {
                                                     <button 
                                                         disabled={processingId === reg.id}
                                                         onClick={() => toggleAttendance(reg.id, reg.status)}
-                                                        className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${reg.status === 'attended' ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
+                                                        className={`px-4 py-2 font-bold text-xs transition-all ${reg.status === 'attended' ? 'bg-accent-orange-soft text-ember hover:bg-ember hover:text-white' : 'bg-signal-soft text-growth hover:bg-growth hover:text-white'}`}
                                                     >
                                                         {processingId === reg.id ? '...' : (reg.status === 'attended' ? 'Cancel Check-in' : 'Check In')}
                                                     </button>
                                                 </td>
-                                                <td className="p-6 text-right text-slate-500 text-sm">
+                                                <td className="p-6 text-right text-ink-soft text-sm">
                                                     {new Date(reg.registeredAt).toLocaleString()}
                                                 </td>
                                             </tr>
@@ -216,15 +216,15 @@ export default function EventRegistrations() {
                 {/* QR Code Modal */}
                 {showQR && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-                        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onClick={() => setShowQR(false)}></div>
-                        <div className="bg-white rounded-[40px] shadow-2xl p-12 max-w-sm w-full relative z-10 text-center animate-in fade-in zoom-in duration-300">
-                            <button onClick={() => setShowQR(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+                        <div className="absolute inset-0 bg-ink/80" onClick={() => setShowQR(false)}></div>
+                        <div className="bg-white p-12 max-w-sm w-full relative z-10 text-center animate-in fade-in zoom-in duration-300">
+                            <button onClick={() => setShowQR(false)} className="absolute top-6 right-6 text-ink-muted hover:text-ink-soft">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
-                            <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tight">Check-in QR</h3>
-                            <p className="text-slate-500 text-sm mb-8">Scan to automatically record attendance for <br/><strong>{event?.title}</strong></p>
+                            <h3 className="text-2xl font-black text-ink mb-2 uppercase tracking-tight">Check-in QR</h3>
+                            <p className="text-ink-soft text-sm mb-8">Scan to automatically record attendance for <br/><strong>{event?.title}</strong></p>
                             
-                            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-inner flex justify-center mb-8">
+                            <div className="bg-white p-6 border border-line flex justify-center mb-8">
                                 <QRCodeSVG 
                                     value={checkInUrl} 
                                     size={200}
@@ -241,7 +241,7 @@ export default function EventRegistrations() {
                                 />
                             </div>
 
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 py-2 rounded-lg">
+                            <p className="text-[10px] font-black text-ink-muted uppercase tracking-widest bg-canvas py-2">
                                 {checkInUrl}
                             </p>
                         </div>

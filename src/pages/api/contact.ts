@@ -2,6 +2,13 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import nodemailer from 'nodemailer'
 import { getBrandedTemplate } from '../../lib/emailTemplates';
 
+const escapeHtml = (value: string) => value
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#039;');
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse){
   if(req.method !== 'POST') return res.status(405).end()
   const { name, email, message } = req.body
@@ -19,12 +26,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     },
   });
 
+  const safeName = escapeHtml(String(name));
+  const safeEmail = escapeHtml(String(email));
+  const safeMessage = escapeHtml(String(message));
   const contentHtml = `
     <h2 style="color: #2b4b77; font-size: 20px;">New Contact Request</h2>
-    <p style="margin-bottom: 10px;"><strong>Name:</strong> ${name}</p>
-    <p style="margin-bottom: 10px;"><strong>Email:</strong> ${email}</p>
+    <p style="margin-bottom: 10px;"><strong>Name:</strong> ${safeName}</p>
+    <p style="margin-bottom: 10px;"><strong>Email:</strong> ${safeEmail}</p>
     <div style="margin-top: 20px; padding: 15px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #2b4b77;">
-        <p style="margin: 0; font-style: italic; color: #475569;">${message}</p>
+        <p style="margin: 0; font-style: italic; color: #475569; white-space: pre-wrap;">${safeMessage}</p>
     </div>
   `;
 

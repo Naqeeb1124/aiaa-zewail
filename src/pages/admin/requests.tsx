@@ -88,13 +88,13 @@ export default function ReviewRequests() {
 
     return (
         <AdminGuard>
-            <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+            <div className="min-h-screen bg-canvas font-sans text-ink">
                 <Navbar />
 
-                <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
+                <section className="pt-72 pb-12 bg-ink text-white border-b border-ink">
                     <div className="max-w-7xl mx-auto px-6">
                         <h1 className="text-4xl font-extrabold mb-2">Join Requests</h1>
-                        <p className="text-slate-400">Review and manage member applications for projects.</p>
+                        <p className="text-ink-muted">Review and manage member applications for projects.</p>
                     </div>
                 </section>
 
@@ -102,36 +102,36 @@ export default function ReviewRequests() {
                     {loading ? (
                         <div className="text-center py-12">Loading requests...</div>
                     ) : requests.length === 0 ? (
-                        <div className="bg-white p-12 rounded-3xl text-center border border-slate-200">
-                            <p className="text-slate-500 text-xl">No requests found.</p>
+                        <div className="bg-white p-12 text-center border border-line">
+                            <p className="text-ink-soft text-xl">No requests found.</p>
                         </div>
                     ) : (
                         <div className="grid gap-4">
                             {requests.map((req) => (
-                                <div key={req.id} className="bg-white p-6 rounded-2xl border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6 hover:shadow-md transition-all">
+                                <div key={req.id} className="bg-white p-6 border border-line flex flex-col md:flex-row justify-between items-center gap-6  transition-all">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-1">
-                                            <h3 className="font-bold text-lg text-slate-800">{req.userName}</h3>
-                                            <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200">{req.studentId}</span>
-                                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
-                                                req.status === 'accepted' ? 'bg-green-100 text-green-700' :
-                                                req.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                                                'bg-amber-100 text-amber-700'
+                                            <h3 className="font-bold text-lg text-ink">{req.userName}</h3>
+                                            <span className="text-xs bg-line text-ink-soft px-2 py-0.5 border border-line">{req.studentId}</span>
+                                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 ${
+                                                req.status === 'accepted' ? 'bg-signal-soft text-growth' :
+                                                req.status === 'rejected' ? 'bg-accent-orange-soft text-ember' :
+                                                'bg-accent-orange-soft text-ember'
                                             }`}>
                                                 {req.status}
                                             </span>
                                             {!req.isMember && req.status === 'pending' && (
-                                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-red-500 text-white animate-pulse">Not a Member</span>
+                                                <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-accent-orange-soft text-white animate-pulse">Not a Member</span>
                                             )}
                                         </div>
-                                        <div className="text-slate-500 text-sm mb-2">
-                                            Applying for <span className="font-bold text-featured-blue">{req.projectTitle}</span>
-                                            {req.projectType === 'Flagship' && <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase rounded">Flagship</span>}
+                                        <div className="text-ink-soft text-sm mb-2">
+                                            Applying for <span className="font-bold text-deep">{req.projectTitle}</span>
+                                            {req.projectType === 'Flagship' && <span className="ml-2 px-2 py-0.5 bg-line text-deep text-[10px] font-bold uppercase">Flagship</span>}
                                         </div>
-                                        <div className="text-xs text-slate-400 flex items-center gap-4">
+                                        <div className="text-xs text-ink-muted flex items-center gap-4">
                                             <span>{req.userEmail} &bull; {req.semester}</span>
                                             {!req.isMember && req.status === 'pending' && (
-                                                <span className="text-red-500 font-bold uppercase tracking-tight text-[10px] flex items-center gap-1">
+                                                <span className="text-ember font-bold uppercase tracking-tight text-[10px] flex items-center gap-1">
                                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                                                     Action Required: Accept Membership First
                                                 </span>
@@ -144,17 +144,17 @@ export default function ReviewRequests() {
                                             <button
                                                 onClick={() => handleReject(req)}
                                                 disabled={processingId === req.id}
-                                                className="px-6 py-2 rounded-xl border border-red-200 text-red-600 font-bold hover:bg-red-50 transition-colors disabled:opacity-50"
+                                                className="px-6 py-2 border border-ember text-ember font-bold hover:bg-accent-orange-soft transition-colors disabled:opacity-50"
                                             >
                                                 Reject
                                             </button>
                                             <button
                                                 onClick={() => handleApprove(req)}
                                                 disabled={processingId === req.id || !req.isMember}
-                                                className={`px-6 py-2 rounded-xl font-bold transition-all shadow-lg disabled:opacity-50 ${
+                                                className={`px-6 py-2 font-bold transition-all disabled:opacity-50 ${
                                                     req.isMember 
-                                                    ? 'bg-featured-blue text-white hover:bg-featured-green shadow-blue-500/20' 
-                                                    : 'bg-slate-100 text-slate-400 border-slate-200 shadow-none cursor-not-allowed'
+                                                    ? 'bg-deep text-white hover:bg-growth-sea/20' 
+                                                    : 'bg-line text-ink-muted border-line-none cursor-not-allowed'
                                                 }`}
                                             >
                                                 {processingId === req.id ? 'Processing...' : 'Approve'}

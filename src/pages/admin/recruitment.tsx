@@ -68,34 +68,34 @@ export default function RecruitmentCenter() {
 
     return (
         <AdminGuard>
-            <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+            <div className="min-h-screen bg-canvas font-sans text-ink">
                 <Navbar />
 
-                <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
+                <section className="pt-72 pb-12 bg-ink text-white border-b border-ink">
                     <div className="max-w-5xl mx-auto px-6">
                         <h1 className="text-4xl font-extrabold mb-2 uppercase tracking-tighter leading-none">Recruitment Center</h1>
-                        <p className="text-slate-400 font-medium italic">Control application access and mission timelines.</p>
+                        <p className="text-ink-muted font-medium italic">Control application access and mission timelines.</p>
                     </div>
                 </section>
 
                 <main className="max-w-5xl mx-auto px-6 py-12">
                     {loading ? (
                         <div className="text-center py-12">
-                            <div className="w-8 h-8 border-4 border-featured-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                            <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">Scanning status...</p>
+                            <div className="w-8 h-8 border-4 border-deep border-t-transparent animate-spin mx-auto mb-4"></div>
+                            <p className="text-ink-muted font-black uppercase text-[10px] tracking-widest">Scanning status...</p>
                         </div>
                     ) : (
                         <div className="grid md:grid-cols-3 gap-8">
                             {/* Status Card */}
                             <div className="md:col-span-1">
-                                <div className={`p-10 rounded-[40px] border-2 text-center transition-all ${config.open ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-100 border-slate-200'}`}>
-                                    <div className={`w-24 h-24 rounded-[32px] flex items-center justify-center mx-auto mb-8 text-4xl shadow-sm ${config.open ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>
+                                <div className={`p-10 border-2 text-center transition-all ${config.open ? 'bg-signal-soft border-signal-soft' : 'bg-line border-line'}`}>
+                                    <div className={`w-24 h-24 flex items-center justify-center mx-auto mb-8 text-4xl ${config.open ? 'bg-signal-soft text-growth' : 'bg-line text-ink-muted'}`}>
                                         {config.open ? '🔓' : '🔒'}
                                     </div>
-                                    <h2 className={`text-2xl font-black mb-2 uppercase tracking-tight ${config.open ? 'text-emerald-800' : 'text-slate-700'}`}>
+                                    <h2 className={`text-2xl font-black mb-2 uppercase tracking-tight ${config.open ? 'text-growth' : 'text-ink'}`}>
                                         {config.open ? 'ACTIVE' : 'HALTED'}
                                     </h2>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10 leading-relaxed">
+                                    <p className="text-[10px] font-bold text-ink-muted uppercase tracking-widest mb-10 leading-relaxed">
                                         {config.open 
                                             ? "Applications are currently being accepted on the Join page." 
                                             : "The Join page is currently locked for all applicants."}
@@ -103,7 +103,7 @@ export default function RecruitmentCenter() {
                                     <button 
                                         onClick={toggleStatus}
                                         type="button"
-                                        className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl transition-all active:scale-95 transform hover:-translate-y-1 ${config.open ? 'bg-red-500 hover:bg-red-600 shadow-red-200' : 'bg-featured-green hover:bg-featured-blue shadow-emerald-200'} text-white`}
+                                        className={`w-full py-4 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 transform hover:-translate-y-1 ${config.open ? 'bg-accent-orange-soft hover:bg-ember' : 'bg-growth hover:bg-deep'} text-white`}
                                     >
                                         {config.open ? 'Shutdown Access' : 'Initiate Access'}
                                     </button>
@@ -112,53 +112,53 @@ export default function RecruitmentCenter() {
 
                             {/* Configuration Form */}
                             <div className="md:col-span-2">
-                                <form onSubmit={handleSave} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-                                    <h3 className="text-xl font-bold text-slate-800 mb-6">Season Configuration</h3>
+                                <form onSubmit={handleSave} className="bg-white p-8 border border-line">
+                                    <h3 className="text-xl font-bold text-ink mb-6">Season Configuration</h3>
                                     
                                     {message && (
-                                        <div className={`mb-6 p-4 rounded-xl text-sm font-bold ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        <div className={`mb-6 p-4 text-sm font-bold ${message.type === 'success' ? 'bg-signal-soft text-growth' : 'bg-accent-orange-soft text-ember'}`}>
                                             {message.text}
                                         </div>
                                     )}
 
                                     <div className="space-y-6">
                                         <div>
-                                            <label className="block text-sm font-bold text-slate-700 mb-2">Cycle Name</label>
+                                            <label className="block text-sm font-bold text-ink mb-2">Cycle Name</label>
                                             <input 
                                                 type="text" 
                                                 value={config.cycleName}
                                                 onChange={e => setConfig({...config, cycleName: e.target.value})}
                                                 placeholder="e.g. Spring 2026 Recruitment"
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-featured-blue outline-none"
+                                                className="w-full px-4 py-3 border border-line focus:ring-2 focus:ring-deep outline-none"
                                             />
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-bold text-slate-700 mb-2">Start Date</label>
+                                                <label className="block text-sm font-bold text-ink mb-2">Start Date</label>
                                                 <input 
                                                     type="date" 
                                                     value={config.startDate}
                                                     onChange={e => setConfig({...config, startDate: e.target.value})}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-featured-blue outline-none"
+                                                    className="w-full px-4 py-3 border border-line focus:ring-2 focus:ring-deep outline-none"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-bold text-slate-700 mb-2">End Date</label>
+                                                <label className="block text-sm font-bold text-ink mb-2">End Date</label>
                                                 <input 
                                                     type="date" 
                                                     value={config.endDate}
                                                     onChange={e => setConfig({...config, endDate: e.target.value})}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-featured-blue outline-none"
+                                                    className="w-full px-4 py-3 border border-line focus:ring-2 focus:ring-deep outline-none"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
+                                    <div className="mt-8 pt-6 border-t border-line flex justify-end">
                                         <button 
                                             type="submit" 
                                             disabled={saving}
-                                            className="px-8 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-lg disabled:opacity-50"
+                                            className="px-8 py-3 bg-ink text-white font-bold hover:bg-ink transition-colors disabled:opacity-50"
                                         >
                                             {saving ? 'Saving...' : 'Save Configuration'}
                                         </button>

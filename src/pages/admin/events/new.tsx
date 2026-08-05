@@ -44,72 +44,72 @@ export default function NewEvent() {
 
     return (
         <AdminGuard>
-            <div className="min-h-screen bg-slate-900 text-white">
+            <div className="min-h-screen bg-ink text-white">
                 <Navbar />
                 <div className="pt-32 px-6 max-w-3xl mx-auto pb-20">
                     <h1 className="text-3xl font-bold mb-8">Create New Event</h1>
-                    <form onSubmit={handleSubmit} className="bg-slate-800 p-8 rounded-2xl border border-slate-700 space-y-6">
+                    <form onSubmit={handleSubmit} className="bg-ink p-8 border border-ink space-y-6">
                         <div>
-                            <label className="block text-slate-400 mb-2">Event Title</label>
+                            <label className="block text-ink-muted mb-2">Event Title</label>
                             <input
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-emerald-500 outline-none"
+                                className="w-full bg-ink border border-ink px-4 py-3 text-white focus:border-growth outline-none"
                                 required
-                                placeholder="e.g., Intro to Rocketry Workshop"
+                                placeholder="e.g., Intro to Aerospace Workshop"
                             />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-slate-400 mb-2">Date</label>
+                                <label className="block text-ink-muted mb-2">Date</label>
                                 <input
                                     type="date"
                                     value={date}
                                     onChange={(e) => setDate(e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-emerald-500 outline-none"
+                                    className="w-full bg-ink border border-ink px-4 py-3 text-white focus:border-growth outline-none"
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-slate-400 mb-2">Time</label>
+                                <label className="block text-ink-muted mb-2">Time</label>
                                 <input
                                     type="time"
                                     value={time}
                                     onChange={(e) => setTime(e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-emerald-500 outline-none"
+                                    className="w-full bg-ink border border-ink px-4 py-3 text-white focus:border-growth outline-none"
                                     required
                                 />
                             </div>
                         </div>
                         <div>
-                            <label className="block text-slate-400 mb-2">Location</label>
+                            <label className="block text-ink-muted mb-2">Location</label>
                             <input
                                 type="text"
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-emerald-500 outline-none"
+                                className="w-full bg-ink border border-ink px-4 py-3 text-white focus:border-growth outline-none"
                                 required
                                 placeholder="e.g., Room 101, Zewail City"
                             />
                         </div>
                         <div>
-                            <label className="block text-slate-400 mb-2">Description</label>
+                            <label className="block text-ink-muted mb-2">Description</label>
                             <textarea
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-emerald-500 outline-none h-40"
+                                className="w-full bg-ink border border-ink px-4 py-3 text-white focus:border-growth outline-none h-40"
                                 required
                                 placeholder="Event details..."
                             />
                         </div>
                         <div>
-                            <label className="block text-slate-400 mb-2">Image URL (Optional)</label>
+                            <label className="block text-ink-muted mb-2">Image URL (Optional)</label>
                             <input
                                 type="text"
                                 value={imageUrl}
                                 onChange={(e) => setImageUrl(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-emerald-500 outline-none"
+                                className="w-full bg-ink border border-ink px-4 py-3 text-white focus:border-growth outline-none"
                                 placeholder="https://example.com/event-banner.jpg"
                             />
                         </div>
@@ -120,22 +120,22 @@ export default function NewEvent() {
                                 id="allowExternal"
                                 checked={allowExternal} 
                                 onChange={(e) => setAllowExternal(e.target.checked)}
-                                className="w-4 h-4 text-emerald-600 rounded border-slate-700 focus:ring-emerald-500 bg-slate-900"
+                                className="w-4 h-4 text-growth border-ink focus:ring-growth bg-ink"
                             />
-                            <label htmlFor="allowExternal" className="text-sm font-bold text-emerald-500 uppercase tracking-wide cursor-pointer">Allow External Participants</label>
+                            <label htmlFor="allowExternal" className="text-sm font-bold text-growth uppercase tracking-wide cursor-pointer">Allow External Participants</label>
                         </div>
 
                         <div className="flex justify-end gap-4 pt-4">
                             <button
                                 type="button"
                                 onClick={() => router.back()}
-                                className="px-6 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                                className="px-6 py-2 text-ink-muted hover:text-white hover:bg-ink transition-colors"
                             >
                                 Cancel                            </button>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="px-8 py-2 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                                className="px-8 py-2 bg-growth text-white font-bold hover:bg-signal-soft transition-colors disabled:opacity-50"
                             >
                                 {loading ? 'Creating...' : 'Create Event'}
                             </button>

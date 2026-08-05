@@ -16,7 +16,7 @@ export function useContentCheck() {
         const [eventsSnap, projectsSnap, opportunitiesSnap] = await Promise.all([
           getDocs(query(collection(db, 'events'), limit(10))),
           getDocs(query(collection(db, 'projects'), limit(10))),
-          getDocs(query(collection(db, 'opportunities'), limit(1)))
+          getDocs(collection(db, 'opportunities'))
         ]);
 
         const activeEvents = eventsSnap.docs.some(doc => {
@@ -31,7 +31,9 @@ export function useContentCheck() {
 
         setHasEvents(activeEvents);
         setHasProjects(activeProjects);
-        setHasOpportunities(!opportunitiesSnap.empty);
+        const activeOpportunities = opportunitiesSnap.docs.some(doc => !doc.data().isArchived);
+
+        setHasOpportunities(activeOpportunities);
       } catch (error) {
         console.error("Error checking content visibility:", error);
         // Default to showing if error

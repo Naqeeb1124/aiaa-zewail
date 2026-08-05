@@ -105,39 +105,39 @@ export default function UserDirectory() {
 
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      <div className="min-h-screen bg-canvas font-sans text-ink">
         <Navbar />
         
-        <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
+        <section className="pt-72 pb-12 bg-ink text-white border-b border-ink">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
                 <h1 className="text-4xl font-extrabold mb-2">Account Directory</h1>
-                <p className="text-slate-400">Viewing all users who have signed in to the platform.</p>
+                <p className="text-ink-muted">Viewing all users who have signed in to the platform.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <button 
                   onClick={() => handleExportCSV('students')}
                   disabled={exporting}
-                  className="bg-featured-blue hover:bg-blue-500 disabled:opacity-50 text-white px-5 py-3 rounded-2xl font-black uppercase tracking-widest text-[9px] shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2"
+                  className="bg-deep hover:bg-sea disabled:opacity-50 text-white px-5 py-3 font-black uppercase tracking-widest text-[9px] transition-all flex items-center gap-2"
                 >
                   {exporting ? (
-                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span className="w-3 h-3 border-2 border-white border-t-transparent animate-spin"></span>
                   ) : '🎓'}
                   {exporting ? 'Exporting...' : 'Export Students Only'}
                 </button>
                 <button 
                   onClick={() => handleExportCSV()}
                   disabled={exporting}
-                  className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-5 py-3 rounded-2xl font-black uppercase tracking-widest text-[9px] shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2"
+                  className="bg-growth hover:bg-signal-soft disabled:opacity-50 text-white px-5 py-3 font-black uppercase tracking-widest text-[9px] transition-all flex items-center gap-2"
                 >
                   {exporting ? (
-                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span className="w-3 h-3 border-2 border-white border-t-transparent animate-spin"></span>
                   ) : '📥'}
                   {exporting ? 'Exporting...' : 'Export All (95)'}
                 </button>
-                <div className="bg-white/10 px-5 py-3 rounded-2xl border border-white/10 backdrop-blur-sm">
-                  <div className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1 leading-none">Total</div>
+                <div className="bg-white/10 px-5 py-3 border border-white/10">
+                  <div className="text-[9px] font-black uppercase tracking-widest text-ink-soft mb-1 leading-none">Total</div>
                   <div className="text-2xl font-black text-white leading-none">{users.length}</div>
                 </div>
               </div>
@@ -148,37 +148,37 @@ export default function UserDirectory() {
         <main className="max-w-7xl mx-auto px-6 py-12">
             <div className="mb-8 flex justify-between items-center">
                 <div className="relative w-full md:w-1/2">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted">[Q]</span>
                     <input 
                         type="text" 
                         placeholder="Search by name or email..." 
-                        className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue outline-none shadow-sm transition-all"
+                        className="w-full pl-12 pr-4 py-4 border border-line focus:ring-4 focus:ring-deep/5 focus:border-deep outline-none transition-all"
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
                     />
                 </div>
                 <div className="hidden md:block text-right">
-                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+                  <p className="text-sm font-bold text-ink-muted uppercase tracking-widest">
                     {filteredUsers.length} results
                   </p>
                 </div>
             </div>
 
-            <div className="bg-white rounded-[32px] shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-white border border-line overflow-hidden">
                 {loading ? (
                     <div className="p-24 text-center">
-                        <div className="w-12 h-12 border-4 border-featured-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Syncing with Firebase...</p>
+                        <div className="w-12 h-12 border-4 border-deep border-t-transparent animate-spin mx-auto mb-4"></div>
+                        <p className="text-ink-soft font-bold uppercase tracking-widest text-xs">Syncing with Firebase...</p>
                     </div>
                 ) : filteredUsers.length === 0 ? (
                     <div className="p-24 text-center">
-                        <div className="text-4xl mb-4">🔍</div>
-                        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No users match your search</p>
+                        <div className="text-4xl mb-4">[Q]</div>
+                        <p className="text-ink-soft font-bold uppercase tracking-widest text-xs">No users match your search</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-slate-50/50 text-[10px] uppercase text-slate-400 font-black border-b border-slate-100">
+                            <thead className="bg-canvas/50 text-[10px] uppercase text-ink-muted font-black border-b border-line">
                                 <tr>
                                     <th className="p-6 w-16">#</th>
                                     <th className="p-6">User Details</th>
@@ -187,25 +187,25 @@ export default function UserDirectory() {
                                     <th className="p-6 text-right">Access Level</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-50">
+                            <tbody className="divide-y divide-canvas">
                                 {filteredUsers.map((user, index) => (
-                                    <tr key={user.id} className="hover:bg-slate-50/80 transition-colors group">
-                                        <td className="p-6 text-xs font-bold text-slate-300 group-hover:text-featured-blue transition-colors">
+                                    <tr key={user.id} className="hover:bg-canvas/80 transition-colors group">
+                                        <td className="p-6 text-xs font-bold text-ink-muted group-hover:text-deep transition-colors">
                                             {filteredUsers.length - index}
                                         </td>
                                         <td className="p-6">
-                                            <div className="font-bold text-slate-900 group-hover:text-featured-blue transition-colors">{user.name || 'Anonymous'}</div>
-                                            <div className="text-[10px] text-slate-400 font-mono mt-0.5">{user.id}</div>
+                                            <div className="font-bold text-ink group-hover:text-deep transition-colors">{user.name || 'Anonymous'}</div>
+                                            <div className="text-[10px] text-ink-muted font-mono mt-0.5">{user.id}</div>
                                         </td>
                                         <td className="p-6">
-                                            <span className="text-sm text-slate-600 font-medium">{user.email}</span>
+                                            <span className="text-sm text-ink-soft font-medium">{user.email}</span>
                                         </td>
                                         <td className="p-6">
-                                            <div className="text-sm text-slate-600 font-bold">{formatDate(user.joinedAt)}</div>
-                                            <div className="text-[10px] text-slate-400 uppercase font-black mt-0.5">Last Login: {formatDate(user.lastLogin)}</div>
+                                            <div className="text-sm text-ink-soft font-bold">{formatDate(user.joinedAt)}</div>
+                                            <div className="text-[10px] text-ink-muted uppercase font-black mt-0.5">Last Login: {formatDate(user.lastLogin)}</div>
                                         </td>
                                         <td className="p-6 text-right">
-                                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${user.role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                                            <span className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest ${user.role === 'admin' ? 'bg-accent-orange-soft text-ember' : 'bg-line text-ink-soft'}`}>
                                                 {user.role || 'user'}
                                             </span>
                                         </td>

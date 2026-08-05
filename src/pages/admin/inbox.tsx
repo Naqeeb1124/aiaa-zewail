@@ -138,23 +138,23 @@ Thank you for reaching out to us.
 
     return (
         <AdminGuard>
-            <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+            <div className="min-h-screen bg-canvas font-sans text-ink">
                 <Navbar />
                 
-                <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
+                <section className="pt-72 pb-12 bg-ink text-white border-b border-ink">
                     <div className="max-w-7xl mx-auto px-6 flex justify-between items-end">
                         <div>
                             <div className="flex items-center gap-4 mb-2">
                                 <h1 className="text-4xl font-extrabold">Inbox</h1>
-                                <span className="bg-featured-blue text-white px-3 py-1 rounded-lg text-sm font-black">
+                                <span className="bg-deep text-white px-3 py-1 text-sm font-black">
                                     {messages.length}
                                 </span>
                             </div>
-                            <p className="text-slate-400">Manage incoming contact requests and inquiries.</p>
+                            <p className="text-ink-muted">Manage incoming contact requests and inquiries.</p>
                         </div>
                         <button 
                             onClick={fetchMessages}
-                            className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-sm transition-all border border-white/10"
+                            className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-sm transition-all border border-white/10"
                         >
                             Refresh Inbox
                         </button>
@@ -163,39 +163,39 @@ Thank you for reaching out to us.
 
                 <main className="max-w-7xl mx-auto px-6 py-12">
                     {loading ? (
-                        <div className="text-center py-12 text-slate-500">Loading messages...</div>
+                        <div className="text-center py-12 text-ink-soft">Loading messages...</div>
                     ) : messages.length === 0 ? (
-                        <div className="text-center py-20 bg-white rounded-3xl border border-slate-200">
-                            <p className="text-slate-400 font-bold">No messages found in &apos;contact_requests&apos; collection.</p>
+                        <div className="text-center py-20 bg-white border border-line">
+                            <p className="text-ink-muted font-bold">No messages found in &apos;contact_requests&apos; collection.</p>
                         </div>
                     ) : (
                         <div className="grid gap-4">
                             {messages.map((msg) => (
-                                <div key={msg.id} className={`bg-white p-6 rounded-2xl border transition-all ${msg.status === 'unread' ? 'border-l-4 border-l-featured-blue border-y-slate-200 border-r-slate-200 shadow-md' : 'border-slate-200 hover:shadow-sm'}`}>
+                                <div key={msg.id} className={`bg-white p-6 border transition-all ${msg.status === 'unread' ? 'border-l-4 border-l-deep border-y-line border-r-line' : 'border-line '}`}>
                                     <div className="flex justify-between items-start mb-3">
                                         <div>
-                                            <h3 className="font-bold text-lg text-slate-800">{msg.name}</h3>
-                                            <p className="text-sm text-slate-500">{msg.email}</p>
+                                            <h3 className="font-bold text-lg text-ink">{msg.name}</h3>
+                                            <p className="text-sm text-ink-soft">{msg.email}</p>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <span className="text-xs font-bold text-slate-400">
+                                            <span className="text-xs font-bold text-ink-muted">
                                                 {formatMessageDate(msg)}
                                             </span>
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                                msg.status === 'unread' ? 'bg-blue-100 text-blue-700' : 
-                                                msg.status === 'replied' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+                                            <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
+                                                msg.status === 'unread' ? 'bg-line text-deep' : 
+                                                msg.status === 'replied' ? 'bg-signal-soft text-growth' : 'bg-line text-ink-soft'
                                             }`}>
                                                 {msg.status}
                                             </span>
                                         </div>
                                     </div>
-                                    <p className="text-slate-600 text-sm leading-relaxed mb-6 whitespace-pre-wrap bg-slate-50 p-4 rounded-xl">
+                                    <p className="text-ink-soft text-sm leading-relaxed mb-6 whitespace-pre-wrap bg-canvas p-4">
                                         {msg.message}
                                     </p>
                                     <div className="flex justify-end">
                                         <button 
                                             onClick={() => handleOpenReply(msg)}
-                                            className="px-6 py-2 bg-featured-blue text-white rounded-xl font-bold text-sm hover:bg-featured-green transition-colors shadow-sm"
+                                            className="px-6 py-2 bg-deep text-white font-bold text-sm hover:bg-growth transition-colors"
                                         >
                                             Reply
                                         </button>
@@ -208,43 +208,43 @@ Thank you for reaching out to us.
 
                 {/* Reply Modal */}
                 {replyingTo && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/50 backdrop-blur-sm">
-                        <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                                <h3 className="font-bold text-lg text-slate-800">Reply to {replyingTo.name}</h3>
-                                <button onClick={() => setReplyingTo(null)} className="text-slate-400 hover:text-red-500 text-2xl leading-none">&times;</button>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-ink/50">
+                        <div className="bg-white w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <div className="p-6 border-b border-line flex justify-between items-center bg-canvas">
+                                <h3 className="font-bold text-lg text-ink">Reply to {replyingTo.name}</h3>
+                                <button onClick={() => setReplyingTo(null)} className="text-ink-muted hover:text-ember text-2xl leading-none">&times;</button>
                             </div>
                             <div className="p-8 space-y-6">
                                 <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Subject</label>
+                                    <label className="block text-xs font-bold uppercase text-ink-soft mb-2">Subject</label>
                                     <input 
                                         type="text" 
                                         value={replySubject} 
                                         onChange={(e) => setReplySubject(e.target.value)} 
-                                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-featured-blue outline-none font-bold text-slate-700"
+                                        className="w-full p-3 border border-line focus:ring-2 focus:ring-deep outline-none font-bold text-ink"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Message</label>
+                                    <label className="block text-xs font-bold uppercase text-ink-soft mb-2">Message</label>
                                     <textarea 
                                         value={replyBody} 
                                         onChange={(e) => setReplyBody(e.target.value)} 
                                         rows={8}
-                                        className="w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-featured-blue outline-none resize-none font-medium text-slate-600"
+                                        className="w-full p-4 border border-line focus:ring-2 focus:ring-deep outline-none resize-none font-medium text-ink-soft"
                                     />
                                 </div>
                             </div>
-                            <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                            <div className="p-6 border-t border-line bg-canvas flex justify-end gap-3">
                                 <button 
                                     onClick={() => setReplyingTo(null)} 
-                                    className="px-6 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-white transition-all"
+                                    className="px-6 py-3 border border-line text-ink-soft font-bold hover:bg-white transition-all"
                                 >
                                     Cancel
                                 </button>
                                 <button 
                                     onClick={handleSendReply} 
                                     disabled={sending}
-                                    className="px-8 py-3 rounded-xl bg-featured-blue text-white font-bold hover:bg-featured-green transition-all shadow-lg hover:shadow-featured-green/20 disabled:opacity-70 flex items-center gap-2"
+                                    className="px-8 py-3 bg-deep text-white font-bold hover:bg-growth transition-all  disabled:opacity-70 flex items-center gap-2"
                                 >
                                     {sending ? 'Sending...' : 'Send Reply'} <span>✈️</span>
                                 </button>

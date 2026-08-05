@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import nodemailer from 'nodemailer'
-import { verifyIdToken, getAdminDb } from '../../lib/firebase-admin';
+import { verifyIdToken, getAdminDb, isAdminEmail } from '../../lib/firebase-admin';
 import { getBrandedTemplate } from '../../lib/emailTemplates';
 
 export default async function handler(
@@ -9,44 +9,20 @@ export default async function handler(
 ) {
   const startTime = Date.now();
   const log = (msg: string) => console.log(`[send-email] [${Date.now() - startTime}ms] ${msg}`);
+  const escapeHtml = (value: string) => value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
   // 1. Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.setHeader('Allow', 'POST, GET, OPTIONS');
     return res.status(200).end();
   }
 
-  // 2. Debugging helper for GET
   if (req.method === 'GET') {
-    let firebaseParses = false;
-    let firebaseError = '';
-    try {
-        let keyString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-        if (keyString) {
-            const firstBrace = keyString.indexOf('{');
-            const lastBrace = keyString.lastIndexOf('}');
-            if (firstBrace !== -1 && lastBrace !== -1) {
-                keyString = keyString.substring(firstBrace, lastBrace + 1);
-            }
-            JSON.parse(keyString);
-            firebaseParses = true;
-        }
-    } catch (e: any) {
-        firebaseError = e.message;
-    }
-
-    return res.status(200).json({ 
-        status: 'online',
-        message: 'Email API is active.',
-        config: {
-            hasUser: !!process.env.EMAIL_SERVER_USER,
-            hasPass: !!process.env.EMAIL_SERVER_PASSWORD,
-            hasFirebaseKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
-            firebaseParses,
-            firebaseError
-        },
-        runtime: process.env.VERCEL ? 'vercel' : 'local',
-        nodeVersion: process.version
-    });
+    return res.status(200).json({ status: 'online', message: 'Email API is active.' });
   }
 
   if (req.method !== 'POST') {
@@ -73,17 +49,27 @@ export default async function handler(
       console.error('Token verification failed:', error);
       return res.status(401).json({ 
         message: 'Unauthorized: Token verification failed', 
-        error: error.message,
-        hint: 'This often happens if FIREBASE_SERVICE_ACCOUNT_KEY is invalid or missing.'
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      hint: 'This often happens if FIREBASE_SERVICE_ACCOUNT_KEY is invalid or missing.'
       });
     }
 
     const adminEmail = decodedToken.email;
+    const callerIsAdmin = await isAdminEmail(adminEmail);
 
-    // 4. Request validation
+    // Non-admin callers may only send to themselves. This preserves the
+    // member interview-confirmation email without exposing the mail relay.
     const { to, subject, text, html, type = 'single', ctaText, ctaUrl } = req.body
-    if (!to || !subject) {
-        return res.status(400).json({ message: 'Missing required fields: to or subject' });
+    if (!to || !subject || String(subject).length > 200) {
+        return res.status(400).json({ message: 'Missing required fields or subject is too long' });
+    }
+    const recipients = Array.isArray(to) ? to : [to];
+    const normalizedCallerEmail = adminEmail?.toLowerCase();
+    const hasOnlySelfRecipient = recipients.length === 1 &&
+      typeof recipients[0] === 'string' &&
+      recipients[0].toLowerCase() === normalizedCallerEmail;
+    if (!callerIsAdmin && !hasOnlySelfRecipient) {
+      return res.status(403).json({ message: 'Forbidden: admin access required for other recipients' });
     }
 
     // 5. Send Email
@@ -98,7 +84,7 @@ export default async function handler(
     });
     log('Transporter created');
 
-    const contentHtml = html || `<div style="white-space: pre-wrap;">${text}</div>`;
+    const contentHtml = html || `<div style="white-space: pre-wrap;">${escapeHtml(String(text || ''))}</div>`;
     const cta = (ctaText && ctaUrl) ? { text: ctaText, url: ctaUrl } : undefined;
     const finalHtml = getBrandedTemplate(contentHtml, SITE_URL, undefined, cta);
 
@@ -144,7 +130,7 @@ export default async function handler(
     console.error('CRITICAL API Error in send-email:', error);
     return res.status(500).json({ 
       message: 'Error processing email request',
-      error: error.message || 'Unknown error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     })
   }

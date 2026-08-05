@@ -8,40 +8,51 @@ import { db } from '../lib/firebase'
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore'
 import { teamMembers } from '../lib/teamData'
 
-const TeamMemberCard = ({ member }: { member: any }) => (
-  <div className="group relative bg-white rounded-[40px] overflow-hidden shadow-sm border border-slate-100 hover:shadow-xl hover:border-featured-green/50 transition-all duration-500 hover:-translate-y-2">
-    <div className="aspect-[4/5] relative overflow-hidden bg-slate-50">
-      <div className="absolute inset-0 bg-gradient-to-t from-featured-blue/90 via-featured-blue/20 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity duration-500"></div>
+/**
+ * Kickoff landing — student-built.
+ *
+ * Used when KICKOFF_MODE is true. The branch's intro event. We dropped
+ * the AI-tropes ("Launchpad to Aerospace Careers", "Meet the Visionaries")
+ * and replaced them with what we actually mean: a first meeting, a list
+ * of what we will cover, and the people running it.
+ */
 
+const TeamMemberCard = ({ member }: { member: any }) => (
+  <article className="card overflow-hidden flex flex-col">
+    <div className="relative aspect-[4/5] overflow-hidden bg-canvas-surface">
       <Image
         src={member.image}
-        alt={member.name}
+        alt={`${member.name}, ${member.role}`}
         fill
-        className="object-cover group-hover:scale-110 transition-transform duration-700"
+        sizes="(max-width: 768px) 100vw, 33vw"
+        style={{ objectFit: 'cover' }}
+        className="photo-natural duration-slow ease-human"
       />
-
-      {/* Social Links (appear on hover) */}
-      <div className="absolute top-6 right-6 z-20 translate-y-[-20px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 flex flex-col gap-3">
-        {member.linkedin && member.linkedin !== '#' && (
-          <a href={member.linkedin} target="_blank" rel="noreferrer" className="p-3.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-[#0077b5] transition-all hover:scale-110" title="LinkedIn">
-            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
-          </a>
-        )}
-
-        {member.link && member.link !== '#' && (
-          <a href={member.link} target="_blank" rel="noreferrer" className="p-3.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-featured-green transition-all hover:scale-110" title="Portfolio / Website">
-            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" /></svg>
-          </a>
-        )}
-      </div>
-
-      <div className="absolute bottom-0 left-0 w-full p-10 z-20 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-        <p className="text-zewail-cyan font-black text-[10px] tracking-[0.2em] uppercase mb-2">{member.role}</p>
-        <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight leading-tight">{member.name}</h3>
-        <p className="text-white/60 text-xs font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">{member.major}</p>
-      </div>
+      <span className="absolute bottom-4 left-4 chip chip-flagship">
+        {member.role}
+      </span>
     </div>
-  </div>
+    <div className="p-6">
+      <p className="eyebrow text-ink-muted">{member.major}</p>
+      <h3 className="mt-2 font-display text-[1.2rem] font-semibold text-ink leading-tight">
+        {member.name.trim()}
+      </h3>
+      {(member.linkedin && member.linkedin !== '#') || (member.link && member.link !== '#') ? (
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-[14px]">
+          {member.linkedin && member.linkedin !== '#' && (
+            <a href={member.linkedin} target="_blank" rel="noreferrer" className="marker-line text-sea font-medium">
+              LinkedIn
+            </a>
+          )}
+          {member.link && member.link !== '#' && (
+            <a href={member.link} target="_blank" rel="noreferrer" className="marker-line text-ember font-medium">
+              Portfolio
+            </a>
+          )}
+        </div>
+      ) : null}
+    </div>
+  </article>
 )
 
 export default function KickoffPage() {
@@ -53,36 +64,25 @@ export default function KickoffPage() {
     const fetchLatestEvent = async () => {
       try {
         const eventsRef = collection(db, 'events')
-        
-        // 1. Try to find an event explicitly flagged as Kickoff
-        const qKickoff = query(
-          eventsRef, 
-          where('isKickoff', '==', true),
-          limit(1)
-        )
+
+        const qKickoff = query(eventsRef, where('isKickoff', '==', true), limit(1))
         const kickoffSnapshot = await getDocs(qKickoff)
-        
+
         if (!kickoffSnapshot.empty) {
           setEvent({ id: kickoffSnapshot.docs[0].id, ...kickoffSnapshot.docs[0].data() })
         } else {
-          // 2. Fallback: Get the next upcoming event
           const qUpcoming = query(
-            eventsRef, 
+            eventsRef,
             where('date', '>=', new Date().toISOString()),
             orderBy('date', 'asc'),
             limit(1)
           )
           const upcomingSnapshot = await getDocs(qUpcoming)
-          
+
           if (!upcomingSnapshot.empty) {
             setEvent({ id: upcomingSnapshot.docs[0].id, ...upcomingSnapshot.docs[0].data() })
           } else {
-            // 3. Last fallback: Get most recent past event
-            const qRecent = query(
-              eventsRef,
-              orderBy('date', 'desc'),
-              limit(1)
-            )
+            const qRecent = query(eventsRef, orderBy('date', 'desc'), limit(1))
             const recentSnapshot = await getDocs(qRecent)
             if (!recentSnapshot.empty) {
               setEvent({ id: recentSnapshot.docs[0].id, ...recentSnapshot.docs[0].data() })
@@ -90,7 +90,7 @@ export default function KickoffPage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching kickoff event:", error)
+        console.error('Error fetching kickoff event:', error)
       } finally {
         setLoading(false)
       }
@@ -115,126 +115,154 @@ export default function KickoffPage() {
         days: Math.floor(diff / (1000 * 60 * 60 * 24)),
         hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
         minutes: Math.floor((diff / 1000 / 60) % 60),
-        seconds: Math.floor((diff / 1000) % 60)
+        seconds: Math.floor((diff / 1000) % 60),
       })
     }, 1000)
     return () => clearInterval(interval)
   }, [event])
 
   const eventDate = event ? new Date(event.date) : null
-  const formattedDate = eventDate ? eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBA'
-  const formattedTime = eventDate ? eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
+  const formattedDate = eventDate
+    ? eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : 'Date soon'
+  const formattedTime = eventDate
+    ? eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : ''
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans">
-      <Seo title="Kickoff - AIAA Zewail City" />
+    <div className="min-h-screen paper-surface text-ink">
+      <Seo title="Kickoff · AIAA Zewail City" />
       <Navbar />
 
       <main>
-        {/* Hero Section */}
-        <section className="pt-24 md:pt-48 pb-20 md:pb-32 bg-gradient-to-b from-white to-slate-50 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] pointer-events-none"></div>
-          
-          <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-featured-blue/10 text-featured-blue border border-featured-blue/20 text-xs font-bold mb-8 uppercase tracking-wider">
-              <span className="w-2 h-2 rounded-full bg-featured-green animate-pulse"></span>
-              Founding Launch Execution
+        {/* Hero */}
+        <section className="relative overflow-hidden bg-deep text-white topo-wash pt-28 md:pt-40 pb-16 md:pb-24">
+          <div className="relative max-w-7xl mx-auto px-6">
+            <div className="grid md:grid-cols-12 gap-10 items-end">
+              <div className="md:col-span-8">
+                <span className="eyebrow text-spark inline-flex items-center gap-2">
+                  <span className="w-2 h-2 bg-growth animate-pulse" aria-hidden />
+                  First meeting
+                </span>
+                <h1 className="mt-3 font-display text-[clamp(2.5rem,6vw,4.5rem)] font-semibold leading-[1.02] tracking-tight">
+                  Our first gathering.<br />
+                  <span className="text-spark">Pop in.</span>
+                </h1>
+              </div>
+              <div className="md:col-span-4 text-white/85 text-[15.5px] leading-relaxed">
+                <p>
+                  A 75-minute intro for anyone curious about the branch.
+                </p>
+                <p>
+                  We will walk through who we are, what we are building this
+                  semester, and how to hop on a project. Bring questions.
+                </p>
+              </div>
             </div>
 
-            <h1 className="text-5xl md:text-8xl font-black mb-8 tracking-tighter text-featured-blue uppercase leading-tight">
-              Launchpad to <br />
-              <span className="text-zewail-cyan italic">Aerospace</span> Careers
-            </h1>
-            
-            <p className="text-lg md:text-2xl text-slate-600 max-w-3xl mx-auto mb-12 leading-relaxed font-medium">
-              Egypt&apos;s only AIAA Student Branch is officially landing. Join us for our kickoff event and start your journey in the aerospace industry.
-            </p>
-
-            {/* Countdown */}
             {!loading && event && (
-              <div className="flex justify-center gap-4 md:gap-8 mb-16">
+              <div className="mt-10 flex flex-wrap gap-3">
                 {[
                   { label: 'Days', value: timeLeft.days },
                   { label: 'Hours', value: timeLeft.hours },
                   { label: 'Mins', value: timeLeft.minutes },
-                  { label: 'Secs', value: timeLeft.seconds }
-                ].map((unit) => (
-                  <div key={unit.label} className="flex flex-col items-center">
-                    <div className="text-4xl md:text-6xl font-black text-featured-blue">{unit.value.toString().padStart(2, '0')}</div>
-                    <div className="text-[10px] md:text-xs uppercase font-bold tracking-[0.2em] text-slate-400">{unit.label}</div>
+                  { label: 'Secs', value: timeLeft.seconds },
+                ].map(unit => (
+                  <div
+                    key={unit.label}
+                    className="px-5 py-3 bg-white/10 border border-white/15"
+                  >
+                    <div className="font-display text-2xl md:text-3xl font-semibold text-spark leading-none">
+                      {unit.value.toString().padStart(2, '0')}
+                    </div>
+                    <div className="eyebrow text-white/70 mt-1.5">{unit.label}</div>
                   </div>
                 ))}
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link 
-                href={event ? `/join?redirect=/events/${event.id}` : "/join"} 
-                className="px-10 py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-sm hover:bg-featured-green transition-all shadow-xl transform hover:-translate-y-0.5"
+            <div className="mt-8">
+              <Link
+                href={event ? `/join?redirect=/events/${event.id}` : '/join'}
+                className="btn btn-primary"
               >
-                {event ? 'Register for the Event' : 'Join the Mission'}
+                {event ? 'Save your seat' : 'Apply to the branch'}
               </Link>
             </div>
           </div>
         </section>
 
-        {/* Event Details */}
-        <section className="py-24 bg-white relative">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-slate-50 p-12 rounded-[40px] border border-slate-100 transition-all hover:shadow-lg">
-                <div className="w-12 h-12 bg-featured-blue/10 rounded-2xl flex items-center justify-center mb-8 text-featured-blue">
-                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                </div>
-                <h3 className="text-featured-blue font-black uppercase tracking-widest text-xs mb-4">When & Where</h3>
-                <p className="text-2xl font-black mb-2 text-slate-900 uppercase">
-                  {formattedDate} {formattedTime && `@ ${formattedTime}`}
+        {/* Three honest beats */}
+        <section className="bg-paper border-y border-line">
+          <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+            <div className="grid md:grid-cols-3 gap-6 md:gap-7">
+              <article className="card p-7 md:p-9">
+                <span className="eyebrow text-deep">Where & when</span>
+                <h3 className="mt-3 font-display font-semibold text-[1.25rem] leading-tight text-ink">
+                  {formattedDate}
+                  {formattedTime && <span className="text-ink-soft"> · {formattedTime}</span>}
+                </h3>
+                <p className="mt-3 text-[14.5px] text-ink-soft leading-relaxed">
+                  {event?.location || 'Room posted a week before the event.'}
                 </p>
-                <p className="text-slate-500 font-medium leading-relaxed">
-                  {event?.location || 'Location to be announced.'} 75 minutes of high-impact career mapping.
+                <p className="mt-3 text-[14.5px] text-ink-soft leading-relaxed">
+                  Stay for the full session. We close with a short Q&amp;A.
                 </p>
-              </div>
+              </article>
 
-              <div className="bg-slate-50 p-12 rounded-[40px] border border-slate-100 transition-all hover:shadow-lg">
-                <div className="w-12 h-12 bg-featured-blue/10 rounded-2xl flex items-center justify-center mb-8 text-featured-blue">
-                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                </div>
-                <h3 className="text-featured-blue font-black uppercase tracking-widest text-xs mb-4">Agenda</h3>
-                <ul className="space-y-4 text-slate-600 font-bold uppercase text-[13px] tracking-wider">
-                  <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-featured-green rounded-full"></span> What is AIAA?</li>
-                  <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-featured-green rounded-full"></span> Aerospace Pathways</li>
-                  <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-featured-green rounded-full"></span> Semester Roadmap</li>
-                  <li className="flex items-center gap-3"><span className="w-1.5 h-1.5 bg-featured-green rounded-full"></span> Project Networking</li>
+              <article className="card p-7 md:p-9">
+                <span className="eyebrow text-ember">What we will cover</span>
+                <ul className="mt-4 space-y-3 text-[14.5px] text-ink leading-snug">
+                  <li className="flex gap-3">
+                    <span className="w-1.5 h-1.5 mt-2 bg-deep" aria-hidden />
+                    What AIAA actually is (and what it is not).
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="w-1.5 h-1.5 mt-2 bg-deep" aria-hidden />
+                    Aerospace pathways from a Zewail City degree.
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="w-1.5 h-1.5 mt-2 bg-deep" aria-hidden />
+                    What our projects look like this semester.
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="w-1.5 h-1.5 mt-2 bg-deep" aria-hidden />
+                    How to join, and what the time commitment really is.
+                  </li>
                 </ul>
-              </div>
+              </article>
 
-              <div className="bg-slate-50 p-12 rounded-[40px] border border-slate-100 transition-all hover:shadow-lg">
-                <div className="w-12 h-12 bg-featured-blue/10 rounded-2xl flex items-center justify-center mb-8 text-featured-blue">
-                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                </div>
-                <h3 className="text-featured-blue font-black uppercase tracking-widest text-xs mb-4">The Value</h3>
-                <p className="text-slate-500 font-medium leading-relaxed">Establish your presence, gain career clarity, and secure your spot in the founding cohort of project teams.</p>
-              </div>
+              <article className="canvas-surface border border-line p-7 md:p-9">
+                <span className="eyebrow text-growth">Why bother</span>
+                <h3 className="mt-3 font-display font-semibold text-[1.25rem] leading-tight text-ink">
+                  You will leave with people to text.
+                </h3>
+                <p className="mt-3 text-[14.5px] text-ink-soft leading-relaxed">
+                  Not a recruitment pitch. A real plan of what to do next,
+                  a name or two to DM, and a way to sit in on a team for a
+                  trial week before deciding anything.
+                </p>
+              </article>
             </div>
           </div>
         </section>
 
-        {/* Team Section */}
-        <section id="board" className="py-24 md:py-32 bg-slate-50">
+        {/* Board section */}
+        <section id="board" className="py-16 md:py-24">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-20">
-              <span className="inline-block px-3 py-1 rounded-full bg-featured-blue/10 text-featured-blue border border-featured-blue/20 text-[10px] font-black mb-6 uppercase tracking-widest">
-                The Board
-              </span>
-              <h2 className="text-4xl md:text-7xl font-black text-featured-blue uppercase tracking-tighter mb-8">
-                Meet the <span className="text-featured-blue/70 italic">Visionaries</span>
+            <div className="max-w-2xl mb-10 md:mb-14">
+              <span className="eyebrow text-deep">The board</span>
+              <h2 className="mt-2 font-display text-[clamp(1.7rem,3.5vw,2.4rem)] font-semibold text-ink leading-tight">
+                Students running it this season.
               </h2>
-              <p className="text-lg text-slate-500 max-w-2xl mx-auto font-medium">
-                The dedicated students behind the mission. We are pilots, engineers, and visionaries working together to reach new heights.
+              <p className="lead mt-3">
+                Engineers, pilots-in-training, and a few who are useful with a
+                soldering iron. Reach out to any of them before the kickoff if
+                you want a head start.
               </p>
             </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
               {teamMembers.map((member, index) => (
                 <TeamMemberCard key={index} member={member} />
               ))}
@@ -242,19 +270,25 @@ export default function KickoffPage() {
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section className="py-24 md:py-40 bg-featured-blue text-white text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/10 to-transparent pointer-events-none"></div>
-          <div className="max-w-4xl mx-auto px-6 relative z-10">
-            <h2 className="text-4xl md:text-7xl font-black uppercase mb-12 tracking-tighter leading-tight">
-              Ready to <span className="text-zewail-cyan italic">Ignite</span> Your Career?
+        {/* Closing */}
+        <section className="bg-deep text-white topo-wash py-16 md:py-24">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <span className="eyebrow text-spark">Still on the fence?</span>
+            <h2 className="mt-3 font-display text-[clamp(1.8rem,3.8vw,2.6rem)] font-semibold leading-tight">
+              Show up once. Decide after.
             </h2>
-            <Link 
-              href={event ? `/join?redirect=/events/${event.id}` : "/join"} 
-              className="inline-block px-12 py-5 bg-white text-featured-blue font-black uppercase tracking-widest text-lg rounded-full hover:bg-featured-green hover:text-white transition-all shadow-2xl transform hover:-translate-y-1"
-            >
-              Register Now
-            </Link>
+            <p className="mt-4 text-white/80 max-w-xl mx-auto text-[16px] leading-relaxed">
+              We will not pressure you into anything. Come for the intro.
+              Watch a project meeting. Decide by the end of the week.
+            </p>
+            <div className="mt-7">
+              <Link
+                href={event ? `/join?redirect=/events/${event.id}` : '/join'}
+                className="btn btn-primary"
+              >
+                Save your seat
+              </Link>
+            </div>
           </div>
         </section>
       </main>

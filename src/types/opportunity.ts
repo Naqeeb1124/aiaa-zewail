@@ -8,6 +8,9 @@ export interface Opportunity {
     description: string;
     link: string;
     tags: string[];
+    isArchived?: boolean;
+    createdAt?: any;
+    updatedAt?: any;
     gpaRequirement?: number;
     level?: ('undergrad' | 'grad' | 'phd')[];
 }

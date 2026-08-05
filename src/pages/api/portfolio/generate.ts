@@ -16,14 +16,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const idToken = authHeader.split('Bearer ')[1];
+    let decodedToken;
     try {
-        await verifyIdToken(idToken);
+        decodedToken = await verifyIdToken(idToken);
     } catch (error) {
         console.error('Token verification failed:', error);
         return res.status(401).json({ message: 'Unauthorized: Token verification failed' });
     }
 
     const { name, email, studentId, joined, points, badges, projects } = req.body;
+    if (email && decodedToken.email && email.toLowerCase() !== decodedToken.email.toLowerCase()) {
+        return res.status(403).json({ message: 'Forbidden: Portfolio identity mismatch' });
+    }
 
     if (!name) {
         return res.status(400).json({ message: 'Missing required fields' });
@@ -36,7 +40,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
 
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=portfolio-${name.replace(/\s+/g, '-')}.pdf`);
+        const safeFilename = String(name).replace(/[^a-z0-9_-]+/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'member-portfolio';
+        res.setHeader('Content-Disposition', `attachment; filename=${safeFilename}.pdf`);
 
         doc.pipe(res);
 

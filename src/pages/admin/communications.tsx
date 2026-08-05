@@ -311,26 +311,26 @@ export default function CommunicationsHub() {
 
     return (
         <AdminGuard>
-            <div className="min-h-screen bg-slate-50">
+            <div className="min-h-screen bg-canvas">
                 <Navbar />
-                <section className="pt-72 pb-12 bg-slate-900 text-white relative overflow-hidden">
+                <section className="pt-72 pb-12 bg-ink text-white relative overflow-hidden">
                     <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.05]"></div>
                     <div className="max-w-5xl mx-auto px-6 relative z-10">
                         <h1 className="text-4xl font-extrabold mb-2 uppercase tracking-tighter leading-none">Dispatch Center</h1>
-                        <p className="text-slate-400 font-medium">Create and broadcast personalized AIAA updates.</p>
+                        <p className="text-ink-muted font-medium">Create and broadcast personalized AIAA updates.</p>
                     </div>
                 </section>
 
                 <main className="max-w-5xl mx-auto px-6 py-12">
                     {/* Recovery Section (Temporary) */}
                     {recoveryList.length > 0 && (
-                        <div className="mb-8 p-8 bg-amber-900 text-white rounded-[40px] shadow-2xl border-4 border-amber-500/30 animate-fade-in">
+                        <div className="mb-8 p-8 bg-ember text-white border-4 border-ember/30 animate-fade-in">
                             <h2 className="text-2xl font-black uppercase tracking-tighter mb-4">🚨 Recovery Protocol: Failed Emails</h2>
-                            <p className="text-amber-200 text-sm mb-6 font-bold uppercase tracking-widest">Found {recoveryList.length} unique failed addresses in recent logs.</p>
+                            <p className="text-accent-orange-soft text-sm mb-6 font-bold uppercase tracking-widest">Found {recoveryList.length} unique failed addresses in recent logs.</p>
                             <textarea 
                                 readOnly
                                 value={recoveryList.join('\n')}
-                                className="w-full h-40 bg-black/30 rounded-2xl p-4 font-mono text-xs border border-white/10 outline-none mb-6"
+                                className="w-full h-40 bg-ink/30 p-4 font-mono text-xs border border-white/10 outline-none mb-6"
                             />
                             <div className="flex gap-4">
                                 <button 
@@ -342,20 +342,20 @@ export default function CommunicationsHub() {
                                         link.download = `recovered_failed_emails.csv`;
                                         link.click();
                                     }}
-                                    className="px-8 py-3 bg-white text-amber-900 rounded-full font-black uppercase tracking-widest text-[10px] hover:bg-amber-100 transition-all"
+                                    className="px-8 py-3 bg-white text-ember font-black uppercase tracking-widest text-[10px] hover:bg-accent-orange-soft transition-all"
                                 >
                                     Download Recovery CSV
                                 </button>
-                                <button onClick={() => setRecoveryList([])} className="px-8 py-3 border border-white/20 rounded-full font-black uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all">Dismiss</button>
+                                <button onClick={() => setRecoveryList([])} className="px-8 py-3 border border-white/20 font-black uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all">Dismiss</button>
                             </div>
                         </div>
                     )}
 
                     <div className="grid lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-1 space-y-6">
-                            <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
-                                <h2 className="font-black text-slate-800 mb-6 uppercase tracking-tight text-xs flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-featured-blue rounded-full"></span>
+                            <div className="bg-white p-6 border border-line">
+                                <h2 className="font-black text-ink mb-6 uppercase tracking-tight text-xs flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-deep"></span>
                                     1. Target Audience
                                 </h2>
                                 <div className="space-y-2">
@@ -371,7 +371,7 @@ export default function CommunicationsHub() {
                                             key={opt.id}
                                             type="button"
                                             onClick={() => setAudience(opt.id as Audience)}
-                                            className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${audience === opt.id ? 'border-featured-blue bg-blue-50/50 text-featured-blue' : 'border-slate-50 hover:border-slate-100 hover:bg-slate-50/50'}`}
+                                            className={`w-full text-left p-4 border-2 transition-all ${audience === opt.id ? 'border-deep bg-canvas/50 text-deep' : 'border-canvas hover:border-line hover:bg-canvas/50'}`}
                                         >
                                             <p className="font-black text-xs uppercase tracking-tight">{opt.label}</p>
                                             <p className="text-[10px] opacity-60 font-bold uppercase tracking-widest mt-1">{opt.sub}</p>
@@ -380,30 +380,30 @@ export default function CommunicationsHub() {
                                 </div>
 
                                 {audience === 'single' && (
-                                    <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div className="mt-4 p-4 bg-canvas border border-line">
                                         <input 
                                             type="email" 
                                             value={singleRecipient}
                                             onChange={(e) => setSingleRecipient(e.target.value)}
                                             placeholder="recipient@example.com"
-                                            className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold outline-none bg-white focus:ring-2 focus:ring-featured-blue"
+                                            className="w-full p-3 border border-line text-xs font-bold outline-none bg-white focus:ring-2 focus:ring-deep"
                                         />
                                     </div>
                                 )}
 
                                 {audience === 'events' && (
-                                    <div className="mt-4 space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div className="mt-4 space-y-3 p-4 bg-canvas border border-line">
                                         <select 
                                             value={selectedEvent}
                                             onChange={(e) => setSelectedEvent(e.target.value)}
-                                            className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-bold outline-none bg-white"
+                                            className="w-full p-2.5 border border-line text-xs font-bold outline-none bg-white"
                                         >
                                             <option value="">Select Event...</option>
                                             {events.map(e => <option key={e.id} value={e.id}>{e.title}</option>)}
                                         </select>
-                                        <div className="flex gap-1 p-1 bg-white rounded-lg border border-slate-200 shadow-sm">
-                                            <button type="button" onClick={() => setEventTarget('all')} className={`flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all ${eventTarget === 'all' ? 'bg-featured-blue text-white shadow-sm' : 'text-slate-400'}`}>All</button>
-                                            <button type="button" onClick={() => setEventTarget('attended')} className={`flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all ${eventTarget === 'attended' ? 'bg-featured-blue text-white shadow-sm' : 'text-slate-400'}`}>Attended</button>
+                                        <div className="flex gap-1 p-1 bg-white border border-line">
+                                            <button type="button" onClick={() => setEventTarget('all')} className={`flex-1 py-1.5 text-[9px] font-black uppercase transition-all ${eventTarget === 'all' ? 'bg-deep text-white' : 'text-ink-muted'}`}>All</button>
+                                            <button type="button" onClick={() => setEventTarget('attended')} className={`flex-1 py-1.5 text-[9px] font-black uppercase transition-all ${eventTarget === 'attended' ? 'bg-deep text-white' : 'text-ink-muted'}`}>Attended</button>
                                         </div>
                                     </div>
                                 )}
@@ -411,95 +411,95 @@ export default function CommunicationsHub() {
                                 {audience === 'custom' && (
                                     <div className="mt-4">
                                         <label className="block w-full cursor-pointer group">
-                                            <div className="py-6 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center group-hover:border-featured-blue group-hover:bg-slate-50 transition-all">
+                                            <div className="py-6 border-2 border-dashed border-line flex flex-col items-center justify-center group-hover:border-deep group-hover:bg-canvas transition-all">
                                                 <span className="text-xl mb-1">📄</span>
-                                                <span className="text-[9px] font-black uppercase text-slate-400">{csvFileName || 'Upload CSV'}</span>
+                                                <span className="text-[9px] font-black uppercase text-ink-muted">{csvFileName || 'Upload CSV'}</span>
                                             </div>
                                             <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
                                         </label>
                                     </div>
                                 )}
 
-                                <div className="mt-6 pt-6 border-t border-slate-100 space-y-4">
+                                <div className="mt-6 pt-6 border-t border-line space-y-4">
                                     <button 
                                         type="button"
                                         onClick={() => setUseBcc(!useBcc)}
-                                        className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${useBcc ? 'border-featured-blue bg-blue-50/50 text-featured-blue' : 'border-slate-50 text-slate-400'}`}
+                                        className={`w-full p-4 border-2 transition-all flex items-center justify-between ${useBcc ? 'border-deep bg-canvas/50 text-deep' : 'border-canvas text-ink-muted'}`}
                                     >
                                         <div className="text-left">
                                             <p className="text-[10px] font-black uppercase tracking-widest">BCC Method</p>
                                             <p className="text-[8px] font-bold uppercase opacity-60 mt-0.5">Send to self, hide recipients</p>
                                         </div>
-                                        <div className={`w-8 h-4 rounded-full relative transition-all ${useBcc ? 'bg-featured-blue' : 'bg-slate-200'}`}>
-                                            <div className={`absolute top-1 w-2 h-2 bg-white rounded-full transition-all ${useBcc ? 'right-1' : 'left-1'}`} />
+                                        <div className={`w-8 h-4 relative transition-all ${useBcc ? 'bg-deep' : 'bg-line'}`}>
+                                            <div className={`absolute top-1 w-2 h-2 bg-white transition-all ${useBcc ? 'right-1' : 'left-1'}`} />
                                         </div>
                                     </button>
 
                                     <button 
                                         onClick={extractFailedFromLogs}
                                         disabled={recovering}
-                                        className="w-full py-3 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-100 hover:text-amber-700 transition-all disabled:opacity-50"
+                                        className="w-full py-3 bg-line text-ink-soft text-[10px] font-black uppercase tracking-widest hover:bg-accent-orange-soft hover:text-ember transition-all disabled:opacity-50"
                                     >
                                         {recovering ? 'Scanning Blackbox...' : 'Recover Failed Emails from Logs'}
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
-                                <h2 className="font-black text-slate-800 mb-6 uppercase tracking-tight text-xs flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-featured-blue rounded-full"></span>
+                            <div className="bg-white p-6 border border-line">
+                                <h2 className="font-black text-ink mb-6 uppercase tracking-tight text-xs flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-deep"></span>
                                     2. Personalize & CTA
                                 </h2>
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-2">
-                                        <button type="button" onClick={() => insertTag('{{name}}')} className="p-3 bg-slate-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 border border-slate-100 hover:border-featured-blue hover:text-featured-blue transition-all">{"{{name}}"}</button>
-                                        <button type="button" onClick={() => insertTag('{{email}}')} className="p-3 bg-slate-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 border border-slate-100 hover:border-featured-blue hover:text-featured-blue transition-all">{"{{email}}"}</button>
+                                        <button type="button" onClick={() => insertTag('{{name}}')} className="p-3 bg-canvas text-[10px] font-black uppercase tracking-widest text-ink-soft border border-line hover:border-deep hover:text-deep transition-all">{"{{name}}"}</button>
+                                        <button type="button" onClick={() => insertTag('{{email}}')} className="p-3 bg-canvas text-[10px] font-black uppercase tracking-widest text-ink-soft border border-line hover:border-deep hover:text-deep transition-all">{"{{email}}"}</button>
                                     </div>
-                                    <div className="pt-4 border-t border-slate-100 space-y-3">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Call to Action Button</p>
+                                    <div className="pt-4 border-t border-line space-y-3">
+                                        <p className="text-[9px] font-black text-ink-muted uppercase tracking-widest ml-1">Call to Action Button</p>
                                         <input 
                                             type="text" 
                                             value={ctaText}
                                             onChange={(e) => setCtaText(e.target.value)}
                                             placeholder="Button Text (e.g. Register Now)"
-                                            className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-featured-blue"
+                                            className="w-full p-3 border border-line text-xs font-bold outline-none bg-canvas focus:bg-white focus:ring-2 focus:ring-deep"
                                         />
                                         <input 
                                             type="url" 
                                             value={ctaUrl}
                                             onChange={(e) => setCtaUrl(e.target.value)}
                                             placeholder="Button URL (https://...)"
-                                            className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-featured-blue"
+                                            className="w-full p-3 border border-line text-xs font-bold outline-none bg-canvas focus:bg-white focus:ring-2 focus:ring-deep"
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
-                                <h2 className="font-black text-slate-800 mb-6 uppercase tracking-tight text-xs flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                            <div className="bg-white p-6 border border-line">
+                                <h2 className="font-black text-ink mb-6 uppercase tracking-tight text-xs flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-ember"></span>
                                     3. Timing
                                 </h2>
                                 <div className="space-y-4">
                                     <button 
                                         type="button"
                                         onClick={() => setIsScheduled(!isScheduled)}
-                                        className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${isScheduled ? 'border-amber-500 bg-amber-50/50 text-amber-700' : 'border-slate-50 text-slate-400'}`}
+                                        className={`w-full p-4 border-2 transition-all flex items-center justify-between ${isScheduled ? 'border-ember bg-accent-orange-soft/50 text-ember' : 'border-canvas text-ink-muted'}`}
                                     >
                                         <span className="text-[10px] font-black uppercase tracking-widest">{isScheduled ? 'Scheduled Delivery' : 'Send Immediately'}</span>
-                                        <div className={`w-8 h-4 rounded-full relative transition-all ${isScheduled ? 'bg-amber-500' : 'bg-slate-200'}`}>
-                                            <div className={`absolute top-1 w-2 h-2 bg-white rounded-full transition-all ${isScheduled ? 'right-1' : 'left-1'}`} />
+                                        <div className={`w-8 h-4 relative transition-all ${isScheduled ? 'bg-ember' : 'bg-line'}`}>
+                                            <div className={`absolute top-1 w-2 h-2 bg-white transition-all ${isScheduled ? 'right-1' : 'left-1'}`} />
                                         </div>
                                     </button>
 
                                     {isScheduled && (
                                         <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                                            <label className="block text-[9px] font-black text-slate-400 mb-2 uppercase tracking-widest ml-1">Dispatch Time</label>
+                                            <label className="block text-[9px] font-black text-ink-muted mb-2 uppercase tracking-widest ml-1">Dispatch Time</label>
                                             <input 
                                                 type="datetime-local" 
                                                 value={scheduledTime}
                                                 onChange={(e) => setScheduledTime(e.target.value)}
-                                                className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold outline-none bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500"
+                                                className="w-full p-3 border border-line text-xs font-bold outline-none bg-canvas focus:bg-white focus:ring-2 focus:ring-ember"
                                             />
                                         </div>
                                     )}
@@ -508,16 +508,16 @@ export default function CommunicationsHub() {
                         </div>
 
                         <div className="lg:col-span-2 space-y-6">
-                            <div className="bg-white p-8 md:p-10 rounded-[40px] border border-slate-200 shadow-sm">
+                            <div className="bg-white p-8 md:p-10 border border-line">
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
-                                    <h2 className="font-black text-slate-800 uppercase tracking-tight text-xl">Message Draft</h2>
+                                    <h2 className="font-black text-ink uppercase tracking-tight text-xl">Message Draft</h2>
                                     <button 
                                         type="button"
                                         onClick={() => setUseBranding(!useBranding)}
-                                        className={`flex items-center gap-3 px-5 py-2.5 rounded-full transition-all border-2 ${useBranding ? 'bg-featured-blue border-featured-blue text-white shadow-lg' : 'bg-white border-slate-200 text-slate-400'}`}
+                                        className={`flex items-center gap-3 px-5 py-2.5 transition-all border-2 ${useBranding ? 'bg-deep border-deep text-white' : 'bg-white border-line text-ink-muted'}`}
                                     >
                                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">{useBranding ? 'Master Template On' : 'Plain Mode'}</span>
-                                        <div className={`w-2 h-2 rounded-full ${useBranding ? 'bg-featured-green animate-pulse' : 'bg-slate-300'}`} />
+                                        <div className={`w-2 h-2 ${useBranding ? 'bg-growth animate-pulse' : 'bg-ink-muted'}`} />
                                     </button>
                                 </div>
 
@@ -528,21 +528,21 @@ export default function CommunicationsHub() {
                                             value={subject}
                                             onChange={(e) => setSubject(e.target.value)}
                                             placeholder="EMAIL SUBJECT HEADER"
-                                            className="w-full px-8 py-5 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue transition-all outline-none font-black text-xl uppercase tracking-tight text-featured-blue"
+                                            className="w-full px-8 py-5 bg-canvas border border-line focus:bg-white focus:ring-4 focus:ring-deep/5 focus:border-deep transition-all outline-none font-black text-xl uppercase tracking-tight text-deep"
                                         />
                                     </div>
 
                                     <div>
-                                        <div className="flex flex-wrap gap-1 mb-4 p-1.5 bg-slate-50 rounded-2xl border border-slate-100 w-fit">
-                                            <button type="button" title="Bold" onClick={() => insertTag('<b>', '</b>')} className="w-10 h-10 flex items-center justify-center font-black text-slate-600 hover:bg-white hover:text-featured-blue rounded-xl transition-all">B</button>
-                                            <button type="button" title="Italic" onClick={() => insertTag('<i>', '</i>')} className="w-10 h-10 flex items-center justify-center italic font-serif text-slate-600 hover:bg-white hover:text-featured-blue rounded-xl transition-all">I</button>
-                                            <button type="button" title="Link" onClick={() => insertTag('<a href="#" style="color: #00a7e1; font-weight: bold; text-decoration: underline;">', '</a>')} className="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-white hover:text-featured-blue rounded-xl transition-all text-lg">🔗</button>
-                                            <div className="w-px h-6 bg-slate-200 mx-1 self-center"></div>
+                                        <div className="flex flex-wrap gap-1 mb-4 p-1.5 bg-canvas border border-line w-fit">
+                                            <button type="button" title="Bold" onClick={() => insertTag('<b>', '</b>')} className="w-10 h-10 flex items-center justify-center font-black text-ink-soft hover:bg-white hover:text-deep transition-all">B</button>
+                                            <button type="button" title="Italic" onClick={() => insertTag('<i>', '</i>')} className="w-10 h-10 flex items-center justify-center italic font-serif text-ink-soft hover:bg-white hover:text-deep transition-all">I</button>
+                                            <button type="button" title="Link" onClick={() => insertTag('<a href="#" style="color: #00a7e1; font-weight: bold; text-decoration: underline;">', '</a>')} className="w-10 h-10 flex items-center justify-center text-ink-soft hover:bg-white hover:text-deep transition-all text-lg">🔗</button>
+                                            <div className="w-px h-6 bg-line mx-1 self-center"></div>
                                             <button type="button" title="Highlight Box" onClick={() => insertTag(`<div style="background: #f7f9fc; padding: 24px; border-radius: 12px; margin: 25px 0; border: 1px solid #e2e8f0;">
   <h3 style="margin-top: 0; color: #2b4b77;">Title</h3>
   `, `
-</div>`)} className="px-4 h-10 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-white hover:text-featured-blue rounded-xl transition-all">Box</button>
-                                            <button type="button" title="New Line" onClick={() => insertTag('<br/>')} className="px-4 h-10 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white hover:text-featured-blue rounded-xl transition-all">Break</button>
+</div>`)} className="px-4 h-10 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-ink-soft hover:bg-white hover:text-deep transition-all">Box</button>
+                                            <button type="button" title="New Line" onClick={() => insertTag('<br/>')} className="px-4 h-10 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-ink-muted hover:bg-white hover:text-deep transition-all">Break</button>
                                         </div>
                                         <textarea 
                                             ref={textareaRef}
@@ -550,32 +550,32 @@ export default function CommunicationsHub() {
                                             value={message}
                                             onChange={(e) => setMessage(e.target.value)}
                                             placeholder="Write your personal message here. HTML is supported. Use tags like {{name}} for personalization."
-                                            className="w-full px-8 py-8 rounded-3xl bg-slate-50 border border-slate-100 focus:bg-white focus:ring-4 focus:ring-featured-blue/5 focus:border-featured-blue transition-all outline-none font-medium resize-none text-lg leading-relaxed text-slate-700 shadow-inner"
+                                            className="w-full px-8 py-8 bg-canvas border border-line focus:bg-white focus:ring-4 focus:ring-deep/5 focus:border-deep transition-all outline-none font-medium resize-none text-lg leading-relaxed text-ink"
                                         />
                                     </div>
 
                                     {sending ? (
-                                        <div className="p-8 bg-blue-50 rounded-3xl border border-blue-100 shadow-inner">
+                                        <div className="p-8 bg-canvas border border-line">
                                             <div className="flex justify-between items-center mb-4">
-                                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700">Engaging Thrusters...</span>
-                                                <span className="text-sm font-black text-blue-700">{progress.current} / {progress.total}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-deep">Engaging Thrusters...</span>
+                                                <span className="text-sm font-black text-deep">{progress.current} / {progress.total}</span>
                                             </div>
-                                            <div className="w-full h-3 bg-blue-200 rounded-full overflow-hidden">
-                                                <div className="h-full bg-featured-blue transition-all duration-500" style={{ width: `${(progress.current / progress.total) * 100}%` }} />
+                                            <div className="w-full h-3 bg-line overflow-hidden">
+                                                <div className="h-full bg-deep transition-all duration-500" style={{ width: `${(progress.current / progress.total) * 100}%` }} />
                                             </div>
                                         </div>
                                     ) : (
                                         <button 
                                             type="button"
                                             onClick={handleSend}
-                                            className={`w-full py-6 rounded-full text-white font-black uppercase tracking-[0.3em] text-sm transition-all shadow-2xl transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-4 ${isScheduled ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30' : 'bg-featured-blue hover:bg-featured-green shadow-featured-green/30'}`}
+                                            className={`w-full py-6 text-white font-black uppercase tracking-[0.3em] text-sm transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-4 ${isScheduled ? 'bg-ember hover:bg-ember/30' : 'bg-deep hover:bg-growth'}`}
                                         >
-                                            {isScheduled ? '🚀 SCHEDULE DISPATCH' : '🚀 SEND DISPATCH'}
+                                            {isScheduled ? '[/] SCHEDULE DISPATCH' : '[/] SEND DISPATCH'}
                                         </button>
                                     )}
 
                                     {result && (
-                                        <div className={`p-6 rounded-3xl border-2 ${result.failed === 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-amber-50 border-amber-100 text-amber-800'} animate-in fade-in slide-in-from-bottom duration-500 shadow-sm`}>
+                                        <div className={`p-6 border-2 ${result.failed === 0 ? 'bg-signal-soft border-signal-soft text-growth' : 'bg-accent-orange-soft border-accent-orange-soft text-ember'} animate-in fade-in slide-in-from-bottom duration-500`}>
                                             <div className="flex justify-between items-start mb-4">
                                                 <div>
                                                     <p className="font-black uppercase text-[10px] tracking-widest mb-1">Transmission Report</p>
@@ -602,7 +602,7 @@ export default function CommunicationsHub() {
                                                             link.click();
                                                             document.body.removeChild(link);
                                                         }}
-                                                        className="px-4 py-2 bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all shadow-md active:scale-95"
+                                                        className="px-4 py-2 bg-ember text-white text-[10px] font-black uppercase tracking-widest hover:bg-ember transition-all active:scale-95"
                                                     >
                                                         Download Failed CSV
                                                     </button>
@@ -610,7 +610,7 @@ export default function CommunicationsHub() {
                                             </div>
                                             {result.errors && result.errors.length > 0 && (
                                                 <div className="mt-4 space-y-1">
-                                                    <p className="text-[10px] font-black uppercase text-amber-600">Recent Failures:</p>
+                                                    <p className="text-[10px] font-black uppercase text-ember">Recent Failures:</p>
                                                     <div className="max-h-32 overflow-y-auto pr-2">
                                                         {result.errors.slice(0, 10).map((err: string, idx: number) => (
                                                             <p key={idx} className="text-[10px] font-medium opacity-60 leading-tight">• {err}</p>

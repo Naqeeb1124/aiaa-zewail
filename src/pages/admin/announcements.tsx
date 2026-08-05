@@ -90,9 +90,9 @@ export default function Announcements() {
                     const contentHtml = `
                         <p style="font-size: 16px; color: #334155;">Hi {{name}},</p>
                         <h1 style="color: #2b4b77; font-size: 24px; margin-bottom: 20px;">New Announcement</h1>
-                        <p style="font-size: 18px; font-weight: bold; color: #334155; margin-bottom: 15px;">${title}</p>
+                        <p style="font-size: 18px; font-weight: bold; color: #334155; margin-bottom: 15px;">${title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
                         <div style="color: #475569; line-height: 1.6;">
-                            ${content.replace(/\n/g, '<br/>')}
+                            ${content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>')}
                         </div>
                         <div style="margin-top: 30px;">
                             <a href="${SITE_URL}/announcements/${docRef.id}" style="display: inline-block; padding: 12px 24px; background-color: #78af03; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold;">Read Full Update</a>
@@ -166,13 +166,13 @@ export default function Announcements() {
 
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      <div className="min-h-screen bg-canvas font-sans text-ink">
         <Navbar />
         
-        <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
+        <section className="pt-72 pb-12 bg-ink text-white border-b border-ink">
           <div className="max-w-7xl mx-auto px-6">
             <h1 className="text-4xl font-extrabold mb-2">Newsroom</h1>
-            <p className="text-slate-400">Manage announcements and notify members.</p>
+            <p className="text-ink-muted">Manage announcements and notify members.</p>
           </div>
         </section>
 
@@ -180,16 +180,16 @@ export default function Announcements() {
             <div className="grid lg:grid-cols-3 gap-8">
                 {/* Form Section */}
                 <div className="lg:col-span-1">
-                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 sticky top-32">
-                        <h2 className="text-xl font-bold mb-6 text-slate-800">Compose Announcement</h2>
+                    <div className="bg-white p-6 border border-line sticky top-32">
+                        <h2 className="text-xl font-bold mb-6 text-ink">Compose Announcement</h2>
                         <form onSubmit={handleAddAnnouncement} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Headline</label>
-                                <input required type="text" name="title" value={newAnnouncement.title} onChange={handleInputChange} className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-featured-blue outline-none" placeholder="Important Update..." />
+                                <label className="block text-xs font-bold uppercase text-ink-soft mb-1">Headline</label>
+                                <input required type="text" name="title" value={newAnnouncement.title} onChange={handleInputChange} className="w-full p-3 border border-line focus:ring-2 focus:ring-deep outline-none" placeholder="Important Update..." />
                             </div>
                             
                             <div>
-                                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Cover Image</label>
+                                <label className="block text-xs font-bold uppercase text-ink-soft mb-1">Cover Image</label>
                                 <ImageUpload onUploadSuccess={handleImageUploadSuccess} initialImageUrl={newAnnouncement.imageUrl} />
                             </div>
 
@@ -200,18 +200,18 @@ export default function Announcements() {
                                     id="isDraft"
                                     checked={newAnnouncement.isDraft} 
                                     onChange={handleInputChange}
-                                    className="w-4 h-4 text-featured-blue rounded border-slate-300 focus:ring-featured-blue"
+                                    className="w-4 h-4 text-deep border-ink-muted focus:ring-deep"
                                 />
-                                <label htmlFor="isDraft" className="text-xs font-bold text-amber-600 uppercase tracking-wide cursor-pointer">Save as Draft (Internal Only)</label>
+                                <label htmlFor="isDraft" className="text-xs font-bold text-ember uppercase tracking-wide cursor-pointer">Save as Draft (Internal Only)</label>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">Content</label>
-                                <textarea required name="content" value={newAnnouncement.content} onChange={handleInputChange} rows={8} className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-featured-blue outline-none" placeholder="Write your message here..." />
+                                <label className="block text-xs font-bold uppercase text-ink-soft mb-1">Content</label>
+                                <textarea required name="content" value={newAnnouncement.content} onChange={handleInputChange} rows={8} className="w-full p-3 border border-line focus:ring-2 focus:ring-deep outline-none" placeholder="Write your message here..." />
                             </div>
 
-                            <button type="submit" disabled={isSubmitting} className={`w-full py-3 ${newAnnouncement.isDraft ? 'bg-amber-500 hover:bg-amber-600' : 'bg-featured-blue hover:bg-featured-green'} text-white font-bold rounded-xl transition-colors disabled:opacity-50`}>
-                                {isSubmitting ? 'Processing...' : (newAnnouncement.isDraft ? '💾 Save Draft' : '🚀 Post Announcement')}
+                            <button type="submit" disabled={isSubmitting} className={`w-full py-3 ${newAnnouncement.isDraft ? 'bg-ember hover:bg-ember' : 'bg-deep hover:bg-growth'} text-white font-bold transition-colors disabled:opacity-50`}>
+                                {isSubmitting ? 'Processing...' : (newAnnouncement.isDraft ? '[SAVE] Save Draft' : '[/] Post Announcement')}
                             </button>
                         </form>
                     </div>
@@ -219,52 +219,52 @@ export default function Announcements() {
 
                 {/* List Section */}
                 <div className="lg:col-span-2">
-                    <h2 className="text-xl font-bold mb-6 text-slate-800">Recent Updates ({announcements.length})</h2>
+                    <h2 className="text-xl font-bold mb-6 text-ink">Recent Updates ({announcements.length})</h2>
                     {loading ? (
-                        <div className="text-center py-12 text-slate-500">Loading news...</div>
+                        <div className="text-center py-12 text-ink-soft">Loading news...</div>
                     ) : announcements.length === 0 ? (
-                        <div className="text-center py-12 bg-white rounded-3xl border border-slate-200">
-                            <p className="text-slate-400">No announcements posted yet.</p>
+                        <div className="text-center py-12 bg-white border border-line">
+                            <p className="text-ink-muted">No announcements posted yet.</p>
                         </div>
                     ) : (
                         <div className="space-y-6">
                             {announcements.map((ann) => (
-                                <div key={ann.id} className={`bg-white p-6 rounded-2xl border ${ann.isDraft ? 'border-amber-200 bg-amber-50/10' : 'border-slate-200'} flex flex-col hover:shadow-md transition-shadow relative overflow-hidden group`}>
+                                <div key={ann.id} className={`bg-white p-6 border ${ann.isDraft ? 'border-accent-orange-soft bg-accent-orange-soft/10' : 'border-line'} flex flex-col   relative overflow-hidden group`}>
                                     {ann.imageUrl && (
-                                        <div className="w-full h-48 bg-slate-100 rounded-xl overflow-hidden mb-4 relative">
+                                        <div className="w-full h-48 bg-line overflow-hidden mb-4 relative">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img src={ann.imageUrl} alt={ann.title} className="w-full h-full object-cover" />
                                             {ann.isDraft && (
-                                                <div className="absolute inset-0 bg-amber-500/20 backdrop-blur-[1px] flex items-center justify-center">
-                                                    <span className="bg-amber-500 text-white text-[8px] font-black px-2 py-1 rounded uppercase tracking-widest">Draft Mode</span>
+                                                <div className="absolute inset-0 bg-ember/20  flex items-center justify-center">
+                                                    <span className="bg-ember text-white text-[8px] font-black px-2 py-1 uppercase tracking-widest">Draft Mode</span>
                                                 </div>
                                             )}
                                         </div>
                                     )}
                                     
                                     <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-xl font-bold text-slate-800">{ann.title}</h3>
+                                        <h3 className="text-xl font-bold text-ink">{ann.title}</h3>
                                         <div className="flex items-center gap-2">
-                                            <button onClick={() => handleToggleDraft(ann)} className={`p-1.5 rounded-lg transition-all ${ann.isDraft ? 'text-featured-blue hover:bg-featured-blue/10' : 'text-amber-400 hover:bg-amber-50'}`} title={ann.isDraft ? "Publish" : "Move to Draft"}>
+                                            <button onClick={() => handleToggleDraft(ann)} className={`p-1.5 transition-all ${ann.isDraft ? 'text-deep hover:bg-deep/10' : 'text-ember hover:bg-accent-orange-soft'}`} title={ann.isDraft ? "Publish" : "Move to Draft"}>
                                                 {ann.isDraft ? (
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                                                 ) : (
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                                 )}
                                             </button>
-                                            <button onClick={() => handleDeleteAnnouncement(ann.id)} className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50">
+                                            <button onClick={() => handleDeleteAnnouncement(ann.id)} className="text-ember hover:text-ember p-1.5 hover:bg-accent-orange-soft">
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                             </button>
                                         </div>
                                     </div>
-                                    <p className="text-slate-600 text-sm whitespace-pre-wrap line-clamp-3">{ann.content}</p>
+                                    <p className="text-ink-soft text-sm whitespace-pre-wrap line-clamp-3">{ann.content}</p>
                                     
-                                    <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    <div className="mt-4 pt-4 border-t border-line flex items-center justify-between">
+                                        <div className="text-[10px] font-black text-ink-muted uppercase tracking-widest">
                                             Posted: {ann.createdAt?.toDate ? ann.createdAt.toDate().toLocaleDateString() : 'Just now'}
                                         </div>
                                         <Link href={`/announcements/${ann.id}`} legacyBehavior>
-                                            <a target="_blank" className="text-[10px] font-black text-featured-blue hover:text-featured-green transition-colors uppercase tracking-widest flex items-center gap-1">
+                                            <a target="_blank" className="text-[10px] font-black text-deep hover:text-growth transition-colors uppercase tracking-widest flex items-center gap-1">
                                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                                 {ann.isDraft ? 'Preview' : 'Live View'}
                                             </a>

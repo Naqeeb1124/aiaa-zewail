@@ -100,7 +100,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUploadSuccess, initialImage
         type="file"
         accept="image/*"
         onChange={handleFileChange}
-        className="p-2 border rounded"
+        className="p-2 border"
       />
       <input
         type="text"
@@ -108,19 +108,19 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onUploadSuccess, initialImage
         onChange={(e) => setImageUrl(e.target.value)}
         onPaste={handlePaste}
         placeholder="Or paste image URL here"
-        className="p-2 border rounded"
+        className="p-2 border"
       />
       {imageUrl && (
         <div className="mt-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageUrl} alt="Preview" className="max-w-full h-auto rounded" />
+          <img src={imageUrl} alt="Preview" className="max-w-full h-auto" />
         </div>
       )}
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-ember text-sm">{error}</p>}
       <button
         onClick={handleUpload}
         disabled={!imageFile || uploading}
-        className="px-4 py-2 rounded bg-featured-blue text-white hover:bg-featured-green transition-colors disabled:opacity-50"
+        className="px-4 py-2 bg-deep text-white hover:bg-growth transition-colors disabled:opacity-50"
       >
         {uploading ? 'Uploading...' : 'Upload Image'}
       </button>

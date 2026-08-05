@@ -23,10 +23,9 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
       
-      // Allow reading members subcollection
+      // Project membership records are private to administrators.
       match /members/{memberId} {
-      	allow read: if true;
-        allow write: if isAdmin();
+        allow read, write: if isAdmin();
       }
     }
 
@@ -61,29 +60,30 @@ service cloud.firestore {
 
     // Registrations: Read/Write own registration
     match /registrations/{regId} {
-      
-      // Allow read if user is the registrant OR if they have the guest userId OR admin
-      allow read: if (request.auth != null && (request.auth.uid == resource.data.userId || isAdmin())) || 
-                     (resource.data.isExternal == true && request.query.limit <= 100); // Guest can read their own if they have the ID (relaxed for external)
-      
-      // Allow create if authenticated and user matches, OR if it's an external guest registration
-      allow create: if (request.auth != null && request.auth.uid == request.resource.data.userId) || 
-                      (request.resource.data.isExternal == true);
-      
-      allow update, delete: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.userId);
+      // Registrations are private to the registrant and admins.
+      allow read: if isAdmin() ||
+                    (request.auth != null && request.auth.uid == resource.data.userId);
+
+      // Guest registrations are created by the server-side registration endpoint.
+      // Authenticated users can create their own registrations directly.
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+
+      allow update, delete: if isAdmin() ||
+                              (request.auth != null && request.auth.uid == resource.data.userId);
     }
 
-    // Members: Publicly readable, write for admins
+    // Member records are private; public team content is maintained separately.
     match /members/{memberId} {
-      allow read: if true;
+      allow read: if isAdmin();
       allow write: if isAdmin();
     }
 
     // --- Admin & System ---
-    // Admins: Read own admin status, or let auth users list them for notification purposes
+    // Users may verify their own admin record; admins may read the directory.
     match /admins/{email} {
-      allow read: if request.auth != null;
-      allow write: if false; 
+      allow read: if request.auth != null &&
+                    (request.auth.token.email == email || isAdmin());
+      allow write: if false;
     }
 
     // Recruitment Status: Publicly readable
@@ -108,7 +108,7 @@ service cloud.firestore {
 
     // --- System Logs (Super Admin Only) ---
     match /audit_logs/{docId} {
-      allow read: if request.auth != null && request.auth.token.email == 's-abdelrahman.alnaqeeb@zewailcity.edu.eg';
+      allow read: if isAdmin();
       allow write: if false; // Written only via Admin SDK (Server-side)
     }
   }

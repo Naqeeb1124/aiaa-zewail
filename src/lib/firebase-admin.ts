@@ -46,6 +46,14 @@ export const getAdminDb = () => {
   return admin.firestore();
 };
 
+export const isAdminEmail = async (email?: string | null) => {
+  if (!email) return false;
+  const db = getAdminDb();
+  if (!db) return false;
+  const adminDoc = await db.collection('admins').doc(email).get();
+  return adminDoc.exists;
+};
+
 export const adminDb = admin.apps.length ? admin.firestore() : null;
 
 export default admin;

@@ -120,7 +120,7 @@ export default function Dashboard() {
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-900">Loading...</div>;
+    if (loading) return <div className="min-h-screen paper-surface flex items-center justify-center text-ink">Loading your stuff...</div>;
 
     const formatDate = (dateInput: any) => {
         if (!dateInput) return 'Recent';
@@ -139,18 +139,18 @@ export default function Dashboard() {
     const member = {
         name: parseZewailName(rawName).fullName || rawName,
         studentId: userProfile?.studentId || '202xxxxx',
-        role: isAdmin ? 'Administrator' : 'Active Member',
-        joined: user?.metadata?.creationTime 
-            ? formatDate(user.metadata.creationTime) 
+        role: isAdmin ? 'Board member' : 'Active member',
+        joined: user?.metadata?.creationTime
+            ? formatDate(user.metadata.creationTime)
             : (userProfile?.joinedAt ? formatDate(userProfile.joinedAt) : formatDate(new Date().toISOString())),
         points: userProfile?.points || 0,
         badges: [
-            { id: 1, name: 'Rocketry 101', icon: '🚀' },
-            { id: 2, name: 'Event Regular', icon: '📅' },
-            { id: 3, name: 'Code Contributor', icon: '💻' },
+            { id: 1, name: 'First build', emoji: '🛠' },
+            { id: 2, name: 'Showed up often', emoji: '🔁' },
+            { id: 3, name: 'Wrote the code', emoji: '⌨' },
         ],
         projects: [
-            { id: 1, name: 'Sounding Rocket Alpha', role: 'Propulsion Lead', status: 'In Progress' },
+            { id: 1, name: 'Flight test · Alpha', role: 'Propulsion lead', status: 'In Progress' },
         ],
     };
 
@@ -201,209 +201,268 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+        <div className="min-h-screen paper-surface text-ink">
             <Navbar />
             
-            {/* Hero Section / Header */}
-            <section className="pt-32 md:pt-72 pb-8 md:pb-12 bg-featured-blue text-white">
-                 <div className="max-w-6xl mx-auto px-6">
+            {/* Header band */}
+            <section className="relative bg-deep text-white topo-wash overflow-hidden pt-32 md:pt-40 pb-10 md:pb-12">
+                <div className="max-w-6xl mx-auto px-6">
                     <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
-                        <div className="w-20 md:w-24 h-20 md:h-24 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl font-black border-2 border-white/50 shadow-xl uppercase tracking-tighter">
+                        <div className="w-20 md:w-24 h-20 md:h-24 bg-white/15 flex items-center justify-center text-3xl font-display font-semibold border border-white/30">
                             {member.name.charAt(0)}
                         </div>
                         <div className="text-center md:text-left flex-1">
-                            <h1 className="text-3xl md:text-4xl font-black mb-2 uppercase tracking-tighter">{member.name}</h1>
-                            <p className="text-white/60 font-bold text-[10px] uppercase tracking-widest">{member.role} • Joined {member.joined}</p>
+                            <span className="eyebrow text-spark">Your dashboard</span>
+                            <h1 className="mt-2 font-display text-[clamp(2rem,4.5vw,3rem)] font-semibold leading-tight">
+                                Hi, {member.name.split(' ')[0]}.
+                            </h1>
+                            <p className="text-white/70 text-[13px] mt-1">
+                                {member.role} · joined {member.joined}
+                            </p>
                         </div>
                         {!isAdmin && (
-                            <div className="text-center bg-white/10 rounded-[32px] p-6 backdrop-blur-sm border border-white/10 shadow-inner">
-                                <div className="text-4xl md:text-5xl font-black text-featured-green leading-none">{member.points}</div>
-                                <div className="text-[10px] text-white/60 uppercase tracking-[0.2em] font-black mt-3">Points</div>
+                            <div className="px-6 py-4 bg-white/10 border border-white/15 text-center">
+                                <div className="font-display text-3xl md:text-4xl font-semibold text-spark leading-none">
+                                    {member.points}
+                                </div>
+                                <div className="eyebrow text-white/70 mt-2">Show-up points</div>
                             </div>
                         )}
                     </div>
-                 </div>
+                </div>
             </section>
 
-            <main className="max-w-6xl mx-auto px-6 py-12 md:py-12">
+            <main className="max-w-6xl mx-auto px-6 py-10 md:py-14">
                 {/* Tabs */}
-                <div className="flex gap-8 border-b border-slate-200 mb-8 overflow-x-auto">
-                    {['profile', 'projects', 'registrations', 'badges'].map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`pb-4 text-sm font-bold uppercase tracking-wider transition-colors relative whitespace-nowrap ${activeTab === tab ? 'text-featured-blue' : 'text-slate-400 hover:text-slate-600'}`}
-                        >
-                            {tab}
-                            {activeTab === tab && <div className="absolute bottom-0 left-0 w-full h-1 bg-featured-blue rounded-t-full"></div>}
-                        </button>
-                    ))}
+                <div className="flex gap-7 border-b border-line mb-10 overflow-x-auto">
+                    {[
+                        { id: 'profile', label: 'Profile' },
+                        { id: 'projects', label: 'Projects' },
+                        { id: 'registrations', label: 'Events I joined' },
+                        { id: 'badges', label: 'Badges' },
+                    ].map(tab => {
+                        const active = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`pb-3 text-[13px] eyebrow relative whitespace-nowrap duration-base ease-human ${
+                                    active ? 'text-ink' : 'text-ink-muted hover:text-ink-soft'
+                                }`}
+                            >
+                                {tab.label}
+                                {active && (
+                                    <span
+                                        aria-hidden
+                                        className="absolute -bottom-px left-0 right-0 h-0.5 bg-ember"
+                                    />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {/* Content */}
                 <div className="min-h-[300px]">
                     {activeTab === 'profile' && (
-                        <div className="grid md:grid-cols-2 gap-8">
-                            <div className="bg-white p-12 rounded-[40px] shadow-sm border border-slate-100 transition-all hover:shadow-xl group hover:-translate-y-1">
-                                <h3 className="text-sm font-black mb-10 text-slate-400 uppercase tracking-widest flex items-center gap-3">
-                                    <span className="w-2 h-2 bg-featured-blue rounded-full"></span>
-                                    Identity
+                        <div className="grid md:grid-cols-2 gap-6 md:gap-7">
+                            <article className="card p-7 md:p-10">
+                                <span className="eyebrow text-deep">Who you are</span>
+                                <h3 className="mt-2 font-display font-semibold text-[1.3rem] leading-tight text-ink">
+                                    Profile
                                 </h3>
-                                <div className="space-y-10">
-                                    <div>
-                                        <label className="block text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3 ml-1">Email Address</label>
-                                        <p className="font-black text-xl text-slate-800 uppercase tracking-tight">{user?.email || 'user@example.com'}</p>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-8">
-                                        <div>
-                                            <label className="block text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3 ml-1">Member ID</label>
-                                            <p className="font-black text-xl text-slate-800 uppercase tracking-tight">{member.studentId}</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] text-slate-400 font-black uppercase tracking-widest mb-3 ml-1">Sector</label>
-                                            <p className="font-black text-xl text-slate-800 uppercase tracking-tight">Aerospace</p>
-                                        </div>
+                                <div className="mt-7 space-y-6">
+                                    <Row label="Email" value={user?.email} />
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <Row label="Student ID" value={member.studentId} />
+                                        <Row label="Branch" value="Aerospace" />
                                     </div>
                                 </div>
-                            </div>
-                            <div className="bg-white p-12 rounded-[40px] shadow-sm border border-slate-100 flex flex-col justify-center text-center transition-all hover:shadow-xl group hover:-translate-y-1">
-                                <div className="w-20 h-24 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-8 text-4xl shadow-inner group-hover:bg-featured-blue/5 transition-colors">📄</div>
-                                <h3 className="text-2xl font-black mb-3 text-slate-800 uppercase tracking-tighter">Member Portfolio</h3>
-                                <p className="text-slate-500 mb-10 max-w-xs mx-auto font-medium">Download your official membership record including all projects and badges.</p>
-                                <button 
+                            </article>
+                            <article className="card p-7 md:p-10 flex flex-col justify-center">
+                                <span className="eyebrow text-ember">PDF record</span>
+                                <h3 className="mt-2 font-display font-semibold text-[1.3rem] leading-tight text-ink">
+                                    Membership one-pager
+                                </h3>
+                                <p className="text-[14.5px] text-ink-soft mt-3 leading-relaxed">
+                                    A short document with your projects and badges. Sponsors or
+                                    visiting companies ask for it sometimes. So do recruiters.
+                                </p>
+                                <button
                                     onClick={handleDownloadPortfolio}
                                     disabled={downloading}
-                                    className="w-full py-4 bg-featured-blue hover:bg-featured-green text-white rounded-full font-black uppercase tracking-widest text-xs transition-all shadow-lg hover:shadow-featured-green/20 disabled:opacity-50 transform hover:-translate-y-0.5"
+                                    className="btn btn-primary mt-6 self-start"
                                 >
-                                    {downloading ? 'Processing...' : 'Download Document'}
+                                    {downloading ? 'Building the PDF...' : 'Download the PDF'}
                                 </button>
-                            </div>
+                            </article>
                         </div>
                     )}
 
                     {activeTab === 'registrations' && (
                         <div className="space-y-8">
-                            {/* Events Section */}
-                            <div>
-                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-featured-blue rounded-full"></span>
-                                    Event Registrations
+                            <section>
+                                <h3 className="font-display text-[1.2rem] font-semibold text-ink mb-5">
+                                    Events you signed up for
                                 </h3>
                                 <div className="space-y-4">
                                     {registrations.length === 0 ? (
-                                        <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-slate-200 shadow-inner">
-                                            <p className="text-slate-400 font-black uppercase tracking-widest text-xs">No activity records found.</p>
+                                        <div className="card p-10 text-center border-dashed">
+                                            <p className="text-ink-soft">
+                                                Nothing yet. Pop into the calendar. We post new ones every other week.
+                                            </p>
+                                            <Link href="/events" className="btn btn-secondary mt-5 inline-flex">
+                                                See upcoming events
+                                            </Link>
                                         </div>
                                     ) : (
                                         registrations.map(reg => (
-                                            <div key={reg.id} className="bg-white p-10 rounded-[40px] shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8 group hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1">
+                                            <article key={reg.id} className="card p-6 md:p-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
                                                 <div>
-                                                    <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight mb-2 leading-tight">{reg.eventTitle}</h3>
-                                                    <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">{reg.eventDate ? new Date(reg.eventDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }) : 'Date TBD'}</p>
+                                                    <p className="eyebrow text-ink-muted">
+                                                        {reg.eventDate
+                                                            ? new Date(reg.eventDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })
+                                                            : 'Date TBD'}
+                                                    </p>
+                                                    <h3 className="mt-1 font-display font-semibold text-[1.15rem] leading-tight text-ink">
+                                                        {reg.eventTitle}
+                                                    </h3>
                                                 </div>
-                                                <div className="flex items-center gap-6 w-full sm:w-auto">
-                                                    <span className="px-5 py-2 rounded-full bg-featured-green/10 text-featured-green text-[10px] font-black uppercase tracking-[0.2em] border border-featured-green/20">Authorized</span>
-                                                    <div className="flex gap-3 ml-auto sm:ml-0">
-                                                        <Link href={`/events/${reg.eventId}`} legacyBehavior>
-                                                            <a className="p-4 text-slate-400 hover:text-featured-blue transition-all bg-slate-50 hover:bg-featured-blue/5 rounded-full shadow-inner">
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                                            </a>
-                                                        </Link>
-                                                        <button 
-                                                            onClick={() => handleDeleteRegistration(reg.id)}
-                                                            className="p-4 text-slate-400 hover:text-red-500 transition-all bg-slate-50 hover:bg-red-50 rounded-full shadow-inner"
-                                                            title="Cancel Registration"
+                                                <div className="flex items-center gap-4 w-full sm:w-auto">
+                                                    <span className="chip chip-completed">You are in</span>
+                                                    <div className="flex gap-2 ml-auto sm:ml-0">
+                                                        <Link
+                                                            href={`/events/${reg.eventId}`}
+                                                            className="p-3 bg-canvas-surface text-ink-muted hover:text-deep border border-line"
+                                                            aria-label="Open event page"
                                                         >
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                            </svg>
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => handleDeleteRegistration(reg.id)}
+                                                            className="p-3 bg-canvas-surface text-ink-muted hover:text-ember border border-line"
+                                                            title="Drop this event"
+                                                        >
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
                                                         </button>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </article>
                                         ))
                                     )}
                                 </div>
-                            </div>
+                            </section>
 
-                            {/* Projects Section */}
-                            <div>
-                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-featured-green rounded-full"></span>
-                                    Project Applications
+                            <section>
+                                <h3 className="font-display text-[1.2rem] font-semibold text-ink mb-5">
+                                    Project applications
                                 </h3>
                                 <div className="space-y-4">
                                     {projectRequests.length === 0 ? (
-                                        <div className="text-center py-20 bg-white rounded-[40px] border border-dashed border-slate-200 shadow-inner">
-                                            <p className="text-slate-400 font-black uppercase tracking-widest text-xs">No application history found.</p>
+                                        <div className="card p-10 text-center border-dashed">
+                                            <p className="text-ink-soft">
+                                                No project applications yet. Browse the workshop and pick one that matches your week.
+                                            </p>
+                                            <Link href="/projects" className="btn btn-secondary mt-5 inline-flex">
+                                                Browse projects
+                                            </Link>
                                         </div>
                                     ) : (
                                         projectRequests.map(req => (
-                                            <div key={req.id} className="bg-white p-10 rounded-[40px] shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8 hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1 group">
+                                            <article key={req.id} className="card p-6 md:p-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
                                                 <div>
-                                                    <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight mb-2 leading-tight">{req.projectTitle}</h3>
-                                                    <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">
-                                                        {req.projectType} • {req.semester}
+                                                    <p className="eyebrow text-ink-muted">
+                                                        {req.projectType} · {req.semester}
                                                     </p>
+                                                    <h3 className="mt-1 font-display font-semibold text-[1.15rem] leading-tight text-ink">
+                                                        {req.projectTitle}
+                                                    </h3>
                                                 </div>
-                                                <div className="flex items-center gap-6 w-full sm:w-auto">
-                                                    <span className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border ${
-                                                        req.status === 'accepted' ? 'bg-green-100 text-green-700 border-green-200' :
-                                                        req.status === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' :
-                                                        'bg-amber-100 text-amber-700 border-amber-200'
-                                                    }`}>
-                                                        {req.status === 'accepted' ? 'Enrolled' : req.status}
+                                                <div className="flex items-center gap-4 w-full sm:w-auto">
+                                                    <span className={
+                                                        req.status === 'accepted' ? 'chip chip-completed' :
+                                                        req.status === 'rejected' ? 'chip chip-recruiting' :
+                                                        'chip chip-progress'
+                                                    }>
+                                                        {req.status === 'accepted' ? 'Accepted' : req.status === 'rejected' ? 'Did not match' : 'In review'}
                                                     </span>
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleCancelProject(req.id, req.projectTitle)}
-                                                        className="p-4 ml-auto sm:ml-0 text-slate-400 hover:text-red-500 transition-all bg-slate-50 hover:bg-red-50 rounded-full shadow-inner"
-                                                        title="Cancel Application"
+                                                        className="p-3 ml-auto sm:ml-0 bg-canvas-surface text-ink-muted hover:text-ember border border-line"
+                                                        title="Cancel application"
                                                     >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
                                                     </button>
                                                 </div>
-                                            </div>
+                                            </article>
                                         ))
                                     )}
                                 </div>
-                            </div>
+                            </section>
                         </div>
                     )}
 
                     {activeTab === 'projects' && (
                         <div className="space-y-4">
                             {member.projects.map(proj => (
-                                <div key={proj.id} className="bg-white p-8 rounded-[24px] shadow-sm border border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1">
+                                <article key={proj.id} className="card p-6 md:p-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
                                     <div>
-                                        <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-1">{proj.name}</h3>
-                                        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">{proj.role}</p>
+                                        <p className="eyebrow text-ink-muted">{proj.role}</p>
+                                        <h3 className="mt-1 font-display font-semibold text-[1.15rem] leading-tight text-ink">
+                                            {proj.name}
+                                        </h3>
                                     </div>
-                                    <span className="px-4 py-1.5 rounded-full bg-featured-green/10 text-featured-green text-[10px] font-black uppercase tracking-widest border border-featured-green/20">{proj.status}</span>
-                                </div>
+                                    <span className="chip chip-progress">{proj.status}</span>
+                                </article>
                             ))}
-                            <button className="w-full py-8 border-2 border-dashed border-slate-200 text-slate-400 rounded-[32px] hover:border-featured-blue hover:text-featured-blue hover:bg-featured-blue/5 transition-all font-black uppercase tracking-[0.2em] text-xs">
-                                + Join a new project
-                            </button>
+                            <Link
+                                href="/projects"
+                                className="block text-center py-6 border border-dashed border-line text-ink-soft hover:text-ink hover:border-deep duration-base ease-human"
+                            >
+                                + Join another project
+                            </Link>
                         </div>
                     )}
 
                     {activeTab === 'badges' && (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-6">
                             {member.badges.map(badge => (
-                                <div key={badge.id} className="bg-white p-10 rounded-[32px] shadow-sm border border-slate-100 text-center group hover:border-featured-green hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1">
-                                    <div className="text-5xl mb-6 transform group-hover:scale-110 transition-transform duration-500">{badge.icon}</div>
-                                    <h3 className="font-black text-slate-800 uppercase tracking-tight text-sm">{badge.name}</h3>
-                                </div>
+                                <article key={badge.id} className="card p-7 md:p-8 text-center">
+                                    <div className="text-4xl mb-4">{badge.emoji}</div>
+                                    <h3 className="font-display font-semibold text-ink text-[14px] uppercase tracking-wide">
+                                        {badge.name}
+                                    </h3>
+                                </article>
                             ))}
-                            {/* Locked badge placeholder */}
-                            <div className="bg-slate-50 p-10 rounded-[32px] border border-dashed border-slate-200 text-center opacity-60">
-                                <div className="text-5xl mb-6 grayscale opacity-30">🏆</div>
-                                <h3 className="font-black text-slate-400 uppercase tracking-tight text-sm">Leadership</h3>
-                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mt-3">Locked</p>
-                            </div>
+                            <article className="card p-7 md:p-8 text-center border-dashed bg-canvas-surface">
+                                <div className="text-4xl mb-4 opacity-30">[A]</div>
+                                <h3 className="font-display font-semibold text-ink-muted text-[14px] uppercase tracking-wide">
+                                    Sub-team lead
+                                </h3>
+                                <p className="eyebrow text-ink-muted mt-3">Locked</p>
+                            </article>
                         </div>
                     )}
                 </div>
             </main>
             <Footer />
+        </div>
+    );
+}
+
+function Row({ label, value }: { label: string; value?: string | null }) {
+    return (
+        <div>
+            <p className="eyebrow text-ink-muted">{label}</p>
+            <p className="mt-1 font-display font-semibold text-ink text-[16px] leading-snug">
+                {value || 'Empty'}
+            </p>
         </div>
     );
 }

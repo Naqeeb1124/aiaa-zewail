@@ -16,7 +16,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
         }
     }, [user, isAdmin, loading, router]);
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-400">Loading...</div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center bg-ink text-ink-muted">Loading...</div>;
     
     if (!isAdmin) return null;
 

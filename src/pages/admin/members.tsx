@@ -74,16 +74,16 @@ export default function ManageMembers() {
 
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      <div className="min-h-screen bg-canvas font-sans text-ink">
         <Navbar />
         
-        <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
+        <section className="pt-72 pb-12 bg-ink text-white border-b border-ink">
           <div className="max-w-7xl mx-auto px-6 flex justify-between items-end">
             <div>
               <h1 className="text-4xl font-extrabold mb-2">Official Member Database</h1>
-              <p className="text-slate-400">Manage accepted members and track participation points.</p>
+              <p className="text-ink-muted">Manage accepted members and track participation points.</p>
             </div>
-            <button onClick={exportCSV} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold transition-colors shadow-lg flex items-center gap-2">
+            <button onClick={exportCSV} className="bg-signal-soft hover:bg-growth text-white px-6 py-2 font-bold transition-colors flex items-center gap-2">
                 <span>📊</span> Export CSV
             </button>
           </div>
@@ -94,27 +94,27 @@ export default function ManageMembers() {
                 <input 
                     type="text" 
                     placeholder="Search by name, email, or ID..." 
-                    className="w-full md:w-1/2 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-featured-blue outline-none shadow-sm"
+                    className="w-full md:w-1/2 px-4 py-3 border border-line focus:ring-2 focus:ring-deep outline-none"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                 />
-                <div className="text-sm font-bold text-slate-500">
+                <div className="text-sm font-bold text-ink-soft">
                     Showing {filteredMembers.length} Members
                 </div>
             </div>
 
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-white border border-line overflow-hidden">
                 {loading ? (
-                    <div className="p-12 text-center text-slate-500">Loading directory...</div>
+                    <div className="p-12 text-center text-ink-soft">Loading directory...</div>
                 ) : filteredMembers.length === 0 ? (
-                    <div className="p-12 text-center text-slate-500 flex flex-col items-center">
+                    <div className="p-12 text-center text-ink-soft flex flex-col items-center">
                         <span className="text-4xl mb-4">📭</span>
                         <p>No official members found. Applicants will appear here once accepted.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-bold border-b border-slate-200">
+                            <thead className="bg-canvas text-xs uppercase text-ink-soft font-bold border-b border-line">
                                 <tr>
                                     <th className="p-6">Member</th>
                                     <th className="p-6">Contact</th>
@@ -122,14 +122,14 @@ export default function ManageMembers() {
                                     <th className="p-6 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-line">
                                 {filteredMembers.map(member => (
-                                    <tr key={member.id} className="hover:bg-slate-50 transition-colors">
+                                    <tr key={member.id} className="hover:bg-canvas transition-colors">
                                         <td className="p-6">
-                                            <div className="font-bold text-slate-900">{member.name}</div>
-                                            <div className="text-xs text-slate-500 uppercase font-bold tracking-wider">{member.studentId || 'No ID'}</div>
+                                            <div className="font-bold text-ink">{member.name}</div>
+                                            <div className="text-xs text-ink-soft uppercase font-bold tracking-wider">{member.studentId || 'No ID'}</div>
                                         </td>
-                                        <td className="p-6 text-sm text-slate-600">
+                                        <td className="p-6 text-sm text-ink-soft">
                                             {member.email}
                                         </td>
                                         <td className="p-6">
@@ -139,18 +139,18 @@ export default function ManageMembers() {
                                                         type="number" 
                                                         value={pointsInput} 
                                                         onChange={(e) => setPointsInput(Number(e.target.value))}
-                                                        className="w-20 px-2 py-1 border rounded"
+                                                        className="w-20 px-2 py-1 border"
                                                     />
-                                                    <button onClick={() => handleSavePoints(member.id)} className="text-green-600 text-sm font-bold">Save</button>
+                                                    <button onClick={() => handleSavePoints(member.id)} className="text-growth text-sm font-bold">Save</button>
                                                 </div>
                                             ) : (
-                                                <div className="font-bold text-featured-blue text-lg">{member.points || 0}</div>
+                                                <div className="font-bold text-deep text-lg">{member.points || 0}</div>
                                             )}
                                         </td>
                                         <td className="p-6 text-right">
                                             <button 
                                                 onClick={() => handleEditPoints(member)} 
-                                                className="text-slate-400 hover:text-featured-blue font-bold text-sm"
+                                                className="text-ink-muted hover:text-deep font-bold text-sm"
                                             >
                                                 Edit Points
                                             </button>

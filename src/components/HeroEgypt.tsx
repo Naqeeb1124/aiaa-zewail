@@ -2,64 +2,125 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-export default function HeroEgypt() {
+/**
+ * Hero — deliberately thin.
+ *   • Story column: eyebrow, one heading, one paragraph, two CTAs.
+ *   • Map plate: the Egypt SVG with a small "X" marker pinned to Cairo's
+ *     centroid using the same SVG viewBox so percentage math never lies.
+ *   • Sharp corners. No shadows. No gradients. No doodle.
+ */
+
+const EGYPT_W = 548.58221;
+const EGYPT_H = 498.86664;
+
+// Cairo governorate centroid in the Egypt SVG's native viewBox.
+// Both <Image> and the marker <svg> use preserveAspectRatio="xMidYMid meet",
+// so a circle at (CX, CY) lands on the same point on the rendered map.
+const CAIRO_CX = 304.272;
+const CAIRO_CY = 102.454;
+
+export default function Hero() {
   return (
-    <section className="pt-12 md:pt-24 pb-12 md:pb-20 bg-gradient-to-b from-white to-slate-50 relative overflow-hidden">
-      {/* Background Grid - CSS Only */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#2b4b77 1px, transparent 1px), linear-gradient(90deg, #2b4b77 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
-      
-      <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center relative z-10">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-featured-blue/10 text-featured-blue border border-featured-blue/20 text-xs font-bold mb-6 uppercase tracking-wider">
-            <span className="w-2 h-2 rounded-full bg-featured-green animate-pulse"></span>
-            Egypt&apos;s Only Active AIAA Student Branch
+    <section className="relative overflow-hidden paper-surface border-b border-line pt-20 md:pt-32 pb-16 md:pb-24">
+      <div className="relative max-w-[1400px] mx-auto px-6">
+        <div className="grid grid-cols-12 gap-6 md:gap-10 items-center">
+          {/* Story column */}
+          <div className="col-span-12 md:col-span-7">
+            <span className="eyebrow text-ink-soft">AIAA Student Branch · Zewail City</span>
+
+            <h1 className="mt-5 font-display text-[clamp(2.4rem,6vw,4.4rem)] font-semibold leading-[1.0] tracking-[-0.02em] text-ink">
+              Build aerospace.<br />
+              <span className="text-ember">From Egypt.</span>
+            </h1>
+
+            <p className="lead mt-6 max-w-2xl">
+              We are students at Zewail City who study flight, build simulations,
+              and read the kind of papers that make our professors roll their
+              eyes in the good way. If aerospace ever made you curious, this
+              is your crew.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link href="/join" className="btn btn-primary">
+                Apply for membership
+                <span className="text-base leading-none" aria-hidden>{'->'}</span>
+              </Link>
+              <Link href="/about" className="btn btn-secondary">
+                About the branch
+              </Link>
+            </div>
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight text-featured-blue mb-6 uppercase tracking-tighter">
-            From Egypt <br />
-            To The Stars.
-          </h1>
+          {/* Map column */}
+          <div className="col-span-12 md:col-span-5">
+            <div className="relative w-full max-w-[440px] md:ml-auto">
+              {/* The map image, kept at its native aspect (1.10 : 1). */}
+              <div className="relative w-full aspect-[548.58/498.86]">
+                <Image
+                  src="/egypt.svg"
+                  alt="Map of Egypt with the Zewail City branch location"
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 90vw, 35vw"
+                  style={{ objectFit: 'contain' }}
+                />
 
-          <p className="text-lg md:text-xl text-slate-600 mb-8 leading-relaxed font-medium">
-            Connecting aerospace-minded students at Zewail City with projects, events, and the global industry. We are the national gateway to the world&apos;s largest aerospace society.
-          </p>
+                {/* Marker overlay. Same viewBox + same meet alignment as the
+                    Image so the cross is locked to Cairo's centroid pixel-
+                    perfect, regardless of container size or padding. */}
+                <svg
+                  className="absolute inset-0 w-full h-full pointer-events-none"
+                  viewBox={`0 0 ${EGYPT_W} ${EGYPT_H}`}
+                  preserveAspectRatio="xMidYMid meet"
+                  aria-hidden
+                >
+                  {/* Crosshair over Cairo centroid. */}
+                  <line
+                    x1={CAIRO_CX - 14}
+                    y1={CAIRO_CY}
+                    x2={CAIRO_CX + 14}
+                    y2={CAIRO_CY}
+                    stroke="#231F20"
+                    strokeWidth={2.5}
+                  />
+                  <line
+                    x1={CAIRO_CX}
+                    y1={CAIRO_CY - 14}
+                    x2={CAIRO_CX}
+                    y2={CAIRO_CY + 14}
+                    stroke="#231F20"
+                    strokeWidth={2.5}
+                  />
+                  <circle cx={CAIRO_CX} cy={CAIRO_CY} r={4} fill="#CC4100" />
 
-          <div className="flex flex-wrap gap-4">
-            <Link 
-              href="/join" 
-              className="px-8 py-3 rounded-full bg-featured-blue text-white font-bold hover:bg-featured-green transition-[transform,background-color] duration-200 transform hover:-translate-y-0.5 active:scale-95 text-sm uppercase tracking-widest"
-            >
-              Join the Mission
-            </Link>
-            <Link 
-              href="/about" 
-              className="px-8 py-3 rounded-full border-2 border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-[transform,background-color] duration-200 transform hover:-translate-y-0.5 active:scale-95 text-sm uppercase tracking-widest"
-            >
-              Our Story
-            </Link>
-          </div>
-        </div>
+                  {/* Caption sits a short step south-east of the cross. */}
+                  <g transform={`translate(${CAIRO_CX + 18}, ${CAIRO_CY + 16})`}>
+                    <text
+                      fontFamily="ui-monospace, 'JetBrains Mono', monospace"
+                      fontSize={14}
+                      fontWeight={700}
+                      letterSpacing="0.06em"
+                      fill="#231F20"
+                    >
+                      ZEWAIL CITY
+                    </text>
+                    <text
+                      y={18}
+                      fontFamily="ui-monospace, 'JetBrains Mono', monospace"
+                      fontSize={11}
+                      letterSpacing="0.06em"
+                      fill="#231F20"
+                      fillOpacity="0.6"
+                    >
+                      29.95°N · 31.10°E
+                    </text>
+                  </g>
+                </svg>
+              </div>
 
-        <div className="relative hidden md:flex items-center justify-center">
-          <div className="w-full max-w-md relative aspect-square">
-            {/* The SVG Map from file */}
-            <Image 
-              src="/egypt.svg" 
-              alt="Map of Egypt" 
-              fill
-              priority
-              sizes="(max-w-768px) 100vw, 50vw"
-              style={{ objectFit: 'contain' }}
-              className="relative z-10 drop-shadow-2xl opacity-90" 
-            />
-            
-            {/* Zewail City Marker */}
-            <div className="absolute top-[15%] left-[59%] z-20 pointer-events-none">
-               <div className="w-4 h-4 bg-featured-green rounded-full animate-ping absolute -inset-0 opacity-75"></div>
-               <div className="w-3 h-3 bg-featured-green rounded-full border-2 border-white relative"></div>
-               <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg border border-slate-100 shadow-sm whitespace-nowrap">
-                  <span className="text-[10px] font-black text-featured-blue uppercase tracking-tighter">Zewail City</span>
-               </div>
+              <p className="mt-3 eyebrow text-ink-muted">
+                1 active branch · Egypt
+              </p>
             </div>
           </div>
         </div>

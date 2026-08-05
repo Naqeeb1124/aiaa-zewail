@@ -9,46 +9,61 @@ interface Announcement {
   id: string;
   title?: string;
   content?: string;
-  text?: string; // For backward compatibility
+  text?: string;
   imageUrl?: string;
   isDraft?: boolean;
-  createdAt: {
-    toDate: () => Date;
-  };
+  createdAt: { toDate: () => Date };
 }
 
+/**
+ * FeaturedAnnouncements — human-crafted:
+ *   • Eyebrow in signal-orange for warmth (NOT more navy everywhere).
+ *   • Date stamp + scanline treatment gives a "bulletin board" feel
+ *     rather than a list of feature-blue cards.
+ *   • Off-black body copy.
+ */
+
 const FeatureCard = ({ announcement }: { announcement: Announcement }) => {
-  const headline = announcement.title || announcement.text || 'Untitled Announcement';
+  const headline = announcement.title || announcement.text || 'Untitled';
   const body = announcement.content || announcement.text || '';
-  const previewText = body.length > 100 ? `${body.substring(0, 100)}...` : body;
+  const preview = body.length > 110 ? `${body.substring(0, 110)}[..]` : body;
 
   return (
-    <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1 group">
-      <Link href={`/announcements/${announcement.id}`}>
-        <div className="relative w-full cursor-pointer overflow-hidden" style={{ paddingTop: '56.25%' }}>
-          <Image
-            src={announcement.imageUrl || "/announcements-placeholder-image.jpeg"}
-            alt={headline}
-            layout="fill"
-            objectFit="cover"
-            loader={announcement.imageUrl?.includes('cloudinary.com') ? undefined : imageLoader}
-            className="group-hover:scale-110 transition-transform duration-700"
-          />
-        </div>
+    <article className="card overflow-hidden flex flex-col">
+      <Link href={`/announcements/${announcement.id}`} className="group block relative w-full" style={{ paddingTop: '58%' }}>
+        <Image
+          src={announcement.imageUrl || '/announcements-placeholder-image.jpeg'}
+          alt={headline}
+          fill
+          sizes="(max-width: 768px) 100vw, 33vw"
+          style={{ objectFit: 'cover' }}
+          loader={announcement.imageUrl?.includes('cloudinary.com') ? undefined : imageLoader}
+          className="photo-natural duration-slow ease-human group-hover:scale-[1.03]"
+        />
+        <span className="absolute top-4 left-4 chip chip-flagship z-10">
+          Bulletin
+        </span>
       </Link>
-      <div className="p-8 flex-grow flex flex-col">
-        <h3 className="text-xl font-black text-featured-blue uppercase tracking-tight mb-2 leading-tight">{headline}</h3>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
-          {announcement.createdAt.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+      <div className="p-7 flex-grow flex flex-col">
+        <p className="eyebrow text-ink-muted">
+          {announcement.createdAt.toDate().toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric',
+          })}
         </p>
-        <p className="text-slate-600 text-sm leading-relaxed mb-6 flex-grow font-medium">
-          {previewText}
+        <h3 className="mt-2 font-display font-semibold text-[1.25rem] leading-snug text-ink">
+          {headline}
+        </h3>
+        <p className="mt-3 text-[14.5px] text-ink-soft leading-relaxed flex-grow">
+          {preview}
         </p>
-        <Link href={`/announcements/${announcement.id}`} className="text-featured-green font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:gap-3 transition-all">
-          READ MORE <span className="text-lg">→</span>
+        <Link
+          href={`/announcements/${announcement.id}`}
+          className="mt-6 marker-line text-[13px] font-display font-semibold text-ink self-start"
+        >
+          Read it
         </Link>
       </div>
-    </div>
+    </article>
   );
 };
 
@@ -59,45 +74,47 @@ const FeaturedAnnouncements = () => {
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        // Fetch more than 3 to account for potential drafts
         const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'), limit(10));
-        const querySnapshot = await getDocs(q);
-        const fetchedAnnouncements = querySnapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as Announcement))
-          .filter(ann => !ann.isDraft)
+        const snap = await getDocs(q);
+        const items = snap.docs
+          .map(doc => ({ id: doc.id, ...(doc.data() as Omit<Announcement, 'id'>) } as Announcement))
+          .filter(a => !a.isDraft)
           .slice(0, 3);
-        
-        setAnnouncements(fetchedAnnouncements);
-      } catch (error) {
-        console.error("Error fetching announcements:", error);
+        setAnnouncements(items);
+      } catch (err) {
+        console.error('Error fetching announcements:', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchAnnouncements();
   }, []);
 
-  if (loading) return null;
-  if (announcements.length === 0) return null;
+  if (loading || announcements.length === 0) return null;
 
   return (
-    <section className="py-24 bg-slate-50">
+    <section className="paper-surface py-20 md:py-28 border-y border-line">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-            <div>
-                <span className="inline-block px-3 py-1 rounded-full bg-featured-blue/10 text-featured-blue border border-featured-blue/20 text-[10px] font-black mb-4 uppercase tracking-widest">
-                    The Bulletin
-                </span>
-                <h2 className="text-3xl md:text-4xl font-black text-slate-900 uppercase tracking-tighter">
-                    Latest <span className="text-featured-blue">News</span>
-                </h2>
-            </div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-14 gap-6">
+          <div className="max-w-xl">
+            <span className="eyebrow ember">The bulletin board</span>
+            <h2 className="mt-2 font-display text-[clamp(1.7rem,3.5vw,2.4rem)] font-semibold leading-tight text-ink">
+              What we&apos;ve been up to.
+            </h2>
+            <p className="lead mt-3">
+              Recaps, calls, and the occasional late-night workshop photo
+              from your fellow branch members.
+            </p>
+          </div>
+          <Link
+            href="/announcements"
+            className="btn btn-secondary self-start md:self-auto"
+          >
+            See all announcements
+          </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
           {announcements.map(ann => (
             <FeatureCard key={ann.id} announcement={ann} />
           ))}

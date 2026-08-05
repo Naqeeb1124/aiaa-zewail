@@ -113,19 +113,19 @@ export default function ApplicationDetail() {
   };
 
   if (loading || !application) {
-    return <div className="min-h-screen flex items-center justify-center text-slate-500">Loading application...</div>
+    return <div className="min-h-screen flex items-center justify-center text-ink-soft">Loading application...</div>
   }
 
   // Helper to render fields nicely
   const renderField = (label: string, value: any) => {
       if (!value) return null;
       return (
-          <div className="mb-6 border-b border-slate-100 pb-4 last:border-0 last:pb-0">
-              <h3 className="text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">{label}</h3>
-              <div className="text-slate-800 font-bold text-lg leading-relaxed">
+          <div className="mb-6 border-b border-line pb-4 last:border-0 last:pb-0">
+              <h3 className="text-xs font-black uppercase text-ink-muted mb-2 tracking-widest">{label}</h3>
+              <div className="text-ink font-bold text-lg leading-relaxed">
                   {Array.isArray(value) ? (
                       <div className="flex flex-wrap gap-2 mt-2">
-                          {value.map(v => <span key={v} className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-black uppercase">{v}</span>)}
+                          {value.map(v => <span key={v} className="px-3 py-1 bg-line text-ink-soft text-xs font-black uppercase">{v}</span>)}
                       </div>
                   ) : String(value)}
               </div>
@@ -135,17 +135,17 @@ export default function ApplicationDetail() {
 
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      <div className="min-h-screen bg-canvas font-sans text-ink">
         <Navbar />
         
-        <section className="pt-72 pb-12 bg-slate-900 text-white border-b border-slate-800">
+        <section className="pt-72 pb-12 bg-ink text-white border-b border-ink">
             <div className="max-w-4xl mx-auto px-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <span className="inline-block px-3 py-1 bg-featured-blue rounded-full text-[10px] font-black uppercase tracking-widest mb-4">Candidate Profile</span>
+                    <span className="inline-block px-3 py-1 bg-deep text-[10px] font-black uppercase tracking-widest mb-4">Candidate Profile</span>
                     <h1 className="text-4xl md:text-5xl font-black mb-2 tracking-tighter uppercase">{application.name}</h1>
-                    <p className="text-slate-400 font-bold">{application.major} • Year {application.year}</p>
+                    <p className="text-ink-muted font-bold">{application.major} • Year {application.year}</p>
                 </div>
-                <div className={`px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest ${application.status === 'accepted' ? 'bg-green-500 text-white' : application.status === 'rejected' ? 'bg-red-500 text-white' : 'bg-amber-400 text-amber-950'}`}>
+                <div className={`px-6 py-2 font-black text-xs uppercase tracking-widest ${application.status === 'accepted' ? 'bg-growth text-white' : application.status === 'rejected' ? 'bg-accent-orange-soft text-white' : 'bg-ember text-ember'}`}>
                     {application.status || 'Pending Review'}
                 </div>
             </div>
@@ -155,8 +155,8 @@ export default function ApplicationDetail() {
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-8">
                     {/* Basic Info */}
-                    <div className="bg-white p-8 md:p-10 rounded-[40px] shadow-sm border border-slate-200">
-                        <h2 className="text-xl font-black mb-8 text-slate-900 border-b-4 border-slate-100 pb-4 uppercase tracking-tight">01. Personal Details</h2>
+                    <div className="bg-white p-8 md:p-10 border border-line">
+                        <h2 className="text-xl font-black mb-8 text-ink border-b-4 border-line pb-4 uppercase tracking-tight">01. Personal Details</h2>
                         {renderField("University Email", application.email)}
                         {renderField("Phone (WhatsApp)", application.phone)}
                         {renderField("Student ID", application.zcid || application.studentId)}
@@ -164,8 +164,8 @@ export default function ApplicationDetail() {
                     </div>
 
                     {/* Commitment Filter */}
-                    <div className="bg-white p-8 md:p-10 rounded-[40px] shadow-sm border border-slate-200">
-                        <h2 className="text-xl font-black mb-8 text-slate-900 border-b-4 border-featured-blue pb-4 uppercase tracking-tight">02. Commitment Filter</h2>
+                    <div className="bg-white p-8 md:p-10 border border-line">
+                        <h2 className="text-xl font-black mb-8 text-ink border-b-4 border-deep pb-4 uppercase tracking-tight">02. Commitment Filter</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
                             {renderField("Hours per week", application.hours_per_week)}
                             {renderField("Weekly Meetings", application.weekly_meetings)}
@@ -175,38 +175,38 @@ export default function ApplicationDetail() {
                     </div>
 
                     {/* Skills & Interests */}
-                    <div className="bg-white p-8 md:p-10 rounded-[40px] shadow-sm border border-slate-200">
-                        <h2 className="text-xl font-black mb-8 text-slate-900 border-b-4 border-featured-green pb-4 uppercase tracking-tight">03. Skills & Interests</h2>
+                    <div className="bg-white p-8 md:p-10 border border-line">
+                        <h2 className="text-xl font-black mb-8 text-ink border-b-4 border-growth pb-4 uppercase tracking-tight">03. Skills & Interests</h2>
                         {renderField("Areas of Interest", application.interests)}
                         {renderField("Known Tools", application.tools)}
                     </div>
 
                     {/* Mindset */}
-                    <div className="bg-white p-8 md:p-10 rounded-[40px] shadow-sm border border-slate-200">
-                        <h2 className="text-xl font-black mb-8 text-slate-900 border-b-4 border-pink-500 pb-4 uppercase tracking-tight">04. The Mindset</h2>
+                    <div className="bg-white p-8 md:p-10 border border-line">
+                        <h2 className="text-xl font-black mb-8 text-ink border-b-4 border-pink-500 pb-4 uppercase tracking-tight">04. The Mindset</h2>
                         {renderField("Vision for the Branch", application.impact_vision)}
                     </div>
                 </div>
 
                 {/* Sidebar Actions */}
                 <div className="space-y-6">
-                    <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-200 sticky top-32">
-                        <h3 className="text-lg font-black mb-6 text-slate-800 uppercase tracking-widest">Admin Control</h3>
+                    <div className="bg-white p-8 border border-line sticky top-32">
+                        <h3 className="text-lg font-black mb-6 text-ink uppercase tracking-widest">Admin Control</h3>
                         
                         <div className="grid grid-cols-1 gap-3 mb-8">
-                            <button onClick={() => handleUpdateStatus('accepted')} className="w-full py-4 bg-featured-green text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:shadow-lg hover:shadow-featured-green/20 transition-all">
+                            <button onClick={() => handleUpdateStatus('accepted')} className="w-full py-4 bg-growth text-white font-black uppercase tracking-widest text-[10px]   transition-all">
                                 Approve Member
                             </button>
-                            <button onClick={() => handleUpdateStatus('rejected')} className="w-full py-4 border-2 border-red-100 text-red-500 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-red-50 transition-all">
+                            <button onClick={() => handleUpdateStatus('rejected')} className="w-full py-4 border-2 border-accent-orange-soft text-ember font-black uppercase tracking-widest text-[10px] hover:bg-accent-orange-soft transition-all">
                                 Reject Profile
                             </button>
                         </div>
 
                         {application.applicationType === 'interview' && (
-                            <div className="pt-8 border-t border-slate-100">
+                            <div className="pt-8 border-t border-line">
                                 <button 
                                     onClick={() => setShowScheduler(!showScheduler)} 
-                                    className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] border-2 transition-all ${showScheduler ? 'border-featured-blue text-featured-blue bg-blue-50' : 'border-slate-100 text-slate-400 hover:border-slate-300'}`}
+                                    className={`w-full py-4 font-black uppercase tracking-widest text-[10px] border-2 transition-all ${showScheduler ? 'border-deep text-deep bg-canvas' : 'border-line text-ink-muted hover:border-ink-muted'}`}
                                 >
                                     {showScheduler ? 'Close Scheduler' : 'Propose Interview'}
                                 </button>

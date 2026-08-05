@@ -4,10 +4,19 @@ import nodemailer from 'nodemailer';
 import { getBrandedTemplate } from '../../../lib/emailTemplates';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // 1. Security Check (Optional: You can add a CRON_SECRET header check here)
-  // if (req.headers['x-cron-secret'] !== process.env.CRON_SECRET) {
-  //   return res.status(401).json({ message: 'Unauthorized' });
-  // }
+  const cronSecret = process.env.CRON_SECRET;
+  const providedSecret = req.headers['x-cron-secret'];
+  const authorization = req.headers.authorization;
+  const bearerSecret = authorization?.startsWith('Bearer ')
+    ? authorization.slice('Bearer '.length)
+    : undefined;
+  const isAuthorizedCron = Boolean(
+    cronSecret && (providedSecret === cronSecret || bearerSecret === cronSecret)
+  );
+
+  if (!isAuthorizedCron) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
 
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
@@ -122,6 +131,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   } catch (error: any) {
     console.error('Cron error:', error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: process.env.NODE_ENV === 'development' ? error.message : 'Cron processing failed' });
   }
 }

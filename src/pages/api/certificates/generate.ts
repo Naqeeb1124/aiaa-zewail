@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import PDFDocument from 'pdfkit';
 import path from 'path';
 import fs from 'fs';
-import { verifyIdToken } from '../../../lib/firebase-admin';
+import { verifyIdToken, isAdminEmail } from '../../../lib/firebase-admin';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'POST') {
@@ -17,7 +17,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const idToken = authHeader.split('Bearer ')[1];
     try {
-        await verifyIdToken(idToken);
+        const decodedToken = await verifyIdToken(idToken);
+        if (!(await isAdminEmail(decodedToken.email))) {
+            return res.status(403).json({ message: 'Forbidden: Admin access required' });
+        }
     } catch (error) {
         console.error('Token verification failed:', error);
         return res.status(401).json({ message: 'Unauthorized: Token verification failed' });
@@ -37,7 +40,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
 
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=certificate-${name.replace(/\s+/g, '-')}.pdf`);
+        const safeFilename = String(name).replace(/[^a-z0-9_-]+/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'certificate';
+        res.setHeader('Content-Disposition', `attachment; filename=certificate-${safeFilename}.pdf`);
 
         doc.pipe(res);
 

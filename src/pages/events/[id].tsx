@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { db, auth } from '../../lib/firebase';
-import { doc, getDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, setDoc, query, where, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -38,7 +38,10 @@ export default function EventDetails() {
                 // Fetch event
                 const eventDoc = await getDoc(doc(db, 'events', id as string));
                 if (eventDoc.exists()) {
-                    setEvent({ id: eventDoc.id, ...eventDoc.data() });
+                    const eventData = eventDoc.data();
+                    if (!eventData.isArchived && !eventData.isDraft) {
+                        setEvent({ id: eventDoc.id, ...eventData });
+                    }
                 }
 
                 // Fetch registration if user is logged in
@@ -74,6 +77,20 @@ export default function EventDetails() {
         }
         setRegistering(true);
         try {
+            if (!event || event.isArchived || event.isDraft) {
+                throw new Error('This event is no longer accepting registrations.');
+            }
+            const existingQuery = await getDocs(query(
+                collection(db, 'registrations'),
+                where('eventId', '==', id),
+                where('userId', '==', user.uid)
+            ));
+            if (!existingQuery.empty) {
+                const existing = existingQuery.docs[0];
+                setRegistration({ id: existing.id, ...existing.data() });
+                return;
+            }
+            const registrationId = `event_${id}_${user.uid}`;
             const regData = {
                 eventId: id,
                 userId: user.uid,
@@ -82,8 +99,8 @@ export default function EventDetails() {
                 status: 'registered',
                 registeredAt: new Date().toISOString()
             };
-            const docRef = await addDoc(collection(db, 'registrations'), regData);
-            setRegistration({ id: docRef.id, ...regData });
+            await setDoc(doc(db, 'registrations', registrationId), regData);
+            setRegistration({ id: registrationId, ...regData });
             alert('Successfully registered!');
         } catch (error) {
             console.error("Error registering:", error);
@@ -97,20 +114,28 @@ export default function EventDetails() {
         e.preventDefault();
         setRegistering(true);
         try {
-            const regData = {
-                eventId: id,
-                userId: 'guest_' + Math.random().toString(36).substr(2, 9),
-                userEmail: guestEmail,
-                userName: guestName,
-                university: guestUniversity,
-                isExternal: true,
-                status: 'registered',
-                registeredAt: new Date().toISOString()
-            };
-            const docRef = await addDoc(collection(db, 'registrations'), regData);
-            setRegistration({ id: docRef.id, ...regData });
+            if (!event || event.isArchived || event.isDraft || !event.allowExternal) {
+                throw new Error('This event is no longer accepting guest registrations.');
+            }
+
+            const response = await fetch('/api/events/register-guest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventId: id,
+                    name: guestName,
+                    email: guestEmail,
+                    university: guestUniversity,
+                }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.message || 'Guest registration failed.');
+            }
+
+            setRegistration(payload.registration);
             setIsGuestFormOpen(false);
-            alert('Successfully registered as a guest!');
+            alert(response.status === 201 ? 'Successfully registered as a guest!' : 'You are already registered for this event.');
         } catch (error) {
             console.error("Error registering guest:", error);
             alert("Registration failed. Please try again.");
@@ -121,34 +146,34 @@ export default function EventDetails() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-600">
-                <div className="w-12 h-12 border-4 border-slate-200 border-t-zewail-cyan rounded-full animate-spin"></div>
+            <div className="min-h-screen bg-canvas flex items-center justify-center text-ink-soft">
+                <div className="w-12 h-12 border-4 border-line border-t-sea animate-spin"></div>
             </div>
         );
     }
 
     if (!event) {
         return (
-            <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center flex-col">
+            <div className="min-h-screen bg-canvas text-ink flex items-center justify-center flex-col">
                 <h1 className="text-3xl font-bold mb-4">Event Not Found</h1>
                 <Link href="/events" legacyBehavior>
-                    <a className="text-featured-blue hover:underline font-bold">Back to Events</a>
+                    <a className="text-deep hover:underline font-bold">Back to Events</a>
                 </Link>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+        <div className="min-h-screen bg-canvas font-sans text-ink">
             <Navbar />
 
             {/* Header / Hero Section */}
-            <section className="pt-32 md:pt-72 pb-12 md:pb-20 bg-featured-blue text-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/10 to-transparent pointer-events-none"></div>
+            <section className="pt-32 md:pt-72 pb-12 md:pb-20 bg-deep text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-1/2 h-full from-white/10 to-transparent pointer-events-none"></div>
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                         <div className="flex-1">
-                            <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-white border border-white/20 text-[10px] font-black mb-6 uppercase tracking-widest">
+                            <span className="inline-block px-3 py-1 bg-white/10 text-white border border-white/20 text-[10px] font-black mb-6 uppercase tracking-widest">
                                 Upcoming Event
                             </span>
                             <h1 className="text-3xl md:text-6xl font-black mb-6 uppercase tracking-tighter leading-tight">{event.title}</h1>
@@ -174,7 +199,7 @@ export default function EventDetails() {
             <main className="max-w-7xl mx-auto px-6 py-12 md:py-12 grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
                 <div className="lg:col-span-2 space-y-8">
                     {/* Event Banner */}
-                    <div className="relative h-[400px] w-full rounded-[40px] overflow-hidden shadow-sm border border-slate-200">
+                    <div className="relative h-[400px] w-full overflow-hidden border border-line">
                         {event.imageUrl ? (
                             <Image
                                 src={event.imageUrl}
@@ -183,46 +208,46 @@ export default function EventDetails() {
                                 objectFit="cover"
                             />
                         ) : (
-                            <div className="absolute inset-0 bg-gradient-to-br from-featured-blue to-slate-800 flex items-center justify-center">
+                            <div className="absolute inset-0 from-deep to-ink flex items-center justify-center">
                                 <span className="text-white/20 text-6xl font-bold">AIAA</span>
                             </div>
                         )}
                     </div>
 
                     {/* Content */}
-                    <div className="bg-white p-8 md:p-16 rounded-[40px] shadow-sm border border-slate-100 group hover:shadow-xl transition-all duration-500">
-                        <h2 className="text-2xl font-black mb-8 text-slate-800 border-b border-slate-50 pb-6 uppercase tracking-tight">About This Event</h2>
-                        <div className="text-slate-600 leading-relaxed whitespace-pre-wrap text-lg font-medium">
+                    <div className="bg-white p-8 md:p-16 border border-line group  transition-all duration-500">
+                        <h2 className="text-2xl font-black mb-8 text-ink border-b border-canvas pb-6 uppercase tracking-tight">About This Event</h2>
+                        <div className="text-ink-soft leading-relaxed whitespace-pre-wrap text-lg font-medium">
                             {event.description}
                         </div>
                     </div>
                 </div>
 
                 <div className="lg:col-span-1">
-                    <div className="bg-white p-10 rounded-[40px] shadow-sm border border-slate-100 sticky top-32 group hover:shadow-xl transition-all duration-500">
-                        <h3 className="text-xl font-black mb-8 text-slate-800 uppercase tracking-tight">Registration</h3>
+                    <div className="bg-white p-10 border border-line sticky top-32 group  transition-all duration-500">
+                        <h3 className="text-xl font-black mb-8 text-ink uppercase tracking-tight">Registration</h3>
 
                         {registration ? (
-                            <div className="text-center p-8 bg-green-50 rounded-[32px] border border-green-100">
-                                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl shadow-inner">
+                            <div className="text-center p-8 bg-signal-soft border border-signal-soft">
+                                <div className="w-16 h-16 bg-signal-soft text-growth flex items-center justify-center mx-auto mb-6 text-2xl">
                                     ✓
                                 </div>
                                 <h4 className="text-lg font-black text-green-900 mb-2 uppercase tracking-tight">Access Confirmed</h4>
-                                <p className="text-green-700 text-sm mb-10 font-medium">Your mission slot is reserved. <br/> Check your email for more intel.</p>
+                                <p className="text-growth text-sm mb-10 font-medium">Your mission slot is reserved. <br/> Check your email for more intel.</p>
                                 <div className="space-y-3">
                                     {event.ctaText && event.ctaUrl && (
                                         <a 
                                             href={event.ctaUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="block w-full py-4 rounded-full bg-featured-green text-white font-black uppercase tracking-widest text-[10px] hover:bg-slate-900 transition-all text-center shadow-lg transform hover:-translate-y-0.5"
+                                            className="block w-full py-4 bg-growth text-white font-black uppercase tracking-widest text-[10px] hover:bg-ink transition-all text-center transform hover:-translate-y-0.5"
                                         >
                                             {event.ctaText}
                                         </a>
                                     )}
                                     {user && (
                                         <Link href="/dashboard?tab=registrations" legacyBehavior>
-                                            <a className="block w-full py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-[10px] hover:bg-featured-green transition-all text-center shadow-lg transform hover:-translate-y-0.5">
+                                            <a className="block w-full py-4 bg-deep text-white font-black uppercase tracking-widest text-[10px] hover:bg-growth transition-all text-center transform hover:-translate-y-0.5">
                                                 Open Dashboard
                                             </a>
                                         </Link>
@@ -233,43 +258,49 @@ export default function EventDetails() {
                             <div>
                                 {isGuestFormOpen ? (
                                     <form onSubmit={handleGuestRegister} className="space-y-4">
-                                        <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">External Registration</h4>
+                                        <h4 className="text-sm font-black text-ink-muted uppercase tracking-widest mb-4">External Registration</h4>
+                                        <label htmlFor="guest-name" className="sr-only">Full Name</label>
                                         <input
+                                            id="guest-name"
                                             type="text"
                                             placeholder="Full Name"
                                             required
                                             value={guestName}
                                             onChange={(e) => setGuestName(e.target.value)}
-                                            className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-featured-blue font-bold text-sm"
+                                            className="w-full p-4 bg-canvas border border-line outline-none focus:border-deep font-bold text-sm"
                                         />
+                                        <label htmlFor="guest-email" className="sr-only">Email Address</label>
                                         <input
+                                            id="guest-email"
                                             type="email"
                                             placeholder="Email Address"
                                             required
                                             value={guestEmail}
                                             onChange={(e) => setGuestEmail(e.target.value)}
-                                            className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-featured-blue font-bold text-sm"
+                                            className="w-full p-4 bg-canvas border border-line outline-none focus:border-deep font-bold text-sm"
                                         />
+                                        <label htmlFor="guest-university" className="sr-only">University or Organization</label>
                                         <input
+                                            id="guest-university"
                                             type="text"
                                             placeholder="University / Organization"
                                             required
                                             value={guestUniversity}
                                             onChange={(e) => setGuestUniversity(e.target.value)}
-                                            className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-featured-blue font-bold text-sm"
+                                            className="w-full p-4 bg-canvas border border-line outline-none focus:border-deep font-bold text-sm"
                                         />
                                         <div className="flex gap-2">
                                             <button
                                                 type="button"
                                                 onClick={() => setIsGuestFormOpen(false)}
-                                                className="flex-1 py-3 rounded-full border border-slate-200 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all"
+                                                className="flex-1 py-3 border border-line text-ink-muted font-black uppercase tracking-widest text-[10px] hover:bg-canvas transition-all"
                                             >
                                                 Back
                                             </button>
                                             <button
                                                 type="submit"
                                                 disabled={registering}
-                                                className="flex-[2] py-3 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-[10px] hover:bg-featured-green transition-all shadow-lg"
+                                                className="flex-[2] py-3 bg-deep text-white font-black uppercase tracking-widest text-[10px] hover:bg-growth transition-all"
                                             >
                                                 {registering ? '...' : 'Complete Registration'}
                                             </button>
@@ -277,11 +308,11 @@ export default function EventDetails() {
                                     </form>
                                 ) : (
                                     <>
-                                        <p className="text-slate-500 mb-10 font-medium leading-relaxed">Secure your spot for this session. Participation certificates will be issued to all attendees.</p>
+                                        <p className="text-ink-soft mb-10 font-medium leading-relaxed">Secure your spot for this session. Participation certificates will be issued to all attendees.</p>
                                         <button
                                             onClick={handleRegister}
                                             disabled={registering}
-                                            className="w-full py-4 rounded-full bg-featured-blue text-white font-black uppercase tracking-widest text-xs hover:bg-featured-green transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transform hover:-translate-y-0.5"
+                                            className="w-full py-4 bg-deep text-white font-black uppercase tracking-widest text-xs hover:bg-growth transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
                                         >
                                             {registering ? 'Processing...' : (event.allowExternal && !user ? 'Register (External/Guest)' : 'Register for Event')}
                                         </button>
@@ -290,14 +321,14 @@ export default function EventDetails() {
                                                 href={event.ctaUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="block w-full py-4 rounded-full border-2 border-slate-100 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:border-featured-blue hover:text-featured-blue transition-all text-center mt-4"
+                                                className="block w-full py-4 border-2 border-line text-ink-muted font-black uppercase tracking-widest text-[10px] hover:border-deep hover:text-deep transition-all text-center mt-4"
                                             >
                                                 {event.ctaText}
                                             </a>
                                         )}
                                         {!user && (
-                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center mt-6 text-slate-400">
-                                                Already a member? <Link href="/join" legacyBehavior><a className="text-featured-blue hover:text-featured-green transition-colors">Sign in</a></Link>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-center mt-6 text-ink-muted">
+                                                Already a member? <Link href="/join" legacyBehavior><a className="text-deep hover:text-growth transition-colors">Sign in</a></Link>
                                             </p>
                                         )}
                                     </>
@@ -305,15 +336,15 @@ export default function EventDetails() {
                             </div>
                         )}
 
-                        <div className="mt-10 pt-10 border-t border-slate-50">
-                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Event Host</h4>
+                        <div className="mt-10 pt-10 border-t border-canvas">
+                            <h4 className="text-[10px] font-black text-ink-muted uppercase tracking-[0.2em] mb-6">Event Host</h4>
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-xl font-black text-slate-300 shadow-inner">
+                                <div className="w-14 h-14 bg-canvas flex items-center justify-center text-xl font-black text-ink-muted">
                                     ZC
                                 </div>
                                 <div>
-                                    <p className="text-sm font-black text-slate-800 uppercase tracking-tight">AIAA Zewail City</p>
-                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Student Branch</p>
+                                    <p className="text-sm font-black text-ink uppercase tracking-tight">AIAA Zewail City</p>
+                                    <p className="text-[10px] text-ink-muted font-black uppercase tracking-widest mt-1">Student Branch</p>
                                 </div>
                             </div>
                         </div>

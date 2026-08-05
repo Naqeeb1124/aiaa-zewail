@@ -13,43 +13,59 @@ interface Event {
   imageUrl?: string;
   isArchived?: boolean;
   isDraft?: boolean;
+  category?: string;
 }
 
+/**
+ * FeaturedEvents — human-crafted:
+ *   • Asymmetric date stamp + category chip — not centered paragraphs.
+ *   • Off-black body copy; warm-yellow category chips.
+ *   • Image cards use a natural photo filter, not heavy color grading.
+ */
+
 const EventCard = ({ event }: { event: Event }) => {
-  const previewText = event.description.length > 100 ? `${event.description.substring(0, 100)}...` : event.description;
-  const eventDate = new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  const eventTime = event.date.includes('T') 
+  const preview = event.description.length > 110 ? `${event.description.substring(0, 110)}[..]` : event.description;
+  const eventDate = new Date(event.date).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+  });
+  const eventTime = event.date.includes('T')
     ? new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
     : null;
 
   return (
-    <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1 group">
-      <Link href={`/events/${event.id}`}>
-        <div className="relative w-full cursor-pointer overflow-hidden" style={{ paddingTop: '56.25%' }}>
-          <Image
-            src={event.imageUrl || "/announcements-placeholder-image.jpeg"}
-            alt={event.title}
-            fill
-            sizes="(max-w-768px) 100vw, (max-w-1200px) 50vw, 33vw"
-            style={{ objectFit: 'cover' }}
-            loader={imageLoader}
-            className="group-hover:scale-110 transition-transform duration-700"
-          />
-        </div>
+    <article className="card overflow-hidden flex flex-col">
+      <Link href={`/events/${event.id}`} className="group block relative w-full" style={{ paddingTop: '58%' }}>
+        <Image
+          src={event.imageUrl || '/announcements-placeholder-image.jpeg'}
+          alt={event.title}
+          fill
+          sizes="(max-width: 768px) 100vw, 33vw"
+          style={{ objectFit: 'cover' }}
+          loader={imageLoader}
+          className="photo-natural duration-slow ease-human group-hover:scale-[1.03]"
+        />
+        <span className="absolute top-4 left-4 chip chip-recruiting z-10">
+          {event.category || 'Gathering'}
+        </span>
       </Link>
-      <div className="p-8 flex-grow flex flex-col">
-        <h3 className="text-xl font-black text-featured-blue uppercase tracking-tight mb-2 leading-tight">{event.title}</h3>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
-          {eventDate} {eventTime && `• ${eventTime}`}
+      <div className="p-7 flex-grow flex flex-col">
+        <p className="eyebrow text-ink-muted">
+          {eventDate}{eventTime ? ` · ${eventTime}` : ''}
         </p>
-        <p className="text-slate-600 text-sm leading-relaxed mb-6 flex-grow font-medium">
-          {previewText}
+        <h3 className="mt-2 font-display font-semibold text-[1.25rem] leading-snug text-ink">
+          {event.title}
+        </h3>
+        <p className="mt-3 text-[14.5px] text-ink-soft leading-relaxed flex-grow">
+          {preview}
         </p>
-        <Link href={`/events/${event.id}`} className="text-featured-green font-black uppercase tracking-widest text-[10px] flex items-center gap-2 hover:gap-3 transition-all">
-          VIEW DETAILS <span className="text-lg">→</span>
+        <Link
+          href={`/events/${event.id}`}
+          className="mt-6 marker-line text-[13px] font-display font-semibold text-ink self-start"
+        >
+          Save your seat
         </Link>
       </div>
-    </div>
+    </article>
   );
 };
 
@@ -60,50 +76,47 @@ const FeaturedEvents = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        // Fetch more than 3 so we can filter archived/draft ones and still potentially have 3
         const q = query(collection(db, 'events'), orderBy('date', 'desc'), limit(15));
-        const querySnapshot = await getDocs(q);
-        const fetchedEvents = querySnapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as Event))
-          .filter(event => !event.isArchived && !event.isDraft)
+        const snap = await getDocs(q);
+        const items = snap.docs
+          .map(doc => ({ id: doc.id, ...(doc.data() as Omit<Event, 'id'>) } as Event))
+          .filter(e => !e.isArchived && !e.isDraft)
           .slice(0, 3);
-        
-        setEvents(fetchedEvents);
-      } catch (error) {
-        console.error("Error fetching featured events:", error);
+        setEvents(items);
+      } catch (err) {
+        console.error('Error fetching featured events:', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchEvents();
   }, []);
 
-  if (loading) return null;
-  if (events.length === 0) return null;
+  if (loading || events.length === 0) return null;
 
   return (
-    <section className="py-24 bg-white">
+    <section className="paper-surface py-20 md:py-28">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-            <div>
-                <span className="inline-block px-3 py-1 rounded-full bg-featured-green/10 text-featured-green border border-featured-green/20 text-[10px] font-black mb-4 uppercase tracking-widest">
-                    The Calendar
-                </span>
-                <h2 className="text-3xl md:text-4xl font-black text-slate-900 uppercase tracking-tighter">
-                    Upcoming <span className="text-featured-green">Gatherings</span>
-                </h2>
-            </div>
-            <Link href="/events" legacyBehavior>
-                <a className="px-8 py-3 rounded-full border-2 border-slate-100 text-slate-400 font-black uppercase tracking-widest text-[10px] hover:border-featured-blue hover:text-featured-blue transition-all">
-                    View Archive
-                </a>
-            </Link>
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 md:mb-14 gap-6">
+          <div className="max-w-xl">
+            <span className="eyebrow text-deep">Upcoming gatherings</span>
+            <h2 className="mt-2 font-display text-[clamp(1.7rem,3.5vw,2.4rem)] font-semibold leading-tight text-ink">
+              Where to find us next.
+            </h2>
+            <p className="lead mt-3">
+              Workshops, talks, launch parties. All free, all open to anyone
+              curious. Pop in even if it&apos;s your first time.
+            </p>
+          </div>
+          <Link
+            href="/events"
+            className="btn btn-secondary self-start md:self-auto"
+          >
+            See the calendar
+          </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
           {events.map(event => (
             <EventCard key={event.id} event={event} />
           ))}
