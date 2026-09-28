@@ -5,7 +5,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:access": "tsc src/lib/config.ts src/lib/forms.ts src/types/form.ts --outDir .tmp-verify --rootDir src --module commonjs --target es2020 --strict --esModuleInterop --skipLibCheck && node --test scripts/access-control.test.cjs",
+    "deploy:rules": "npx firebase-tools@13 deploy --only firestore:rules"
   },
   "dependencies": {
     "cloudinary": "^2.8.0",

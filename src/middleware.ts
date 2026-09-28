@@ -14,13 +14,15 @@ export function middleware(request: NextRequest) {
   // 2. API routes
   // 3. Kickoff page itself (to avoid infinite loops)
   // 4. Join page (for registration)
-  // 5. Static files (images, fonts, etc.) and Next.js internals
+  // 5. Standalone forms and events
+  // 6. Static files (images, fonts, etc.) and Next.js internals
   const isAllowed = 
     pathname.startsWith('/admin') || 
     pathname.startsWith('/api') || 
     pathname.startsWith('/kickoff') ||
     pathname.startsWith('/join') ||
     pathname.startsWith('/events') ||
+    pathname.startsWith('/forms') ||
     pathname.includes('.') || // Static files like .png, .jpg, .svg
     pathname.startsWith('/_next') // Next.js internal files
 

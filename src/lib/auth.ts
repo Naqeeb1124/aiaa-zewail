@@ -1,6 +1,7 @@
 import { auth, provider, db } from './firebase'
 import { signInWithPopup, signOut as fbSignOut } from 'firebase/auth'
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore'
+import { classifyEmail } from './config'
 
 /**
  * Extracts Name and Student ID from Zewail City Google Display Name
@@ -35,6 +36,21 @@ export const parseZewailName = (displayName: string | null) => {
   };
 }
 
+/**
+ * Splits a display name for accounts outside Zewail City, whose Google display
+ * names carry no student-ID convention to strip.
+ */
+const splitDisplayName = (displayName: string) => {
+  const parts = displayName.trim().split(/\s+/).filter(Boolean)
+
+  return {
+    firstName: parts[0] || '',
+    lastName: parts.slice(1).join(' '),
+    fullName: displayName.trim(),
+    studentId: '',
+  }
+}
+
 export const signInWithGoogle = async () => {
   console.log("Attempting to sign in with Google...");
 
@@ -45,32 +61,46 @@ export const signInWithGoogle = async () => {
   try {
     res = await signInWithPopup(auth, provider)
     user = res.user
-
-    // Strict Check: Only s- prefixed Zewail City emails allowed
-    if (!user.email?.endsWith('@zewailcity.edu.eg') || !user.email?.startsWith('s-')) {
-      await fbSignOut(auth); 
-      alert('Access Denied: Please use your Zewail City student email (starting with s-).');
-      throw new Error('Only Zewail City students are allowed to join.');
-    }
-
-    console.log("Authentication successful:", user.uid);
   } catch (authError) {
     console.error("Error during authentication:", authError);
     throw authError;
   }
 
-  // Step 2: Write structured data to Database
+  // Step 2: Confirm the account belongs to an Egyptian university.
+  // Zewail City students become members; everyone else gets the external tier.
+  const identity = classifyEmail(user.email);
+  if (!identity) {
+    await fbSignOut(auth);
+    const onZewailDomain = (user.email || '').toLowerCase().endsWith('@zewailcity.edu.eg');
+    alert(
+      onZewailDomain
+        ? 'Access Denied: That is a Zewail City staff account. Please sign in with your student email (starting with s-).'
+        : 'Access Denied: Please sign in with your university student email.'
+    );
+    throw new Error('Only students of Zewail City and other Egyptian universities may sign in.');
+  }
+
+  console.log("Authentication successful:", user.uid, identity.affiliation);
+
+  // Step 3: Write structured data to Database
   try {
-    const { firstName, lastName, fullName, studentId } = parseZewailName(user.displayName);
+    const rawName = user.displayName || '';
+    const profile = identity.affiliation === 'zewail'
+      ? parseZewailName(rawName)
+      : splitDisplayName(rawName);
+
     const docRef = doc(db, 'users', user.uid);
     const docSnap = await getDoc(docRef);
 
     const userData: any = { 
-      email: user.email, 
-      name: fullName || user.displayName, 
-      firstName,
-      lastName,
-      studentId,
+      email: identity.email, 
+      name: profile.fullName || rawName, 
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      // External students have no Zewail ID, so this stays an empty string.
+      studentId: profile.studentId,
+      affiliation: identity.affiliation,
+      university: identity.university,
       subscribedToAnnouncements: true,
       lastLogin: serverTimestamp(),
     };
@@ -81,7 +111,7 @@ export const signInWithGoogle = async () => {
     
     await setDoc(docRef, userData, { merge: true });
 
-    console.log("Database record updated for:", fullName);
+    console.log("Database record updated for:", profile.fullName);
     return res;
   } catch (error) {
     console.error("Error updating user record:", error);

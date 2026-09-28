@@ -113,6 +113,13 @@ export default function AdminDashboard() {
         color: "bg-accent-orange-soft text-ember border-accent-orange-soft"
     },
     { 
+        title: "Forms", 
+        desc: "Build surveys and questionnaires, and review their responses.",
+        icon: "🗒",
+        link: "/admin/forms",
+        color: "bg-iris-soft text-iris border-iris-soft"
+    },
+    { 
         title: "Certificates", 
         desc: "Generate and distribute participation certificates.",
         icon: "🏅",

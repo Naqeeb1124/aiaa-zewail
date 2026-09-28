@@ -8,6 +8,43 @@ service cloud.firestore {
              exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
     }
 
+    // ---------------------------------------------------------------------
+    // Affiliation tiers
+    //
+    // The tier is derived from the Firebase ID token's email, which is signed
+    // by Google and cannot be forged. It is deliberately NOT read from
+    // users/{uid}.affiliation, because that field is written by the client and
+    // would be trivial to self-promote through.
+    // ---------------------------------------------------------------------
+    function authEmail() {
+      return request.auth != null && request.auth.token.email is string
+        ? request.auth.token.email.lower()
+        : "";
+    }
+
+    // Zewail City students: members with applications, projects, points, badges.
+    function isZewail() {
+      return request.auth != null
+        && authEmail().startsWith("s-")
+        && authEmail().endsWith("@zewailcity.edu.eg");
+    }
+
+    // Any verified Egyptian university account, Zewail City included.
+    function isUniversityAccount() {
+      return request.auth != null && authEmail().endsWith(".edu.eg");
+    }
+
+    // Fields that grant membership credit or privilege. A user may never set
+    // these on their own document, otherwise any member could award themselves
+    // show-up points and badges, and with them certificate eligibility.
+    //
+    // activeFlagship and projectHistory are deliberately NOT listed: the
+    // client-side transaction in src/lib/projects.ts maintains them, and the
+    // "1 flagship per semester" rule depends on that write going through.
+    function isPrivilegeEscalation(keys) {
+      return keys.hasAny(['role', 'points', 'badges']);
+    }
+
     // --- Public Content (Read Only for Everyone, Write for Admins) ---
     match /announcements/{docId} {
       allow read: if true;
@@ -29,44 +66,62 @@ service cloud.firestore {
       }
     }
 
+    // --- Membership (Zewail City students only) ---
+
     // --- Join Requests ---
     match /joinRequests/{requestId} {
       // Users can read their own requests, Admins can read all
-      allow read: if request.auth != null && (request.auth.uid == requestId.split('_')[0] || isAdmin());
-      // Users can create requests for themselves
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null
+                  && (isAdmin() || (isZewail() && request.auth.uid == requestId.split('_')[0]));
+      // Only Zewail City students can apply to the chapter
+      allow create: if isZewail() && request.resource.data.userId == request.auth.uid;
       // Only admins can update status (users can cancel? maybe later)
       allow update: if isAdmin();
-      allow delete: if isAdmin() || (request.auth != null && requestId.split('_')[0] == request.auth.uid); 
+      allow delete: if isAdmin()
+                    || (request.auth != null && isZewail() && requestId.split('_')[0] == request.auth.uid); 
+    }
+
+    // Applications: Read/Write own application. Membership is chapter-only.
+    match /applications/{userId} {
+      allow read, write: if isAdmin() || (isZewail() && request.auth.uid == userId);
+    }
+
+    // Interviews: Read/Write own interview
+    match /interviews/{userId} {
+      allow read, write: if isAdmin() || (isZewail() && request.auth.uid == userId);
     }
 
     // --- User Data ---
     // Users: Read/Write own profile, Read for admins
     match /users/{userId} {
       allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
-      // Allow user to write own, OR admin to write (for approving requests/updating profile)
-      allow write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+
+      // On create there is no prior document to diff against, so require the
+      // write to omit privileged fields outright.
+      allow create: if request.auth != null
+                    && request.auth.uid == userId
+                    && !isPrivilegeEscalation(request.resource.data.keys());
+
+      // Users may maintain their own contact details and affiliation metadata.
+      allow update: if isAdmin()
+                    || (request.auth != null
+                        && request.auth.uid == userId
+                        && !isPrivilegeEscalation(request.resource.data.diff(resource.data).affectedKeys()));
+
+      allow delete: if isAdmin();
     }
 
-    // Applications: Read/Write own application
-    match /applications/{userId} {
-      allow read, write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
-    }
-
-    // Interviews: Read/Write own interview
-    match /interviews/{userId} {
-      allow read, write: if (request.auth != null && request.auth.uid == userId) || isAdmin();
-    }
-
-    // Registrations: Read/Write own registration
+    // --- Event Registrations ---
+    // Open to every university account, which is the whole point of the
+    // external tier: visitors can register for events flagged allowExternal.
     match /registrations/{regId} {
       // Registrations are private to the registrant and admins.
       allow read: if isAdmin() ||
                     (request.auth != null && request.auth.uid == resource.data.userId);
 
       // Guest registrations are created by the server-side registration endpoint.
-      // Authenticated users can create their own registrations directly.
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      // Authenticated university accounts can create their own directly.
+      allow create: if isUniversityAccount() && request.auth.uid == request.resource.data.userId;
 
       allow update, delete: if isAdmin() ||
                               (request.auth != null && request.auth.uid == resource.data.userId);
@@ -95,6 +150,47 @@ service cloud.firestore {
     match /opportunities/{docId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // --- Dynamic Forms ---
+    //
+    // Any Zewail City student may build a form and owns it. Owners and admins
+    // can read and triage that form's responses; the public can only ever read
+    // a published form, never its responses.
+    match /forms/{formId} {
+      // Ownership lives on the form document, so nested rules must read it
+      // across documents with get() rather than resource.data.
+      function isOwner() {
+        return request.auth != null
+          && get(/databases/$(database)/documents/forms/$(formId)).data.createdBy == request.auth.uid;
+      }
+
+      allow read: if isAdmin() || isOwner() || resource.data.status == 'published';
+      allow create: if isZewail() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAdmin() || isOwner();
+      allow delete: if isAdmin();
+
+      match /responses/{responseId} {
+        allow read: if isAdmin() || isOwner();
+
+        // Responses are written only by /api/forms/submit via the Admin SDK,
+        // so a public form cannot become a spam bucket through the client.
+        allow create: if false;
+
+        // Triage only. Owners and admins may set status and notes, but never
+        // rewrite answers, so a response stays what the submitter actually sent.
+        allow update: if (isAdmin() || isOwner())
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['status', 'notes', 'reviewedAt', 'reviewedBy']);
+
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Per-form rate limit counter, keyed by a salted hash of the submitter's IP.
+    // Written only by the submit endpoint; no client access at all.
+    match /formRateLimits/{limitId} {
+      allow read, write: if false;
     }
 
     match /scheduled_emails/{docId} {

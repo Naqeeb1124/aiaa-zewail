@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import PDFDocument from 'pdfkit';
 import path from 'path';
 import fs from 'fs';
-import { verifyIdToken } from '../../../lib/firebase-admin';
+import { verifyIdToken, isAdminEmail, emailAffiliation } from '../../../lib/firebase-admin';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (req.method !== 'POST') {
@@ -27,6 +27,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { name, email, studentId, joined, points, badges, projects } = req.body;
     if (email && decodedToken.email && email.toLowerCase() !== decodedToken.email.toLowerCase()) {
         return res.status(403).json({ message: 'Forbidden: Portfolio identity mismatch' });
+    }
+
+    // A portfolio certifies attendance points and badges, so it stays a member
+    // benefit. Mirrors the isZewail() tier in firestore.rules, with admins exempt.
+    const callerIsAdmin = await isAdminEmail(decodedToken.email);
+    if (!callerIsAdmin && emailAffiliation(decodedToken.email) !== 'zewail') {
+        return res.status(403).json({ message: 'Forbidden: Portfolios are available to Zewail City members.' });
     }
 
     if (!name) {

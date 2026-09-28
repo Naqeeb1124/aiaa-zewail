@@ -13,6 +13,7 @@ import Image from 'next/image';
 import { useAdmin } from '../hooks/useAdmin';
 import { useRouter } from 'next/router';
 import { signInWithGoogle } from '../lib/auth';
+import { useAffiliation } from '../hooks/useAffiliation';
 import imageLoader from '../lib/imageLoader';
 
 /**
@@ -53,6 +54,7 @@ const applicationChip = (status?: string) => {
 
 export default function Projects() {
   const { isAdmin } = useAdmin();
+  const { identity } = useAffiliation();
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +63,7 @@ export default function Projects() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const isOfficialMember = userProfile?.role === 'member' || isAdmin;
+  const isExternal = identity?.affiliation === 'external';
 
   useEffect(() => {
     const qAll = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
@@ -98,6 +101,13 @@ export default function Projects() {
       }
     }
     if (!isOfficialMember) {
+      // External students are never eligible for sub-teams, so send them to the
+      // events they can actually join rather than the chapter application form.
+      if (isExternal) {
+        alert('Sub-teams are for Zewail City members. You can still register for our open events.');
+        router.push('/events');
+        return;
+      }
       router.push(`/join?redirect=${encodeURIComponent(currentPath)}`);
       return;
     }

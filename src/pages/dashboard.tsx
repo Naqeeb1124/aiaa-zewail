@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useAdmin } from '../hooks/useAdmin';
+import { useAffiliation } from '../hooks/useAffiliation';
 import { doc, getDoc, query, collection, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { cancelJoinRequest } from '../lib/projects';
@@ -21,6 +22,10 @@ interface RegistrationItem {
 
 export default function Dashboard() {
     const { user, loading, isAdmin } = useAdmin();
+    const { identity } = useAffiliation();
+    // The dashboard is the member view: points, badges, sub-team projects and
+    // the portfolio download. External students get the visitor panel instead.
+    const isExternal = !!user && identity?.affiliation === 'external';
 // ... rest of the component ...
 
     const router = useRouter();
@@ -121,6 +126,10 @@ export default function Dashboard() {
     };
 
     if (loading) return <div className="min-h-screen paper-surface flex items-center justify-center text-ink">Loading your stuff...</div>;
+
+    if (isExternal) {
+        return <ExternalVisitorPanel university={identity?.university} />;
+    }
 
     const formatDate = (dateInput: any) => {
         if (!dateInput) return 'Recent';
@@ -271,14 +280,20 @@ export default function Dashboard() {
                                 <h3 className="mt-2 font-display font-semibold text-[1.3rem] leading-tight text-ink">
                                     Profile
                                 </h3>
-                                <div className="mt-7 space-y-6">
-                                    <Row label="Email" value={user?.email} />
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <Row label="Student ID" value={member.studentId} />
-                                        <Row label="Branch" value="Aerospace" />
+                                    <div className="mt-7 space-y-6">
+                                        <Row label="Email" value={user?.email} />
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <Row label="Student ID" value={member.studentId} />
+                                            <Row label="Branch" value="Aerospace" />
+                                        </div>
                                     </div>
-                                </div>
-                            </article>
+                                    <Link
+                                        href="/admin/forms"
+                                        className="btn btn-secondary mt-7 inline-flex"
+                                    >
+                                        My forms
+                                    </Link>
+                                </article>
                             <article className="card p-7 md:p-10 flex flex-col justify-center">
                                 <span className="eyebrow text-ember">PDF record</span>
                                 <h3 className="mt-2 font-display font-semibold text-[1.3rem] leading-tight text-ink">
@@ -449,6 +464,35 @@ export default function Dashboard() {
                             </article>
                         </div>
                     )}
+                </div>
+            </main>
+            <Footer />
+        </div>
+    );
+}
+
+function ExternalVisitorPanel({ university }: { university?: string }) {
+    return (
+        <div className="min-h-screen paper-surface text-ink">
+            <Navbar />
+            <main className="max-w-3xl mx-auto px-6 pt-32 pb-24">
+                <div className="card p-7 md:p-12">
+                    <span className="chip chip-recruiting">Visiting</span>
+                    <h1 className="mt-4 font-display text-[clamp(1.8rem,4vw,2.6rem)] font-semibold tracking-tight">
+                        Welcome to AIAA Zewail City
+                    </h1>
+                    <p className="mt-3 text-ink-soft text-[15.5px] leading-relaxed">
+                        You&apos;re signed in as a visitor from <strong className="text-ink">{university || 'another Egyptian university'}</strong>.
+                        You can browse every project, event and announcement, and register for the events we&apos;ve opened to external participants.
+                    </p>
+                    <p className="mt-3 text-ink-soft text-[15.5px] leading-relaxed">
+                        The member dashboard — attendance points, badges, sub-team projects and your portfolio — is
+                        reserved for Zewail City students. Chapter membership is opened through recruitment each semester.
+                    </p>
+                    <div className="mt-8 flex flex-wrap gap-3">
+                        <Link href="/events" className="btn btn-primary">Browse events</Link>
+                        <Link href="/projects" className="btn btn-secondary">See the projects</Link>
+                    </div>
                 </div>
             </main>
             <Footer />

@@ -65,8 +65,12 @@ export default function UserDirectory() {
       const downloadUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = downloadUrl;
-      const fileName = filterType === 'students' ? 'aiaa-students-only.csv' : 'aiaa-all-accounts.csv';
-      a.download = `${fileName.split('.')[0]}-${new Date().toISOString().split('T')[0]}.csv`;
+      const fileNames: Record<string, string> = {
+        students: 'aiaa-zewail-students',
+        external: 'aiaa-external-students',
+      };
+      const baseName = (filterType && fileNames[filterType]) || 'aiaa-all-accounts';
+      a.download = `${baseName}-${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(downloadUrl);
@@ -124,7 +128,17 @@ export default function UserDirectory() {
                   {exporting ? (
                     <span className="w-3 h-3 border-2 border-white border-t-transparent animate-spin"></span>
                   ) : '🎓'}
-                  {exporting ? 'Exporting...' : 'Export Students Only'}
+                  {exporting ? 'Exporting...' : 'Export Zewail Students'}
+                </button>
+                <button 
+                  onClick={() => handleExportCSV('external')}
+                  disabled={exporting}
+                  className="bg-ink-soft hover:bg-deep disabled:opacity-50 text-white px-5 py-3 font-black uppercase tracking-widest text-[9px] transition-all flex items-center gap-2"
+                >
+                  {exporting ? (
+                    <span className="w-3 h-3 border-2 border-white border-t-transparent animate-spin"></span>
+                  ) : '🌍'}
+                  {exporting ? 'Exporting...' : 'Export External Students'}
                 </button>
                 <button 
                   onClick={() => handleExportCSV()}

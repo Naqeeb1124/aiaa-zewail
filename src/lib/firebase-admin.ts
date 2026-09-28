@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import { classifyEmail, type Affiliation } from './config';
 
 let serviceAccount = null;
 try {
@@ -52,6 +53,19 @@ export const isAdminEmail = async (email?: string | null) => {
   if (!db) return false;
   const adminDoc = await db.collection('admins').doc(email).get();
   return adminDoc.exists;
+};
+
+/**
+ * Access tier for a verified token email, or null if the account is not an
+ * admitted student.
+ *
+ * Server routes should gate on this rather than trusting a request body or the
+ * client-writable users/{uid}.affiliation field. It mirrors isZewail() in
+ * firestore.rules, which derives the same tier from the same signed token.
+ * Admin accounts are still governed by isAdminEmail() and bypass the tier.
+ */
+export const emailAffiliation = (email?: string | null): Affiliation | null => {
+  return classifyEmail(email)?.affiliation ?? null;
 };
 
 export const adminDb = admin.apps.length ? admin.firestore() : null;

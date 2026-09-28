@@ -9,6 +9,7 @@ import { useRouter } from 'next/router';
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import ApplicationForm from '../components/ApplicationForm';
 import { useAdmin } from '../hooks/useAdmin';
+import { useAffiliation } from '../hooks/useAffiliation';
 import { GetServerSideProps } from 'next';
 
 /**
@@ -32,7 +33,11 @@ export const getServerSideProps: GetServerSideProps = async () => {
 
 export default function Join({ initialRecruitmentOpen }: { initialRecruitmentOpen: boolean }) {
   const { user, isAdmin, loading } = useAdmin();
+  const { identity } = useAffiliation();
   const router = useRouter();
+  // Chapter membership is Zewail City only. External students may use the site
+  // and register for events, but applications and interviews are closed to them.
+  const isExternal = !!user && identity?.affiliation === 'external';
   const [applicationStatus, setApplicationStatus] = useState<
     'loading' | 'not_applied' | 'applied' | 'accepted' | 'rejected' | 'scheduled'
   >('loading');
@@ -55,7 +60,7 @@ export default function Join({ initialRecruitmentOpen }: { initialRecruitmentOpe
       if (d.exists()) setRecruitmentOpen(d.data().open);
     });
 
-    if (user && !isAdmin) {
+    if (user && !isAdmin && !isExternal) {
       const unsubApp = onSnapshot(doc(db, 'applications', user.uid), (d) => {
         if (d.exists()) {
           const status = d.data().status || 'applied';
@@ -69,10 +74,10 @@ export default function Join({ initialRecruitmentOpen }: { initialRecruitmentOpe
       });
       return () => { unsubStatus(); unsubApp(); unsubInterview(); };
     } else {
-      if (!loading && !user) setApplicationStatus('not_applied');
+      if (!loading && (!user || isExternal)) setApplicationStatus('not_applied');
       return () => unsubStatus();
     }
-  }, [user, isAdmin, loading, router, applicationStatus]);
+  }, [user, isAdmin, loading, router, applicationStatus, isExternal]);
 
   const handleConfirmSlot = async () => {
     if (!selectedSlot || !user) { alert('Please select a time slot.'); return; }
@@ -210,6 +215,8 @@ export default function Join({ initialRecruitmentOpen }: { initialRecruitmentOpe
               <ApplicationStatus
                 user={user}
                 isAdmin={isAdmin}
+                isExternal={isExternal}
+                university={identity?.university}
                 applicationStatus={applicationStatus}
                 testMode={testMode}
                 setTestMode={setTestMode}
@@ -220,7 +227,7 @@ export default function Join({ initialRecruitmentOpen }: { initialRecruitmentOpe
                 routerPush={() => router.push('/dashboard')}
               />
 
-              {interview && interview.status === 'pending' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && !isAdmin && (
+              {!isExternal && interview && interview.status === 'pending' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && !isAdmin && (
                 <InterviewPicker
                   interview={interview}
                   selectedSlot={selectedSlot}
@@ -229,7 +236,7 @@ export default function Join({ initialRecruitmentOpen }: { initialRecruitmentOpe
                 />
               )}
 
-              {interview && interview.status === 'scheduled' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && !isAdmin && (
+              {!isExternal && interview && interview.status === 'scheduled' && applicationStatus !== 'accepted' && applicationStatus !== 'rejected' && !isAdmin && (
                 <InterviewScheduled interview={interview} />
               )}
             </div>
@@ -281,10 +288,11 @@ function StatusBanner({
 }
 
 function ApplicationStatus({
-  user, isAdmin, applicationStatus, testMode, setTestMode,
+  user, isAdmin, isExternal, university, applicationStatus, testMode, setTestMode,
   recruitmentOpen, onSubmit, onReset, onGoHome, routerPush,
 }: {
-  user: any; isAdmin: boolean; applicationStatus: string;
+  user: any; isAdmin: boolean; isExternal: boolean; university?: string;
+  applicationStatus: string;
   testMode: boolean; setTestMode: (v: boolean) => void;
   recruitmentOpen: boolean;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
@@ -303,6 +311,22 @@ function ApplicationStatus({
           <button onClick={signInWithGoogle} className="btn btn-primary">
             Continue with Google
           </button>
+        }
+      />
+    );
+  }
+  if (isExternal) {
+    return (
+      <StatusBanner
+        kind="info"
+        icon="🌍"
+        title="Chapter membership is Zewail City only"
+        body={`Thanks for signing in from ${university || 'another Egyptian university'}. You can browse everything on the site and register for our open events, but sub-team membership is reserved for Zewail City students.`}
+        cta={
+          <>
+            <Link href="/events" className="btn btn-primary">Browse events</Link>
+            <button onClick={onGoHome} className="btn btn-secondary">Back home</button>
+          </>
         }
       />
     );

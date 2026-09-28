@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import admin from '../../../lib/firebase-admin';
+import { classifyEmail, type Affiliation } from '../../../lib/config';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -42,10 +43,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // 4. Filter logic
     let filteredList = authUsers.users;
-    if (filterType === 'students') {
-      filteredList = authUsers.users.filter(user => 
-        user.email?.startsWith('s-') && user.email?.endsWith('@zewailcity.edu.eg')
-      );
+    const tier = (filterType === 'students' || filterType === 'external') ? filterType as Affiliation : null;
+    if (tier) {
+      filteredList = authUsers.users.filter(user => classifyEmail(user.email)?.affiliation === tier);
     }
 
     // 5. Define CSV Headers
@@ -53,6 +53,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       'UID',
       'Display Name',
       'Email',
+      'Affiliation',
+      'University',
       'Created At',
       'Last Sign In',
       'Major (Firestore)',
@@ -62,11 +64,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 6. Convert to CSV
     const rows = filteredList.map(user => {
       const fs = firestoreData[user.uid] || {};
+      // Prefer the live classification over the stored field, which is client-written.
+      const identity = classifyEmail(user.email);
       
       return [
         user.uid,
         `"${(user.displayName || fs.name || '').replace(/"/g, '""')}"`,
         user.email || '',
+        identity?.affiliation || 'unverified',
+        identity?.university || fs.university || 'N/A',
         user.metadata.creationTime,
         user.metadata.lastSignInTime,
         fs.major || 'N/A',
@@ -77,9 +83,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const csvContent = [headers.join(','), ...rows].join('\n');
 
     // 7. Send Response
-    const filename = filterType === 'students' ? 'aiaa-students-only.csv' : 'aiaa-all-accounts.csv';
+    const filenames: Record<string, string> = {
+      students: 'aiaa-zewail-students',
+      external: 'aiaa-external-students',
+    };
+    const baseName = (tier && filenames[tier]) || 'aiaa-all-accounts';
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.setHeader('Content-Disposition', `attachment; filename=${baseName}.csv`);
     return res.status(200).send(csvContent);
 
   } catch (error: any) {
