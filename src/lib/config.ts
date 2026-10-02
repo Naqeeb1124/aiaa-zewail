@@ -16,23 +16,18 @@ export const INTERNAL_DOMAIN = 'zewailcity.edu.eg';
 export const INTERNAL_EMAIL_PREFIX = 's-';
 
 /**
- * Every other Egyptian university. Zewail City matches this suffix too, so it
- * is classified first and never lands in the external tier.
+ * Optional narrowing for the external tier. Leave empty to admit any well-formed
+ * email address (open sign-up); list domains (e.g. ['aucegypt.edu',
+ * 'zu.edu.eg']) to admit only those. Lowercase, and Zewail City students are
+ * always admitted as members regardless.
  *
- * This is a weak signal: it proves the address is a real Egyptian university
- * mailbox, not that the holder is a student. That is acceptable for the current
- * external scope (browse + event registration) and no more.
- */
-export const EXTERNAL_DOMAIN_SUFFIX = '.edu.eg';
-
-/**
- * Optional narrowing for the external tier. Leave empty to admit any Egyptian
- * university; list domains (e.g. ['eng.zu.edu.eg', 'auc.edu.eg']) to admit only
- * those. Lowercase, and Zewail City is always admitted as a member regardless.
- *
- * Populate this before extending external access to anything worth protecting.
+ * Admission is deliberately not tied to `.edu.eg`: AUC, for example, issues
+ * `aucegypt.edu` addresses, so a `.edu.eg`-only gate locked their students out.
  */
 export const EXTERNAL_DOMAIN_ALLOWLIST: string[] = [];
+
+/** Loose shape check: local part, `@`, and a dotted domain, with no whitespace. */
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface AffiliationResult {
     affiliation: Affiliation;
@@ -44,36 +39,37 @@ export interface AffiliationResult {
 /**
  * Single source of truth for "who may sign in, and as what".
  *
+ * Open sign-up: any well-formed email address is admitted to the external tier,
+ * and only Zewail City students (`s-…@zewailcity.edu.eg`) get member access.
+ * EXTERNAL_DOMAIN_ALLOWLIST narrows admission again when populated.
+ *
  * This is a convenience check for the UI only. Firestore rules re-derive the
  * tier from the verified ID token email, because the result of this function is
  * only ever as trustworthy as the client that called it.
  */
 export const classifyEmail = (email: string | null | undefined): AffiliationResult | null => {
     const normalized = (email || '').trim().toLowerCase();
+    if (!EMAIL_SHAPE.test(normalized)) return null;
+
     const at = normalized.lastIndexOf('@');
-    if (at < 1) return null;
-
     const domain = normalized.slice(at + 1);
-    if (!domain) return null;
 
-    if (domain === INTERNAL_DOMAIN) {
-        // Staff and faculty accounts share the domain but are not members.
-        if (!normalized.startsWith(INTERNAL_EMAIL_PREFIX)) return null;
+    // Members: only Zewail City student accounts. Staff and faculty share the
+    // domain but lack the `s-` prefix, so they fall through to the external
+    // tier instead of being denied.
+    if (domain === INTERNAL_DOMAIN && normalized.startsWith(INTERNAL_EMAIL_PREFIX)) {
         return { affiliation: 'zewail', email: normalized, domain, university: 'Zewail City' };
     }
 
-    if (domain.endsWith(EXTERNAL_DOMAIN_SUFFIX)) {
-        // An empty allowlist admits every Egyptian university. When populated it
-        // must match exactly, or as a parent of a subdomain (e.g. 'zu.edu.eg'
-        // admits 'eng.zu.edu.eg').
-        if (EXTERNAL_DOMAIN_ALLOWLIST.length) {
-            const permitted = EXTERNAL_DOMAIN_ALLOWLIST.some(
-                allowed => domain === allowed || domain.endsWith(`.${allowed}`)
-            );
-            if (!permitted) return null;
-        }
-        return { affiliation: 'external', email: normalized, domain, university: domain };
+    // An empty allowlist admits every well-formed address. When populated it
+    // must match exactly, or as a parent of a subdomain (e.g. 'zu.edu.eg'
+    // admits 'eng.zu.edu.eg').
+    if (EXTERNAL_DOMAIN_ALLOWLIST.length) {
+        const permitted = EXTERNAL_DOMAIN_ALLOWLIST.some(
+            allowed => domain === allowed || domain.endsWith(`.${allowed}`)
+        );
+        if (!permitted) return null;
     }
 
-    return null;
+    return { affiliation: 'external', email: normalized, domain, university: domain };
 };

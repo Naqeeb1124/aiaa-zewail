@@ -66,18 +66,16 @@ export const signInWithGoogle = async () => {
     throw authError;
   }
 
-  // Step 2: Confirm the account belongs to an Egyptian university.
-  // Zewail City students become members; everyone else gets the external tier.
+  // Step 2: Confirm Google shared a usable email address. Sign-up is open, so
+  // any valid email gets an account; Zewail City students get the member tier
+  // and everyone else the external tier.
   const identity = classifyEmail(user.email);
   if (!identity) {
     await fbSignOut(auth);
-    const onZewailDomain = (user.email || '').toLowerCase().endsWith('@zewailcity.edu.eg');
     alert(
-      onZewailDomain
-        ? 'Access Denied: That is a Zewail City staff account. Please sign in with your student email (starting with s-).'
-        : 'Access Denied: Please sign in with your university student email.'
+      'Access Denied: Your Google account did not share a valid email address. Please try a different account.'
     );
-    throw new Error('Only students of Zewail City and other Egyptian universities may sign in.');
+    throw new Error('Sign-in requires a Google account with a valid email address.');
   }
 
   console.log("Authentication successful:", user.uid, identity.affiliation);

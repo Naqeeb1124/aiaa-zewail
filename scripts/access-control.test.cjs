@@ -90,50 +90,55 @@ test('Zewail City students are members', () => {
     assert.equal(classifyEmail('S-X@ZEWAILCITY.EDU.EG').email, 's-x@zewailcity.edu.eg');
 });
 
-test('Zewail City staff accounts are rejected, not made members', () => {
-    // Same domain, but no s- prefix: faculty and staff are never members.
-    assert.equal(tier('t-abdelrahman.alnaqeeb@zewailcity.edu.eg'), null);
-    assert.equal(tier('abdelrahman.alnaqeeb@zewailcity.edu.eg'), null);
-    assert.equal(tier('aiaa@zewailcity.edu.eg'), null);
-    // Org subdomains are external, never members.
+test('Zewail City staff accounts are external, never members', () => {
+    // Same domain, but no s- prefix: faculty and staff never get member access.
+    assert.equal(tier('t-abdelrahman.alnaqeeb@zewailcity.edu.eg'), 'external');
+    assert.equal(tier('abdelrahman.alnaqeeb@zewailcity.edu.eg'), 'external');
+    assert.equal(tier('aiaa@zewailcity.edu.eg'), 'external');
+    // Org subdomains are external too.
     assert.equal(tier('outreach@aiaa.zewailcity.edu.eg'), 'external');
 });
 
-test('other Egyptian universities are external', () => {
+test('students at other universities are external', () => {
     assert.equal(tier('student@eng.zu.edu.eg'), 'external');
-    assert.equal(tier('someone@auc.edu.eg'), 'external');
+    assert.equal(tier('someone@aucegypt.edu'), 'external'); // AUC's real domain
     assert.equal(tier('someone@cu.edu.eg'), 'external');
     assert.equal(tier('someone@deep.sub.university.edu.eg'), 'external');
 });
 
-test('everything else is refused', () => {
-    assert.equal(tier('someone@gmail.com'), null);
-    assert.equal(tier('someone@zewailcity.edu.eg.evil.com'), null);
-    assert.equal(tier('someone@notedu.eg'), null);   // no dot separator
-    assert.equal(tier('someone@edu.eg'), null);      // bare suffix
-    assert.equal(tier('@zewailcity.edu.eg'), null);   // no local part
+test('open sign-up admits any well-formed address as external', () => {
+    // Sign-up is open while the AUC event runs: addresses outside `.edu.eg`
+    // must not be denied.
+    assert.equal(tier('someone@gmail.com'), 'external');
+    assert.equal(tier('student@aucegypt.edu'), 'external');
+    assert.equal(tier('someone@notedu.eg'), 'external');
+});
+
+test('only malformed addresses are refused', () => {
+    assert.equal(tier('@zewailcity.edu.eg'), null); // no local part
     assert.equal(tier('someone@'), null);
+    assert.equal(tier('someone@localhost'), null); // no dotted domain
     assert.equal(tier('not-an-email'), null);
+    assert.equal(tier('someone @example.com'), null);
     assert.equal(tier(''), null);
     assert.equal(tier(null), null);
     assert.equal(tier(undefined), null);
 });
 
-test('a domain merely prefixed by edu.eg is not a university domain', () => {
-    assert.equal(tier('a@notedu.eg.attacker.com'), null);
-    assert.equal(tier('a@myedu.eg'), null);
+test('Zewail membership cannot be spoofed with a lookalike domain', () => {
+    assert.equal(tier('s-a@zewailcity.edu.eg.evil.com'), 'external');
+    assert.equal(tier('s-a@notzewailcity.edu.eg'), 'external');
 });
 
-test('Zewail City is never classified as external', () => {
+test('Zewail City students are never classified as external', () => {
     for (const email of [
         's-a@zewailcity.edu.eg',
-        't-a@zewailcity.edu.eg',
-        'aiaa@zewailcity.edu.eg',
+        's-abdelrahman.alnaqeeb@zewailcity.edu.eg',
     ]) {
-        assert.notEqual(
+        assert.equal(
             classifyEmail(email)?.affiliation,
-            'external',
-            `${email} must not be external`
+            'zewail',
+            `${email} must be a member`
         );
     }
 });
@@ -149,14 +154,15 @@ test('metadata is derived consistently', () => {
     assert.equal(e.email, 'student@eng.zu.edu.eg');
 });
 
-test('allowlist defaults to admitting all .edu.eg, and narrows when populated', () => {
+test('allowlist defaults to open sign-up, and narrows when populated', () => {
     assert.deepEqual(EXTERNAL_DOMAIN_ALLOWLIST, [], 'default must stay open');
 
     const config = require(path.join(OUT, 'lib', 'config.js'));
     config.EXTERNAL_DOMAIN_ALLOWLIST.push('zu.edu.eg');
     try {
         assert.equal(tier('student@eng.zu.edu.eg'), 'external', 'subdomain of allowlisted parent');
-        assert.equal(tier('someone@auc.edu.eg'), null, 'not allowlisted once narrowed');
+        assert.equal(tier('someone@aucegypt.edu'), null, 'not allowlisted once narrowed');
+        assert.equal(tier('someone@gmail.com'), null, 'open sign-up is off once narrowed');
         assert.equal(tier('s-a@zewailcity.edu.eg'), 'zewail', 'members are exempt');
     } finally {
         config.EXTERNAL_DOMAIN_ALLOWLIST.length = 0;
@@ -202,6 +208,23 @@ test('rules derive the tier from the signed token, not the user document', () =>
     );
 });
 
+test('rules use only documented String methods', () => {
+    // rules.String defines lower/matches/replace/size/split/toUtf8/trim/upper.
+    // startsWith/endsWith/contains are not in the language: the compiler warns
+    // "Invalid function name" and evaluation fails closed, silently denying
+    // every member action. A whole-string RE2 match is the correct tool.
+    assert.doesNotMatch(
+        RULES,
+        /\.(startsWith|endsWith|contains|toLowerCase|toUpperCase)\s*\(/,
+        'unknown String method would fail closed at evaluation'
+    );
+    assert.match(
+        RULES,
+        /authEmail\(\)\.matches\("s-\.\*@zewailcity\[\.\]edu\[\.\]eg"\)/,
+        'membership must be matched with an escaped dot regex'
+    );
+});
+
 test('rules restrict exactly role, points and badges', () => {
     const m = RULES.match(
         /function isPrivilegeEscalation\(keys\)\s*\{\s*return keys\.hasAny\(\[([^\]]*)\]\)/
@@ -237,12 +260,14 @@ test('membership collections are gated on isZewail()', () => {
     }
 });
 
-test('event registrations stay open to every university account', () => {
+test('event registrations stay open to every signed-in account', () => {
     const block = blockFor('registrations');
     assert.ok(block, 'registrations block must exist');
-    assert.match(block, /isUniversityAccount\(\)/);
+    assert.match(block, /isVerifiedAccount\(\)/);
     // The external tier must not be locked out of its one real capability.
     assert.doesNotMatch(block, /isZewail\(\)/, 'registrations must not be Zewail-only');
+    // A `.edu.eg`-only gate locked out real university accounts like AUC's.
+    assert.doesNotMatch(block, /edu\.eg/, 'registrations must not require an Egyptian domain');
 });
 
 test('rules file is structurally balanced', () => {

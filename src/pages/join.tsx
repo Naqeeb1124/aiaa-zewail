@@ -8,8 +8,10 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import ApplicationForm from '../components/ApplicationForm';
+import MajorPrompt from '../components/MajorPrompt';
 import { useAdmin } from '../hooks/useAdmin';
 import { useAffiliation } from '../hooks/useAffiliation';
+import { isAucEmail } from '../lib/majors';
 import { GetServerSideProps } from 'next';
 
 /**
@@ -316,19 +318,29 @@ function ApplicationStatus({
     );
   }
   if (isExternal) {
+    // AUC visitors get a personalized greeting and a major picker; everyone
+    // else keeps the generic visitor copy.
+    const isAuc = isAucEmail(user.email);
     return (
-      <StatusBanner
-        kind="info"
-        icon="🌍"
-        title="Chapter membership is Zewail City only"
-        body={`Thanks for signing in from ${university || 'another Egyptian university'}. You can browse everything on the site and register for our open events, but sub-team membership is reserved for Zewail City students.`}
-        cta={
-          <>
-            <Link href="/events" className="btn btn-primary">Browse events</Link>
-            <button onClick={onGoHome} className="btn btn-secondary">Back home</button>
-          </>
-        }
-      />
+      <>
+        <MajorPrompt email={user.email} displayName={user.displayName} />
+        <StatusBanner
+          kind="info"
+          icon="🌍"
+          title="Chapter membership is Zewail City only"
+          body={
+            isAuc
+              ? 'You can browse everything on the site and register for our open events, but sub-team membership is reserved for Zewail City students.'
+              : `Thanks for signing in from ${university || 'another Egyptian university'}. You can browse everything on the site and register for our open events, but sub-team membership is reserved for Zewail City students.`
+          }
+          cta={
+            <>
+              <Link href="/events" className="btn btn-primary">Browse events</Link>
+              <button onClick={onGoHome} className="btn btn-secondary">Back home</button>
+            </>
+          }
+        />
+      </>
     );
   }
   if (user && isAdmin && applicationStatus !== 'applied') {

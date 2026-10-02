@@ -19,6 +19,13 @@ export interface UserProfile {
     affiliation?: Affiliation;
     university?: string;
 
+    /**
+     * Bachelor's program, collected from AUC visitors after sign-in through
+     * the major picker. Grants no privileges, so it is client-writable.
+     */
+    major?: string;
+    majorUpdatedAt?: any;
+
     // Track active flagship project to enforce "1 per semester" rule
     // Map key: semester (e.g., "Spring 2024"), Value: projectId
     activeFlagship?: {

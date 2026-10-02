@@ -23,15 +23,20 @@ service cloud.firestore {
     }
 
     // Zewail City students: members with applications, projects, points, badges.
+    //
+    // `matches` is a whole-string RE2 match, and dots must be escaped. The rules
+    // language has no startsWith/endsWith/contains helpers: unknown method names
+    // compile with a warning and fail closed at evaluation, silently denying
+    // every member action.
     function isZewail() {
       return request.auth != null
-        && authEmail().startsWith("s-")
-        && authEmail().endsWith("@zewailcity.edu.eg");
+        && authEmail().matches("s-.*@zewailcity[.]edu[.]eg");
     }
 
-    // Any verified Egyptian university account, Zewail City included.
-    function isUniversityAccount() {
-      return request.auth != null && authEmail().endsWith(".edu.eg");
+    // Any account Google has verified an email for, including open sign-up
+    // addresses outside `.edu.eg`. Guests without a session are still refused.
+    function isVerifiedAccount() {
+      return request.auth != null && authEmail().size() > 0;
     }
 
     // Fields that grant membership credit or privilege. A user may never set
@@ -112,16 +117,17 @@ service cloud.firestore {
     }
 
     // --- Event Registrations ---
-    // Open to every university account, which is the whole point of the
-    // external tier: visitors can register for events flagged allowExternal.
+    // Open to every signed-in account now that sign-up is open, which is what
+    // the external tier exists for: visitors register for events flagged
+    // allowExternal.
     match /registrations/{regId} {
       // Registrations are private to the registrant and admins.
       allow read: if isAdmin() ||
                     (request.auth != null && request.auth.uid == resource.data.userId);
 
       // Guest registrations are created by the server-side registration endpoint.
-      // Authenticated university accounts can create their own directly.
-      allow create: if isUniversityAccount() && request.auth.uid == request.resource.data.userId;
+      // Signed-in accounts can create their own directly.
+      allow create: if isVerifiedAccount() && request.auth.uid == request.resource.data.userId;
 
       allow update, delete: if isAdmin() ||
                               (request.auth != null && request.auth.uid == resource.data.userId);

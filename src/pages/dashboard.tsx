@@ -9,6 +9,8 @@ import { doc, getDoc, query, collection, where, getDocs, deleteDoc } from 'fireb
 import { db } from '../lib/firebase';
 import { cancelJoinRequest } from '../lib/projects';
 import { parseZewailName } from '../lib/auth';
+import MajorPrompt from '../components/MajorPrompt';
+import { AUC_NAME, isAucEmail } from '../lib/majors';
 
 interface RegistrationItem {
     id: string;
@@ -128,7 +130,13 @@ export default function Dashboard() {
     if (loading) return <div className="min-h-screen paper-surface flex items-center justify-center text-ink">Loading your stuff...</div>;
 
     if (isExternal) {
-        return <ExternalVisitorPanel university={identity?.university} />;
+        return (
+            <ExternalVisitorPanel
+                university={identity?.university}
+                email={user?.email}
+                displayName={user?.displayName}
+            />
+        );
     }
 
     const formatDate = (dateInput: any) => {
@@ -471,18 +479,33 @@ export default function Dashboard() {
     );
 }
 
-function ExternalVisitorPanel({ university }: { university?: string }) {
+function ExternalVisitorPanel({ university, email, displayName }: {
+    university?: string;
+    email?: string | null;
+    displayName?: string | null;
+}) {
+    const isAuc = isAucEmail(email);
+    const signedInFrom = isAuc ? AUC_NAME : university || 'another Egyptian university';
+
     return (
         <div className="min-h-screen paper-surface text-ink">
             <Navbar />
             <main className="max-w-3xl mx-auto px-6 pt-32 pb-24">
                 <div className="card p-7 md:p-12">
                     <span className="chip chip-recruiting">Visiting</span>
-                    <h1 className="mt-4 font-display text-[clamp(1.8rem,4vw,2.6rem)] font-semibold tracking-tight">
-                        Welcome to AIAA Zewail City
-                    </h1>
+
+                    {/* AUC visitors get the personalized greeting and major picker,
+                        which already says welcome; a second heading would repeat it. */}
+                    {!isAuc && (
+                        <h1 className="mt-4 font-display text-[clamp(1.8rem,4vw,2.6rem)] font-semibold tracking-tight">
+                            Welcome to AIAA Zewail City
+                        </h1>
+                    )}
+
+                    <MajorPrompt email={email} displayName={displayName} />
+
                     <p className="mt-3 text-ink-soft text-[15.5px] leading-relaxed">
-                        You&apos;re signed in as a visitor from <strong className="text-ink">{university || 'another Egyptian university'}</strong>.
+                        You&apos;re signed in as a visitor from <strong className="text-ink">{signedInFrom}</strong>.
                         You can browse every project, event and announcement, and register for the events we&apos;ve opened to external participants.
                     </p>
                     <p className="mt-3 text-ink-soft text-[15.5px] leading-relaxed">
